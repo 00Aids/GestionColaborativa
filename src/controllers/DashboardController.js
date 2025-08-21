@@ -1,0 +1,530 @@
+const User = require('../models/User');
+const Project = require('../models/Project');
+const Deliverable = require('../models/Deliverable');
+const Evaluation = require('../models/Evaluation');
+const Task = require('../models/Task');
+
+class DashboardController {
+  constructor() {
+    this.userModel = new User();
+    this.projectModel = new Project();
+    this.deliverableModel = new Deliverable();
+    this.evaluationModel = new Evaluation();
+    this.taskModel = new Task();
+  }
+
+  // Dashboard principal
+  async index(req, res) {
+    try {
+      const user = req.session.user;
+      const roleName = user.rol_nombre;
+      
+      // En lugar de redirigir, usar directamente el dashboard Kanban
+      return this.kanbanDashboard(req, res);
+      
+      // Comentar o eliminar las redirecciones específicas por rol
+      /*
+      switch (roleName) {
+        case 'Administrador':
+          return res.redirect('/admin/dashboard');
+        case 'Coordinador':
+          return res.redirect('/coordinator/dashboard');
+        case 'Director de Proyecto': // ← CAMBIO AQUÍ
+          return res.redirect('/director/dashboard');
+        case 'Evaluador':
+          return res.redirect('/evaluator/dashboard');
+        case 'Estudiante':
+          return res.redirect('/student/dashboard');
+        default:
+          return this.showGenericDashboard(req, res);
+      }
+      */
+    } catch (error) {
+      console.error('Error in dashboard index:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard genérico
+  async showGenericDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener estadísticas básicas
+      const stats = {
+        totalProjects: 0,
+        totalDeliverables: 0,
+        completedEvaluations: 0,
+        pendingEvaluations: 0
+      };
+
+      res.render('dashboard/index', {
+        user,
+        stats,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in generic dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard para Administrador
+  async adminDashboard(req, res) {
+    try {
+      console.log('🔍 Session:', req.session);
+      console.log('🔍 User from req:', req.user);
+      console.log('🔍 User from session:', req.session?.user);
+      console.log('🔍 res.locals.user:', res.locals.user);
+      
+      const { user } = req.session;
+      
+      // Verificar que el usuario existe
+      if (!user) {
+        req.flash('error', 'Sesión expirada. Por favor, inicia sesión nuevamente.');
+        return res.redirect('/auth/login');
+      }
+      
+      // Obtener estadísticas
+      const [projectStatsRaw, deliverableStatsRaw, evaluationStatsRaw] = await Promise.all([
+        this.projectModel.getStatistics(),
+        this.deliverableModel.getStatistics(),
+        this.evaluationModel.getStatistics()
+      ]);
+  
+      // Procesar estadísticas para obtener totales
+      const projectStats = {
+        total: projectStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
+        byStatus: projectStatsRaw
+      };
+  
+      const deliverableStats = {
+        total: deliverableStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
+        byStatus: deliverableStatsRaw
+      };
+  
+      const evaluationStats = {
+        total: evaluationStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
+        byStatus: evaluationStatsRaw,
+        averageGrade: evaluationStatsRaw.length > 0 ? 
+          evaluationStatsRaw.reduce((sum, stat) => sum + (stat.promedio_nota || 0), 0) / evaluationStatsRaw.length : 0
+      };
+  
+      // Entregables vencidos
+      const overdueDeliverables = await this.deliverableModel.findOverdue();
+  
+      // Obtener usuarios recientes
+      const recentUsers = await this.userModel.findWithRole({ activo: true });
+  
+      // Obtener proyectos recientes (usando findWithDetails para obtener información completa)
+      const recentProjects = await this.projectModel.findWithDetails();
+      // Limitar a los 5 más recientes (ordenar por ID descendente como aproximación)
+      const limitedRecentProjects = recentProjects.slice(0, 5);
+  
+      res.render('admin/dashboard', {
+        user: user,
+        projectStats,
+        deliverableStats,
+        evaluationStats,
+        overdueDeliverables: overdueDeliverables || [],
+        recentUsers: recentUsers || [],
+        recentProjects: limitedRecentProjects || [], // Add this line
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard para Coordinador
+  async coordinatorDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener estadísticas del sistema
+      const [projectStats, deliverableStats, evaluationStats] = await Promise.all([
+        this.projectModel.getStatistics(),
+        this.deliverableModel.getStatistics(),
+        this.evaluationModel.getStatistics()
+      ]);
+  
+      // Entregables vencidos
+      const overdueDeliverables = await this.deliverableModel.findOverdue();
+  
+      res.render('coordinator/dashboard', {
+        user,
+        projectStats,
+        deliverableStats,
+        evaluationStats,
+        overdueDeliverables: overdueDeliverables || [],
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in coordinator dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard para Estudiante
+  async studentDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener proyectos del estudiante
+      const myProjects = await this.projectModel.findByStudent(user.id);
+      
+      // Entregables pendientes del estudiante
+      const myDeliverables = [];
+      for (const project of myProjects) {
+        const deliverables = await this.deliverableModel.findByProject(project.id);
+        if (deliverables && deliverables.length > 0) {
+          myDeliverables.push(...deliverables);
+        }
+      }
+
+      // Evaluaciones del estudiante
+      const myEvaluations = [];
+      for (const project of myProjects) {
+        const evaluations = await this.evaluationModel.findByProject(project.id);
+        if (evaluations && evaluations.length > 0) {
+          myEvaluations.push(...evaluations);
+        }
+      }
+
+      const stats = {
+        totalProjects: myProjects.length,
+        totalDeliverables: myDeliverables.length,
+        completedEvaluations: myEvaluations.filter(e => e.estado === 'completada').length,
+        pendingEvaluations: myEvaluations.filter(e => e.estado === 'pendiente').length
+      };
+
+      res.render('student/dashboard', {
+        user,
+        stats,
+        myProjects: myProjects.slice(0, 5), // Últimos 5
+        myDeliverables: myDeliverables.slice(0, 5), // Últimos 5
+        myEvaluations: myEvaluations.slice(0, 5), // Últimas 5
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in student dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard para Director
+  async directorDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener proyectos dirigidos
+      const directedProjects = await this.projectModel.findByDirector(user.id);
+      
+      // Entregables de proyectos dirigidos
+      const directedDeliverables = [];
+      for (const project of directedProjects) {
+        const deliverables = await this.deliverableModel.findByProject(project.id);
+        if (deliverables && deliverables.length > 0) {
+          directedDeliverables.push(...deliverables);
+        }
+      }
+
+      // Evaluaciones pendientes
+      const pendingEvaluations = [];
+      for (const project of directedProjects) {
+        const evaluations = await this.evaluationModel.findByProject(project.id);
+        if (evaluations && evaluations.length > 0) {
+          pendingEvaluations.push(...evaluations.filter(e => e.estado === 'pendiente'));
+        }
+      }
+
+      const stats = {
+        totalProjects: directedProjects.length,
+        totalDeliverables: directedDeliverables.length,
+        completedEvaluations: directedDeliverables.filter(d => d.estado === 'aprobado').length,
+        pendingEvaluations: pendingEvaluations.length
+      };
+
+      res.render('director/dashboard', {
+        user,
+        stats,
+        directedProjects: directedProjects.slice(0, 10),
+        directedDeliverables: directedDeliverables.slice(0, 10),
+        pendingEvaluations: pendingEvaluations.slice(0, 10),
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in director dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard para Evaluador
+  async evaluatorDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener evaluaciones asignadas al evaluador
+      const assignedEvaluations = await this.evaluationModel.findByEvaluator(user.id);
+      
+      // Estadísticas
+      const stats = {
+        totalEvaluations: assignedEvaluations.length,
+        completedEvaluations: assignedEvaluations.filter(e => e.estado === 'completada').length,
+        pendingEvaluations: assignedEvaluations.filter(e => e.estado === 'pendiente').length,
+        overdueEvaluations: assignedEvaluations.filter(e => 
+          e.estado === 'pendiente' && new Date(e.fecha_limite) < new Date()
+        ).length
+      };
+
+      res.render('evaluator/dashboard', {
+        user,
+        stats,
+        assignedEvaluations: assignedEvaluations.slice(0, 10),
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in evaluator dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Dashboard Kanban (CORREGIDO)
+  async kanbanDashboard(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener TAREAS agrupadas por estado (no proyectos)
+      const allTasks = await this.taskModel.findWithDetails();
+      
+      const kanbanData = {
+        por_hacer: allTasks.filter(t => t.estado === 'pendiente'),
+        en_progreso: allTasks.filter(t => t.estado === 'entregado'), 
+        completado: allTasks.filter(t => ['aprobado', 'revisado'].includes(t.estado))
+      };
+
+      // Obtener proyectos según el rol del usuario
+      let userProjects = [];
+      switch (user.rol_nombre) {
+        case 'Estudiante':
+          userProjects = await this.projectModel.findByStudent(user.id);
+          break;
+        case 'Director':
+          userProjects = await this.projectModel.findByDirector(user.id);
+          break;
+        case 'Administrador':
+        case 'Coordinador':
+          userProjects = await this.projectModel.findWithDetails();
+          break;
+        case 'Evaluador':
+          // Los evaluadores pueden ver proyectos que están evaluando
+          userProjects = await this.projectModel.findWithDetails();
+          break;
+        default:
+          userProjects = [];
+      }
+
+      // Obtener todos los proyectos para estadísticas generales
+      const allProjects = await this.projectModel.findWithDetails();
+      
+      // Estadísticas generales
+      const stats = {
+        totalProjects: allProjects.length,
+        totalTasks: allTasks.length,
+        por_hacer: kanbanData.por_hacer.length,
+        en_progreso: kanbanData.en_progreso.length,
+        completado: kanbanData.completado.length,
+        totalDeliverables: allTasks.length,
+        completedEvaluations: kanbanData.completado.length,
+        pendingEvaluations: kanbanData.por_hacer.length,
+        // Mantener compatibilidad con la vista actual
+        nuevos: allProjects.filter(p => p.estado === 'borrador').length,
+        en_desarrollo: allProjects.filter(p => p.estado === 'en_desarrollo').length,
+        en_evaluacion: allProjects.filter(p => p.estado === 'en_revision').length,
+        completados: allProjects.filter(p => p.estado === 'finalizado').length
+      };
+
+      res.render('dashboard/index', {
+        user,
+        kanbanData, // Ahora contiene TAREAS
+        stats,
+        projects: allProjects, // Lista de proyectos para estadísticas
+        userProjects, // Proyectos específicos del usuario para la barra lateral
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in kanban dashboard:', error);
+      res.status(500).render('errors/500', { error: 'Error interno del servidor' });
+    }
+  }
+
+  // Actualizar estado de tarea (drag & drop)
+  async updateTaskStatus(req, res) {
+    try {
+      const { taskId, newStatus } = req.body;
+
+      // Validar entrada
+      if (!taskId || !newStatus) {
+        return res.status(400).json({
+          success: false,
+          message: 'taskId y newStatus son requeridos'
+        });
+      }
+
+      // Mapear estados del frontend a la base de datos
+      const statusMap = {
+        'por_hacer': 'pendiente',
+        'en_progreso': 'entregado', 
+        'completado': 'aprobado'
+      };
+
+      const dbStatus = statusMap[newStatus];
+      if (!dbStatus) {
+        return res.status(400).json({
+          success: false,
+          message: 'Estado no válido'
+        });
+      }
+
+      // Actualizar en la base de datos
+      await this.taskModel.updateStatus(taskId, dbStatus);
+
+      res.json({
+        success: true,
+        message: 'Estado actualizado correctamente'
+      });
+
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Obtener una tarea específica
+  async getTask(req, res) {
+    try {
+      const { id } = req.params;
+      const task = await this.taskModel.findById(id);
+      
+      if (!task) {
+        return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
+      }
+      
+      res.json({ success: true, task });
+    } catch (error) {
+      console.error('Error getting task:', error);
+      res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    }
+  }
+
+  // Crear nueva tarea
+  async createTask(req, res) {
+    try {
+      const { titulo, descripcion, proyecto_id, fase_id, fecha_limite, estado } = req.body;
+      const user = req.session.user;
+      
+      // Validar campos requeridos
+      if (!titulo || !proyecto_id || !fase_id || !fecha_limite) {
+        return res.status(400).json({ success: false, message: 'Campos requeridos faltantes' });
+      }
+      
+      // Generar código único para la tarea
+      const codigo = await this.generateTaskCode();
+      
+      const taskData = {
+        codigo,
+        titulo,
+        descripcion: descripcion || '',
+        proyecto_id: parseInt(proyecto_id),
+        fase_id: parseInt(fase_id),
+        fecha_limite,
+        estado: estado || 'pendiente',
+        asignado_a: user.id,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      
+      const newTask = await this.taskModel.create(taskData);
+      res.json({ success: true, task: newTask });
+      
+    } catch (error) {
+      console.error('Error creating task:', error);
+      res.status(500).json({ success: false, message: 'Error al crear la tarea' });
+    }
+  }
+
+  // Actualizar tarea existente
+  async updateTask(req, res) {
+    try {
+      const { id } = req.params;
+      const { titulo, descripcion, proyecto_id, fase_id, fecha_limite, estado } = req.body;
+      
+      const updateData = {
+        titulo,
+        descripcion,
+        proyecto_id: parseInt(proyecto_id),
+        fase_id: parseInt(fase_id),
+        fecha_limite,
+        estado,
+        updated_at: new Date()
+      };
+      
+      const updatedTask = await this.taskModel.update(id, updateData);
+      res.json({ success: true, task: updatedTask });
+      
+    } catch (error) {
+      console.error('Error updating task:', error);
+      res.status(500).json({ success: false, message: 'Error al actualizar la tarea' });
+    }
+  }
+
+  // Eliminar tarea
+  async deleteTask(req, res) {
+    try {
+      const { id } = req.params;
+      
+      await this.taskModel.delete(id);
+      res.json({ success: true, message: 'Tarea eliminada correctamente' });
+      
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      res.status(500).json({ success: false, message: 'Error al eliminar la tarea' });
+    }
+  }
+
+  // Método auxiliar para generar código de tarea
+  async generateTaskCode() {
+    try {
+      const prefix = 'TSK';
+      let isUnique = false;
+      let codigo;
+      
+      while (!isUnique) {
+        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        codigo = `${prefix}${randomNum}`;
+        
+        const existingTask = await this.taskModel.findOne({ codigo });
+        if (!existingTask) {
+          isUnique = true;
+        }
+      }
+      
+      return codigo;
+    } catch (error) {
+      throw new Error(`Error generating task code: ${error.message}`);
+    }
+  }
+}
+
+module.exports = DashboardController;

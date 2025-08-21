@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Únete a nosotros</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: auto;  /* Cambiado de 'hidden' a 'auto' para permitir scroll */
+        }
+
+        /* Elementos decorativos de fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: 10%;
+            left: 10%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            bottom: 10%;
+            right: 10%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .register-container {
+            display: flex;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 1000px;
+            width: 90%;
+            min-height: 600px;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+            color: white;
+            padding: 60px 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .logo-img {
+            max-height: 40px;
+            max-width: 150px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* Fallback para cuando no hay imagen */
+        .logo::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .welcome-title {
+            font-size: 48px;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            z-index: 1;
+            position: relative;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.5;
+            z-index: 1;
+            position: relative;
+        }
+
+        .form-section {
+            padding: 60px 40px;
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-main-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #5a67d8;
+            margin-bottom: 15px;
+            text-align: center;
+            background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-subtitle {
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #718096;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #5a67d8;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #5a67d8;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .checkbox-group input {
+            margin-right: 10px;
+            margin-top: 2px;
+        }
+
+        .checkbox-group label {
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .checkbox-group a {
+            color: #5a67d8;
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+            transform: translateY(-2px);
+        }
+
+        .login-link {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #5a67d8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .social-login {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .social-text {
+            color: #718096;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .social-icon:hover {
+            background: #f7fafc;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .register-container {
+                flex-direction: column;
+                max-width: 400px;
+            }
+
+            .welcome-section {
+                padding: 40px 30px;
+                text-align: center;
+            }
+
+            .welcome-title {
+                font-size: 36px;
+            }
+
+            .form-section {
+                padding: 40px 30px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        .welcome-content {
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="welcome-section">
+            <div class="logo">
+                <!-- Cambia por tu imagen: <img src="tu-logo.png" alt="Logo de la empresa" class="logo-img"> -->
+                <span class="logo-text">YOUR LOGO</span>
+            </div>
+            <h1 class="welcome-title">Únete a<br>nosotros!</h1>
+            <p class="welcome-subtitle">
+                Crea tu cuenta y comienza<br>
+                tu experiencia con nosotros.
+            </p>
+        </div>
+        
+        <div class="form-section">
+            <h2 class="form-title">Crear cuenta</h2>
+            <p class="form-subtitle">Completa los siguientes datos para registrarte</p>
+            
+            <form>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Nombre</label>
+                        <input type="text" id="firstName" name="firstName" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Apellido</label>
+                        <input type="text" id="lastName" name="lastName" placeholder="Tu apellido" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="nombre@correo.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Teléfono</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+1 234 567 8900">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar contraseña</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••••••" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="birthDate">Fecha de nacimiento</label>
+                    <input type="date" id="birthDate" name="birthDate">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        Acepto los <a href="#">términos y condiciones</a> y la <a href="#">política de privacidad</a>
+                    </label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="newsletter" name="newsletter">
+                    <label for="newsletter">
+                        Quiero recibir noticias y ofertas especiales por correo electrónico
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Crear cuenta</button>
+            </form>
+            
+            <div class="login-link">
+                ¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a>
+            </div>
+            
+            <div class="social-login">
+                <p class="social-text">O regístrate con</p>
+                <div class="social-icons">
+                    <a href="#" class="social-icon">G</a>
+                    <a href="#" class="social-icon">f</a>
+                    <a href="#" class="social-icon">@</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

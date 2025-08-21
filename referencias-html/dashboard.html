@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestión de Proyectos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #5a67d8;
+            font-size: 18px;
+        }
+
+        .logo::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #5a67d8;
+            border-radius: 50%;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .search-bar::before {
+            content: '🔍';
+            margin-right: 8px;
+            opacity: 0.6;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-icon:hover {
+            background: #e2e8f0;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5a67d8, #667eea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            width: 250px;
+            height: calc(100vh - 60px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-item:hover {
+            background: #f7fafc;
+            color: #5a67d8;
+        }
+
+        .sidebar-item.active {
+            background: #edf2f7;
+            color: #5a67d8;
+            border-right: 3px solid #5a67d8;
+        }
+
+        .sidebar-item::before {
+            content: attr(data-icon);
+            margin-right: 12px;
+            width: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            margin-top: 60px;
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .board-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Kanban Board */
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .kanban-column {
+            min-width: 300px;
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .column-title {
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .column-menu {
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            color: #718096;
+        }
+
+        .column-menu:hover {
+            background: #e2e8f0;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 200px;
+        }
+
+        /* Task Cards */
+        .task-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-1px);
+        }
+
+        .task-card.priority-high {
+            border-left-color: #e53e3e;
+        }
+
+        .task-card.priority-medium {
+            border-left-color: #dd6b20;
+        }
+
+        .task-card.priority-low {
+            border-left-color: #38a169;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .task-description {
+            color: #718096;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-tags {
+            display: flex;
+            gap: 6px;
+        }
+
+        .task-tag {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .task-tag.bug {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .task-tag.feature {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .task-tag.improvement {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .task-assignee {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .task-id {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-bottom: 4px;
+        }
+
+        /* Add Task Button */
+        .add-task {
+            background: transparent;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            color: #718096;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-task:hover {
+            border-color: #5a67d8;
+            color: #5a67d8;
+            background: #f7fafc;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-bar {
+                width: 200px;
+            }
+
+            .kanban-board {
+                flex-direction: column;
+            }
+
+            .kanban-column {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">TU PROYECTO</div>
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar tareas, proyectos...">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon">🔔</div>
+            <div class="header-icon">❓</div>
+            <div class="user-avatar">JD</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">Principal</div>
+            <a href="#" class="sidebar-item active" data-icon="🏠">Dashboard</a>
+            <a href="#" class="sidebar-item" data-icon="📋">Mis Tareas</a>
+            <a href="#" class="sidebar-item" data-icon="📊">Reportes</a>
+            <a href="#" class="sidebar-item" data-icon="📅">Calendario</a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">Proyectos</div>
+            <a href="#" class="sidebar-item" data-icon="🚀">Proyecto Alpha</a>
+            <a href="#" class="sidebar-item" data-icon="💼">Proyecto Beta</a>
+            <a href="#" class="sidebar-item" data-icon="⭐">Proyecto Gamma</a>
+            <a href="#" class="sidebar-item" data-icon="➕">Crear Proyecto</a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">Configuración</div>
+            <a href="#" class="sidebar-item" data-icon="⚙️">Configuración</a>
+            <a href="#" class="sidebar-item" data-icon="👥">Equipo</a>
+            <a href="#" class="sidebar-item" data-icon="🚪">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Proyecto Alpha</h1>
+            <p class="page-subtitle">Gestiona las tareas y el progreso de tu proyecto</p>
+        </div>
+
+        <div class="board-header">
+            <div>
+                <h2>Tablero Kanban</h2>
+            </div>
+            <div class="board-actions">
+                <button class="btn btn-secondary">⚙️ Configurar</button>
+                <button class="btn btn-primary">➕ Nueva Tarea</button>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board">
+            <!-- To Do Column -->
+            <div class="kanban-column">
+                <div class="column-header">
+                    <div class="column-title">
+                        Por Hacer
+                        <span class="column-count">3</span>
+                    </div>
+                    <div class="column-menu">⋯</div>
+                </div>
+                <div class="task-list">
+                    <div class="task-card priority-high">
+                        <div class="task-id">ALPHA-001</div>
+                        <div class="task-title">Optimizar el sitio para consultorio en dispositivos móviles</div>
+                        <div class="task-description">Mejorar la experiencia de usuario en dispositivos móviles y tablets</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag improvement">Mejora</span>
+                            </div>
+                            <div class="task-assignee">JM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-medium">
+                        <div class="task-id">ALPHA-002</div>
+                        <div class="task-title">Crear un acceso rápido para registrar las tareas diarias</div>
+                        <div class="task-description">Implementar funcionalidad de registro rápido de tareas</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag feature">Feature</span>
+                            </div>
+                            <div class="task-assignee">AM</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-low">
+                        <div class="task-id">ALPHA-003</div>
+                        <div class="task-title">Actualizar documentación del proyecto</div>
+                        <div class="task-description">Revisar y actualizar toda la documentación técnica</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag">Docs</span>
+                            </div>
+                            <div class="task-assignee">LR</div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-task">
+                        ➕ Agregar tarea
+                    </div>
+                </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="kanban-column">
+                <div class="column-header">
+                    <div class="column-title">
+                        En Progreso
+                        <span class="column-count">2</span>
+                    </div>
+                    <div class="column-menu">⋯</div>
+                </div>
+                <div class="task-list">
+                    <div class="task-card priority-high">
+                        <div class="task-id">ALPHA-004</div>
+                        <div class="task-title">Asistencia al cliente: chat en vivo de Squarespace</div>
+                        <div class="task-description">Implementar sistema de chat en vivo para soporte al cliente</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag feature">Feature</span>
+                            </div>
+                            <div class="task-assignee">CS</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-medium">
+                        <div class="task-id">ALPHA-005</div>
+                        <div class="task-title">Integración con API de pagos</div>
+                        <div class="task-description">Conectar el sistema con pasarela de pagos externa</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag feature">Feature</span>
+                            </div>
+                            <div class="task-assignee">MG</div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-task">
+                        ➕ Agregar tarea
+                    </div>
+                </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="kanban-column">
+                <div class="column-header">
+                    <div class="column-title">
+                        Completado
+                        <span class="column-count">4</span>
+                    </div>
+                    <div class="column-menu">⋯</div>
+                </div>
+                <div class="task-list">
+                    <div class="task-card priority-low">
+                        <div class="task-id">ALPHA-006</div>
+                        <div class="task-title">Elegir una plantilla de sitio web</div>
+                        <div class="task-description">Seleccionar y configurar la plantilla base del proyecto</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag">Design</span>
+                            </div>
+                            <div class="task-assignee">UI</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-medium">
+                        <div class="task-id">ALPHA-007</div>
+                        <div class="task-title">Configurar base de datos</div>
+                        <div class="task-description">Establecer estructura inicial de la base de datos</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag">Backend</span>
+                            </div>
+                            <div class="task-assignee">DB</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-high">
+                        <div class="task-id">ALPHA-008</div>
+                        <div class="task-title">Implementar autenticación de usuarios</div>
+                        <div class="task-description">Sistema completo de login y registro de usuarios</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag feature">Feature</span>
+                            </div>
+                            <div class="task-assignee">AU</div>
+                        </div>
+                    </div>
+                    
+                    <div class="task-card priority-low">
+                        <div class="task-id">ALPHA-009</div>
+                        <div class="task-title">Subir código al repositorio</div>
+                        <div class="task-description">Configurar repositorio Git y subir código inicial</div>
+                        <div class="task-meta">
+                            <div class="task-tags">
+                                <span class="task-tag">DevOps</span>
+                            </div>
+                            <div class="task-assignee">GI</div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-task">
+                        ➕ Agregar tarea
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Funcionalidad básica para interactividad
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hacer las tarjetas clickeables
+            const taskCards = document.querySelectorAll('.task-card');
+            taskCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    console.log('Tarea clickeada:', this.querySelector('.task-title').textContent);
+                    // Aquí puedes agregar lógica para abrir modal de detalles
+                });
+            });
+
+            // Funcionalidad para agregar tareas
+            const addTaskButtons = document.querySelectorAll('.add-task');
+            addTaskButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log('Agregar nueva tarea');
+                    // Aquí puedes agregar lógica para crear nueva tarea
+                });
+            });
+
+            // Funcionalidad para el botón de nueva tarea
+            const newTaskBtn = document.querySelector('.btn-primary');
+            if (newTaskBtn) {
+                newTaskBtn.addEventListener('click', function() {
+                    console.log('Crear nueva tarea desde header');
+                    // Aquí puedes agregar lógica para modal de nueva tarea
+                });
+            }
+        });
+    </script>
+</body>
+</html>

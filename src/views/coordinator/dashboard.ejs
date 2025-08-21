@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Coordinador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+        }
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #5a67d8;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .role-badge {
+            background: #ed8936;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .logout-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .dashboard-title {
+            margin-bottom: 30px;
+        }
+        .dashboard-title h1 {
+            font-size: 28px;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .dashboard-title p {
+            color: #718096;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .card-content {
+            padding: 20px;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f7fafc;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .quick-actions {
+            display: grid;
+            gap: 10px;
+        }
+        .action-btn {
+            background: #ed8936;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .action-btn:hover {
+            background: #dd6b20;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status-pending {
+            background: #fef5e7;
+            color: #744210;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">🎯 Panel de Coordinación</div>
+            <div class="user-info">
+                <span><%= user.nombres %> <%= user.apellidos %></span>
+                <span class="role-badge">Coordinador</span>
+                <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="dashboard-title">
+            <h1>Dashboard de Coordinación</h1>
+            <p>Gestión y supervisión de proyectos académicos</p>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number"><%= projectStats?.total || 0 %></div>
+                <div class="stat-label">Proyectos Activos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= deliverableStats?.pending || 0 %></div>
+                <div class="stat-label">Entregables Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= evaluationStats?.pending || 0 %></div>
+                <div class="stat-label">Evaluaciones Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= students?.length || 0 %></div>
+                <div class="stat-label">Estudiantes Asignados</div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="content-grid">
+            <!-- Proyectos Bajo Supervisión -->
+            <div class="card">
+                <div class="card-header">📁 Proyectos Bajo Mi Supervisión</div>
+                <div class="card-content">
+                    <% if (myProjects && myProjects.length > 0) { %>
+                        <% myProjects.forEach(project => { %>
+                            <div class="list-item">
+                                <div>
+                                    <strong><%= project.titulo %></strong><br>
+                                    <small>Estudiante: <%= project.estudiante_nombres %> <%= project.estudiante_apellidos %></small>
+                                </div>
+                                <span class="status-badge status-<%= project.estado === 'Activo' ? 'active' : 'pending' %>">
+                                    <%= project.estado %>
+                                </span>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <p>No tienes proyectos asignados para supervisión</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Acciones Rápidas -->
+            <div class="card">
+                <div class="card-header">🚀 Acciones Rápidas</div>
+                <div class="card-content">
+                    <div class="quick-actions">
+                        <a href="/coordinator/projects" class="action-btn">📁 Gestionar Proyectos</a>
+                        <a href="/coordinator/students" class="action-btn">👥 Mis Estudiantes</a>
+                        <a href="/coordinator/evaluations" class="action-btn">⭐ Evaluaciones</a>
+                        <a href="/coordinator/reports" class="action-btn">📊 Reportes</a>
+                        <a href="/coordinator/calendar" class="action-btn">📅 Calendario</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entregables Próximos a Vencer -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="card-header">⏰ Entregables Próximos a Vencer</div>
+            <div class="card-content">
+                <% if (upcomingDeliverables && upcomingDeliverables.length > 0) { %>
+                    <% upcomingDeliverables.forEach(deliverable => { %>
+                        <div class="list-item">
+                            <div>
+                                <strong><%= deliverable.titulo %></strong><br>
+                                <small>Proyecto: <%= deliverable.proyecto_titulo %></small>
+                            </div>
+                            <span style="color: #ed8936; font-size: 12px;">
+                                <%= new Date(deliverable.fecha_entrega).toLocaleDateString() %>
+                            </span>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p>No hay entregables próximos a vencer</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes Flash -->
+    <% if (success && success.length > 0) { %>
+        <div style="position: fixed; top: 80px; right: 20px; background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000;">
+            <%= success %>
+        </div>
+    <% } %>
+    <% if (error && error.length > 0) { %>
+        <div style="position: fixed; top: 80px; right: 20px; background: #fed7d7; color: #742a2a; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000;">
+            <%= error %>
+        </div>
+    <% } %>
+</body>
+</html>

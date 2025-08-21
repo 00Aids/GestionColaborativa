@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Tareas - Gestión de Proyectos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #5a67d8;
+            font-size: 18px;
+        }
+
+        .logo::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #5a67d8;
+            border-radius: 50%;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .search-bar::before {
+            content: '🔍';
+            margin-right: 8px;
+            opacity: 0.6;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-icon:hover {
+            background: #e2e8f0;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5a67d8, #667eea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 60px;
+            width: 250px;
+            height: calc(100vh - 60px);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar-item:hover {
+            background: #f7fafc;
+            color: #5a67d8;
+        }
+
+        .sidebar-item.active {
+            background: #edf2f7;
+            color: #5a67d8;
+            border-right: 3px solid #5a67d8;
+        }
+
+        .sidebar-item::before {
+            content: attr(data-icon);
+            margin-right: 12px;
+            width: 16px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            margin-top: 60px;
+            padding: 20px;
+            min-height: calc(100vh - 60px);
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        /* Filters and Controls */
+        .controls-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .task-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #5a67d8;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #f7fafc;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #5a67d8;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Task List */
+        .tasks-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .task-item {
+            border-bottom: 1px solid #f7fafc;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: #f7fafc;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .task-main-info {
+            flex: 1;
+        }
+
+        .task-id {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 4px;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .task-description {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .task-project {
+            font-size: 12px;
+            color: #5a67d8;
+            background: #edf2f7;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .task-priority {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .priority-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .priority-high .priority-indicator {
+            background: #e53e3e;
+        }
+
+        .priority-medium .priority-indicator {
+            background: #dd6b20;
+        }
+
+        .priority-low .priority-indicator {
+            background: #38a169;
+        }
+
+        .task-due-date {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .task-due-date.overdue {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+
+        .task-due-date.due-soon {
+            color: #dd6b20;
+            font-weight: 600;
+        }
+
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-todo {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .status-progress {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .status-review {
+            background: #fbb6ce;
+            color: #b83280;
+        }
+
+        .status-done {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 15px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            background: #f7fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .empty-description {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-bar {
+                width: 200px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .task-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .task-actions {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">TU PROYECTO</div>
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar en mis tareas...">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-icon">🔔</div>
+            <div class="header-icon">❓</div>
+            <div class="user-avatar">JD</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">Principal</div>
+            <a href="dashboard.html" class="sidebar-item" data-icon="🏠">Dashboard</a>
+            <a href="#" class="sidebar-item active" data-icon="📋">Mis Tareas</a>
+            <a href="#" class="sidebar-item" data-icon="📊">Reportes</a>
+            <a href="#" class="sidebar-item" data-icon="📅">Calendario</a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">Proyectos</div>
+            <a href="#" class="sidebar-item" data-icon="🚀">Proyecto Alpha</a>
+            <a href="#" class="sidebar-item" data-icon="💼">Proyecto Beta</a>
+            <a href="#" class="sidebar-item" data-icon="⭐">Proyecto Gamma</a>
+            <a href="#" class="sidebar-item" data-icon="➕">Crear Proyecto</a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-title">Configuración</div>
+            <a href="#" class="sidebar-item" data-icon="⚙️">Configuración</a>
+            <a href="#" class="sidebar-item" data-icon="👥">Equipo</a>
+            <a href="#" class="sidebar-item" data-icon="🚪">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Mis Tareas</h1>
+            <p class="page-subtitle">Gestiona todas las tareas asignadas a ti</p>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="controls-header">
+                <div class="task-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">5</div>
+                        <div class="stat-label">En Progreso</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">4</div>
+                        <div class="stat-label">Completadas</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary">➕ Nueva Tarea</button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Estado</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">Todos los estados</option>
+                        <option value="todo">Por hacer</option>
+                        <option value="progress">En progreso</option>
+                        <option value="review">En revisión</option>
+                        <option value="done">Completado</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Prioridad</label>
+                    <select class="filter-select" id="priorityFilter">
+                        <option value="all">Todas las prioridades</option>
+                        <option value="high">Alta</option>
+                        <option value="medium">Media</option>
+                        <option value="low">Baja</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Proyecto</label>
+                    <select class="filter-select" id="projectFilter">
+                        <option value="all">Todos los proyectos</option>
+                        <option value="alpha">Proyecto Alpha</option>
+                        <option value="beta">Proyecto Beta</option>
+                        <option value="gamma">Proyecto Gamma</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Vista</label>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="list">📋 Lista</button>
+                        <button class="view-btn" data-view="grid">⊞ Tarjetas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Container -->
+        <div class="tasks-container">
+            <!-- Task Item 1 -->
+            <div class="task-item" data-status="progress" data-priority="high" data-project="alpha">
+                <div class="task-header">
+                    <div class="task-main-info">
+                        <div class="task-id">ALPHA-001</div>
+                        <div class="task-title">Optimizar el sitio para consultorio en dispositivos móviles</div>
+                        <div class="task-description">Mejorar la experiencia de usuario en dispositivos móviles y tablets. Incluye optimización de imágenes, ajuste de layouts y mejora de velocidad de carga.</div>
+                        <div class="task-meta">
+                            <div class="task-project">Proyecto Alpha</div>
+                            <div class="task-priority priority-high">
+                                <span class="priority-indicator"></span>
+                                Alta prioridad
+                            </div>
+                            <div class="task-due-date due-soon">Vence: 15 Dic 2024</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-status status-progress">En Progreso</div>
+                        <button class="action-btn" title="Editar">✏️</button>
+                        <button class="action-btn" title="Comentarios">💬</button>
+                        <button class="action-btn" title="Más opciones">⋯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Item 2 -->
+            <div class="task-item" data-status="todo" data-priority="medium" data-project="alpha">
+                <div class="task-header">
+                    <div class="task-main-info">
+                        <div class="task-id">ALPHA-002</div>
+                        <div class="task-title">Crear un acceso rápido para registrar las tareas diarias</div>
+                        <div class="task-description">Implementar funcionalidad de registro rápido de tareas desde el dashboard principal con formulario modal.</div>
+                        <div class="task-meta">
+                            <div class="task-project">Proyecto Alpha</div>
+                            <div class="task-priority priority-medium">
+                                <span class="priority-indicator"></span>
+                                Media prioridad
+                            </div>
+                            <div class="task-due-date">Vence: 20 Dic 2024</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-status status-todo">Por Hacer</div>
+                        <button class="action-btn" title="Editar">✏️</button>
+                        <button class="action-btn" title="Comentarios">💬</button>
+                        <button class="action-btn" title="Más opciones">⋯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Item 3 -->
+            <div class="task-item" data-status="review" data-priority="high" data-project="beta">
+                <div class="task-header">
+                    <div class="task-main-info">
+                        <div class="task-id">BETA-005</div>
+                        <div class="task-title">Integración con API de pagos</div>
+                        <div class="task-description">Conectar el sistema con pasarela de pagos externa (Stripe/PayPal) y implementar flujo completo de checkout.</div>
+                        <div class="task-meta">
+                            <div class="task-project">Proyecto Beta</div>
+                            <div class="task-priority priority-high">
+                                <span class="priority-indicator"></span>
+                                Alta prioridad
+                            </div>
+                            <div class="task-due-date overdue">Vencida: 10 Dic 2024</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-status status-review">En Revisión</div>
+                        <button class="action-btn" title="Editar">✏️</button>
+                        <button class="action-btn" title="Comentarios">💬</button>
+                        <button class="action-btn" title="Más opciones">⋯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Item 4 -->
+            <div class="task-item" data-status="done" data-priority="low" data-project="gamma">
+                <div class="task-header">
+                    <div class="task-main-info">
+                        <div class="task-id">GAMMA-003</div>
+                        <div class="task-title">Actualizar documentación del proyecto</div>
+                        <div class="task-description">Revisar y actualizar toda la documentación técnica, incluyendo README, guías de instalación y API docs.</div>
+                        <div class="task-meta">
+                            <div class="task-project">Proyecto Gamma</div>
+                            <div class="task-priority priority-low">
+                                <span class="priority-indicator"></span>
+                                Baja prioridad
+                            </div>
+                            <div class="task-due-date">Completada: 8 Dic 2024</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-status status-done">Completado</div>
+                        <button class="action-btn" title="Editar">✏️</button>
+                        <button class="action-btn" title="Comentarios">💬</button>
+                        <button class="action-btn" title="Más opciones">⋯</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Item 5 -->
+            <div class="task-item" data-status="progress" data-priority="medium" data-project="alpha">
+                <div class="task-header">
+                    <div class="task-main-info">
+                        <div class="task-id">ALPHA-007</div>
+                        <div class="task-title">Implementar sistema de notificaciones</div>
+                        <div class="task-description">Crear sistema de notificaciones en tiempo real para actualizaciones de tareas y mensajes del equipo.</div>
+                        <div class="task-meta">
+                            <div class="task-project">Proyecto Alpha</div>
+                            <div class="task-priority priority-medium">
+                                <span class="priority-indicator"></span>
+                                Media prioridad
+                            </div>
+                            <div class="task-due-date">Vence: 25 Dic 2024</div>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-status status-progress">En Progreso</div>
+                        <button class="action-btn" title="Editar">✏️</button>
+                        <button class="action-btn" title="Comentarios">💬</button>
+                        <button class="action-btn" title="Más opciones">⋯</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Filtros
+            const statusFilter = document.getElementById('statusFilter');
+            const priorityFilter = document.getElementById('priorityFilter');
+            const projectFilter = document.getElementById('projectFilter');
+            const taskItems = document.querySelectorAll('.task-item');
+
+            function filterTasks() {
+                const statusValue = statusFilter.value;
+                const priorityValue = priorityFilter.value;
+                const projectValue = projectFilter.value;
+
+                taskItems.forEach(task => {
+                    const taskStatus = task.dataset.status;
+                    const taskPriority = task.dataset.priority;
+                    const taskProject = task.dataset.project;
+
+                    const statusMatch = statusValue === 'all' || taskStatus === statusValue;
+                    const priorityMatch = priorityValue === 'all' || taskPriority === priorityValue;
+                    const projectMatch = projectValue === 'all' || taskProject === projectValue;
+
+                    if (statusMatch && priorityMatch && projectMatch) {
+                        task.style.display = 'block';
+                    } else {
+                        task.style.display = 'none';
+                    }
+                });
+
+                updateStats();
+            }
+
+            function updateStats() {
+                const visibleTasks = document.querySelectorAll('.task-item[style="display: block;"], .task-item:not([style*="display: none"])');
+                const totalStat = document.querySelector('.stat-item:nth-child(1) .stat-number');
+                totalStat.textContent = visibleTasks.length;
+            }
+
+            // Event listeners para filtros
+            statusFilter.addEventListener('change', filterTasks);
+            priorityFilter.addEventListener('change', filterTasks);
+            projectFilter.addEventListener('change', filterTasks);
+
+            // Toggle de vista
+            const viewButtons = document.querySelectorAll('.view-btn');
+            viewButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    viewButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const view = this.dataset.view;
+                    console.log('Cambiar a vista:', view);
+                    // Aquí puedes implementar el cambio de vista
+                });
+            });
+
+            // Click en tareas
+            taskItems.forEach(task => {
+                task.addEventListener('click', function(e) {
+                    if (!e.target.closest('.action-btn')) {
+                        console.log('Tarea clickeada:', this.querySelector('.task-title').textContent);
+                        // Aquí puedes abrir modal de detalles
+                    }
+                });
+            });
+
+            // Botones de acción
+            const actionButtons = document.querySelectorAll('.action-btn');
+            actionButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    console.log('Acción:', this.title);
+                });
+            });
+
+            // Búsqueda
+            const searchInput = document.querySelector('.search-bar input');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                taskItems.forEach(task => {
+                    const title = task.querySelector('.task-title').textContent.toLowerCase();
+                    const description = task.querySelector('.task-description').textContent.toLowerCase();
+                    const id = task.querySelector('.task-id').textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || description.includes(searchTerm) || id.includes(searchTerm)) {
+                        task.style.display = 'block';
+                    } else {
+                        task.style.display = 'none';
+                    }
+                });
+                
+                updateStats();
+            });
+        });
+    </script>
+</body>
+</html>
