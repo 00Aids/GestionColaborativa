@@ -1,0 +1,2167 @@
+const User = require('../models/User');
+const Role = require('../models/Role');
+const Project = require('../models/Project');
+const Deliverable = require('../models/Deliverable');
+const BaseModel = require('../models/BaseModel');
+const Task = require('../models/Task');
+
+class AdminController {
+  constructor() {
+    this.userModel = new User();
+    this.roleModel = new Role();
+    this.projectModel = new Project();
+    this.deliverableModel = new Deliverable();
+    this.lineasInvestigacionModel = new BaseModel('lineas_investigacion');
+    this.ciclosAcademicosModel = new BaseModel('ciclos_academicos');
+    this.taskModel = new Task();
+  }
+
+  // Mostrar página de gestión de usuarios
+  async users(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener todos los usuarios con información de rol
+      const allUsers = await this.userModel.findWithRole();
+      
+      // Obtener usuarios recientes (últimos 10)
+      const recentUsers = allUsers.slice(0, 10);
+      
+      // Obtener estadísticas de usuarios
+      const userStats = {
+        total: allUsers.length,
+        active: allUsers.filter(u => u.activo).length,
+        inactive: allUsers.filter(u => !u.activo).length,
+        byRole: {}
+      };
+      
+      // Agrupar por roles
+      allUsers.forEach(user => {
+        const roleName = user.rol_nombre || 'Sin rol';
+        userStats.byRole[roleName] = (userStats.byRole[roleName] || 0) + 1;
+      });
+      
+      // Obtener todos los roles disponibles
+      const roles = await this.roleModel.findAll();
+
+      res.render('admin/users', {
+        title: 'Gestión de Usuarios',
+        user,
+        allUsers,
+        recentUsers,
+        userStats,
+        roles: roles || [],
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin users:', error);
+      req.flash('error', 'Error al cargar la gestión de usuarios');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Mostrar página de gestión de roles
+  async roles(req, res) {
+    try {
+      console.log('=== DEBUG: Iniciando método roles ===');
+      const user = req.session.user;
+      console.log('Usuario:', user ? user.rol_nombre : 'No user');
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        console.log('ERROR: Usuario no autorizado');
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+  
+      console.log('=== Obteniendo todos los roles ===');
+      // Obtener todos los roles
+      const allRoles = await this.roleModel.findAll();
+      console.log('Roles encontrados:', allRoles.length);
+      
+      console.log('=== Obteniendo roles activos ===');
+      // Obtener roles activos
+      const activeRoles = await this.roleModel.findActive();
+      console.log('Roles activos:', activeRoles.length);
+      
+      console.log('=== Obteniendo usuarios con rol ===');
+      // Contar usuarios por rol
+      const usersWithRole = await this.userModel.findWithRole();
+      console.log('Usuarios con rol:', usersWithRole.length);
+      
+      const usersByRole = {};
+      const userCounts = {}; // Nuevo objeto para contar por ID
+      
+      usersWithRole.forEach(user => {
+        const roleName = user.rol_nombre || 'Sin rol';
+        const roleId = user.rol_id;
+        
+        // Mantener el conteo por nombre para estadísticas
+        usersByRole[roleName] = (usersByRole[roleName] || 0) + 1;
+        
+        // Agregar conteo por ID para la vista
+        if (roleId) {
+          userCounts[roleId] = (userCounts[roleId] || 0) + 1;
+        }
+      });
+      console.log('Usuarios por rol:', usersByRole);
+      console.log('Usuarios por ID de rol:', userCounts);
+      
+      // Calcular cuántos roles tienen usuarios asignados
+      const rolesWithUsers = Object.keys(usersByRole).filter(roleName => roleName !== 'Sin rol').length;
+      console.log('Roles con usuarios:', rolesWithUsers);
+      
+      // Definir permisos disponibles en el sistema
+      const availablePermissions = [
+        'ADMIN_USERS',
+        'ADMIN_ROLES', 
+        'ADMIN_PROJECTS',
+        'ADMIN_REPORTS',
+        'ADMIN_SETTINGS',
+        'ADMIN_CALENDAR',
+        'ADMIN_INVITATIONS',
+        'ADMIN_BACKUP',
+        'ADMIN_LOGS',
+        'VIEW_DASHBOARD',
+        'MANAGE_PROJECTS',
+        'MANAGE_TASKS',
+        'MANAGE_DELIVERABLES',
+        'MANAGE_EVALUATIONS',
+        'VIEW_REPORTS',
+        'MANAGE_NOTIFICATIONS'
+      ];
+      
+      // Obtener estadísticas de roles
+      const roleStats = {
+        total: allRoles.length,
+        active: activeRoles.length,
+        inactive: allRoles.filter(r => !r.activo).length,
+        withUsers: rolesWithUsers
+      };
+
+      res.render('admin/roles', {
+        title: 'Gestión de Roles',
+        user,
+        roles: allRoles,
+        activeRoles,
+        roleStats,
+        userCounts, // Ahora pasamos userCounts que tiene los IDs como clave
+        availablePermissions,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+      console.log('=== Vista renderizada exitosamente ===');
+    } catch (error) {
+      console.error('Error in admin roles:', error);
+      req.flash('error', 'Error al cargar la gestión de roles');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Crear nuevo rol
+  async createRole(req, res) {
+    try {
+      const { nombre, descripcion, permisos } = req.body;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      // Validar datos requeridos
+      if (!nombre || !descripcion) {
+        return res.status(400).json({ error: 'Nombre y descripción son requeridos' });
+      }
+
+      // Verificar que el nombre no exista
+      const existingRole = await this.roleModel.findByName(nombre);
+      if (existingRole) {
+        return res.status(400).json({ error: 'Ya existe un rol con ese nombre' });
+      }
+
+      // Preparar datos del rol
+      const roleData = {
+        nombre,
+        descripcion,
+        permisos: permisos || {},
+        activo: true
+      };
+
+      // Crear rol
+      const newRole = await this.roleModel.create(roleData);
+
+      res.json({ 
+        success: true, 
+        message: 'Rol creado exitosamente',
+        role: newRole
+      });
+    } catch (error) {
+      console.error('Error creating role:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Actualizar rol
+  async updateRole(req, res) {
+    try {
+      const { roleId } = req.params;
+      const { nombre, descripcion, permisos } = req.body;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const role = await this.roleModel.findById(roleId);
+      if (!role) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // No permitir editar el rol de Administrador General
+      if (role.nombre === 'Administrador General') {
+        return res.status(400).json({ error: 'No se puede modificar el rol de Administrador General' });
+      }
+
+      // Verificar nombre único (si se está cambiando)
+      if (nombre && nombre !== role.nombre) {
+        const existingRole = await this.roleModel.findByName(nombre);
+        if (existingRole) {
+          return res.status(400).json({ error: 'Ya existe un rol con ese nombre' });
+        }
+      }
+
+      // Preparar datos de actualización
+      const updateData = {};
+      if (nombre) updateData.nombre = nombre;
+      if (descripcion) updateData.descripcion = descripcion;
+      if (permisos) updateData.permisos = permisos;
+
+      // Actualizar rol
+      await this.roleModel.update(roleId, updateData);
+
+      res.json({ 
+        success: true, 
+        message: 'Rol actualizado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error updating role:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Cambiar estado de rol (activar/desactivar)
+  async toggleRoleStatus(req, res) {
+    try {
+      const { roleId } = req.params;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const role = await this.roleModel.findById(roleId);
+      if (!role) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // No permitir desactivar el rol de Administrador General
+      if (role.nombre === 'Administrador General') {
+        return res.status(400).json({ error: 'No se puede desactivar el rol de Administrador General' });
+      }
+
+      // Cambiar estado
+      const newStatus = !role.activo;
+      await this.roleModel.update(roleId, { activo: newStatus });
+
+      res.json({ 
+        success: true, 
+        message: `Rol ${newStatus ? 'activado' : 'desactivado'} exitosamente`,
+        newStatus
+      });
+    } catch (error) {
+      console.error('Error toggling role status:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Eliminar rol
+  async deleteRole(req, res) {
+    try {
+      const { roleId } = req.params;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const role = await this.roleModel.findById(roleId);
+      if (!role) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // No permitir eliminar el rol de Administrador General
+      if (role.nombre === 'Administrador General') {
+        return res.status(400).json({ error: 'No se puede eliminar el rol de Administrador General' });
+      }
+
+      // Verificar si hay usuarios con este rol
+      const usersWithRole = await this.userModel.findAll({ rol_id: roleId });
+      if (usersWithRole.length > 0) {
+        return res.status(400).json({ 
+          error: `No se puede eliminar el rol porque ${usersWithRole.length} usuario(s) lo tienen asignado` 
+        });
+      }
+
+      // Eliminar rol
+      await this.roleModel.delete(roleId);
+
+      res.json({ 
+        success: true, 
+        message: 'Rol eliminado exitosamente'
+      });
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Obtener detalles de un rol
+  async getRoleDetails(req, res) {
+    try {
+      const { roleId } = req.params;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const role = await this.roleModel.findById(roleId);
+      if (!role) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // Obtener usuarios con este rol
+      const usersWithRole = await this.userModel.findAll({ rol_id: roleId });
+
+      res.json({ 
+        success: true, 
+        role,
+        usersCount: usersWithRole.length,
+        users: usersWithRole
+      });
+    } catch (error) {
+      console.error('Error getting role details:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Activar/desactivar usuario
+  async toggleUserStatus(req, res) {
+    try {
+      const { userId } = req.params;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const targetUser = await this.userModel.findById(userId);
+      if (!targetUser) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // No permitir desactivar al propio administrador
+      if (targetUser.id === user.id) {
+        return res.status(400).json({ error: 'No puedes desactivar tu propia cuenta' });
+      }
+
+      // Cambiar estado
+      const newStatus = !targetUser.activo;
+      await this.userModel.update(userId, { activo: newStatus });
+
+      res.json({ 
+        success: true, 
+        message: `Usuario ${newStatus ? 'activado' : 'desactivado'} correctamente`,
+        newStatus 
+      });
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Cambiar rol de usuario
+  async changeUserRole(req, res) {
+    try {
+      const { userId } = req.params;
+      const { roleId } = req.body;
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      const targetUser = await this.userModel.findById(userId);
+      if (!targetUser) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // No permitir cambiar el rol del propio administrador
+      if (targetUser.id === user.id) {
+        return res.status(400).json({ error: 'No puedes cambiar tu propio rol' });
+      }
+
+      // Verificar que el rol existe
+      const role = await this.roleModel.findById(roleId);
+      if (!role) {
+        return res.status(404).json({ error: 'Rol no encontrado' });
+      }
+
+      // Actualizar rol
+      await this.userModel.update(userId, { rol_id: roleId });
+
+      res.json({ 
+        success: true, 
+        message: `Rol cambiado a ${role.nombre} correctamente`,
+        newRole: role.nombre
+      });
+    } catch (error) {
+      console.error('Error changing user role:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Mostrar página de gestión de proyectos
+  async projects(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener todos los proyectos con detalles
+      const allProjects = await this.projectModel.findWithDetails();
+      
+      // Obtener proyectos recientes (últimos 10)
+      const recentProjects = allProjects.slice(0, 10);
+      
+      // Obtener estadísticas de proyectos
+      const projectStats = {
+        total: allProjects.length,
+        active: allProjects.filter(p => ['en_desarrollo', 'en_revision', 'enviado'].includes(p.estado)).length,
+        completed: allProjects.filter(p => p.estado === 'finalizado').length,
+        pending: allProjects.filter(p => p.estado === 'borrador').length,
+        borrador: allProjects.filter(p => p.estado === 'borrador').length,
+        enviado: allProjects.filter(p => p.estado === 'enviado').length,
+        en_revision: allProjects.filter(p => p.estado === 'en_revision').length,
+        aprobado: allProjects.filter(p => p.estado === 'aprobado').length,
+        rechazado: allProjects.filter(p => p.estado === 'rechazado').length,
+        en_desarrollo: allProjects.filter(p => p.estado === 'en_desarrollo').length,
+        finalizado: allProjects.filter(p => p.estado === 'finalizado').length
+      };
+      
+      // Obtener líneas de investigación y ciclos académicos para formularios
+      const lineasInvestigacion = await this.lineasInvestigacionModel.findAll();
+      const ciclosAcademicos = await this.ciclosAcademicosModel.findAll();
+      
+      // Obtener usuarios para asignar como directores/estudiantes
+      const allUsers = await this.userModel.findWithRole();
+      const directores = allUsers.filter(user => 
+          user.rol_nombre === 'Director de Proyecto' || 
+          user.rol_nombre === 'Administrador General'
+      );
+      const estudiantes = allUsers.filter(u => u.rol_nombre === 'Estudiante');
+
+      res.render('admin/projects', {
+        title: 'Gestión de Proyectos',
+        user,
+        projects: allProjects,
+        recentProjects,
+        stats: projectStats,
+        lineasInvestigacion,
+        ciclosAcademicos,
+        directores,
+        estudiantes,
+        pagination: {
+          currentPage: 1,
+          totalPages: 1,
+          totalItems: allProjects.length
+        },
+        search: '',
+        statusFilter: '',
+        lineaFilter: '',
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin projects:', error);
+      req.flash('error', 'Error al cargar la gestión de proyectos');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Mostrar formulario para crear nuevo proyecto
+  async newProject(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener datos necesarios para el formulario
+      const lineasInvestigacion = await this.lineasInvestigacionModel.findAll();
+      const ciclosAcademicos = await this.ciclosAcademicosModel.findAll();
+      
+      // Obtener usuarios para asignar como directores/estudiantes
+      const allUsers = await this.userModel.findWithRole();
+      const directores = allUsers.filter(user => 
+          user.rol_nombre === 'Director de Proyecto' || 
+          user.rol_nombre === 'Administrador General'
+      );
+      const estudiantes = allUsers.filter(u => u.rol_nombre === 'Estudiante');
+
+      res.render('admin/project-new', {
+        title: 'Crear Nuevo Proyecto',
+        user,
+        lineasInvestigacion,
+        ciclosAcademicos,
+        directores,
+        estudiantes,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in newProject:', error);
+      req.flash('error', 'Error al cargar el formulario de nuevo proyecto');
+      res.redirect('/admin/projects');
+    }
+  }
+
+  // Mostrar formulario para agregar nuevo usuario
+  async newUser(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener todos los roles disponibles
+      const roles = await this.roleModel.findAll();
+
+      res.render('admin/user-new', {
+        title: 'Agregar Nuevo Usuario',
+        user,
+        roles,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in newUser:', error);
+      req.flash('error', 'Error al cargar el formulario de nuevo usuario');
+      res.redirect('/admin/users');
+    }
+  }
+
+  // Crear nuevo proyecto
+  async createProject(req, res) {
+    try {
+      // Verificar permisos de administrador
+      const user = req.session.user;
+      if (!user || !['Administrador General', 'Coordinador Académico'].includes(user.rol_nombre)) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'No tienes permisos para crear proyectos' 
+        });
+      }
+
+      const { titulo, descripcion, estudiante_id, director_id, linea_investigacion_id, ciclo_academico_id, estado, fecha_inicio, fecha_fin } = req.body;
+
+      // Validaciones
+      if (!titulo || !descripcion || !estudiante_id || !director_id || !ciclo_academico_id || !fecha_inicio || !fecha_fin) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Todos los campos obligatorios deben ser completados (título, descripción, estudiante, director, ciclo académico, fecha de inicio y fecha de fin)' 
+        });
+      }
+
+      // Validar que la fecha de fin sea posterior a la fecha de inicio
+      if (new Date(fecha_fin) <= new Date(fecha_inicio)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'La fecha de fin debe ser posterior a la fecha de inicio' 
+        });
+      }
+
+      // Crear el proyecto usando los campos existentes de la base de datos
+      const projectData = {
+        titulo,
+        descripcion,
+        estudiante_id: parseInt(estudiante_id),
+        director_id: parseInt(director_id),
+        linea_investigacion_id: linea_investigacion_id ? parseInt(linea_investigacion_id) : null,
+        ciclo_academico_id: parseInt(ciclo_academico_id),
+        estado: estado || 'borrador',
+        fecha_inicio,
+        fecha_fin
+        // fecha_propuesta se establece automáticamente con CURRENT_TIMESTAMP
+        // fecha_aprobacion y fecha_finalizacion se establecerán cuando corresponda
+      };
+
+      const projectId = await this.projectModel.create(projectData);
+
+      res.json({ 
+        success: true, 
+        message: 'Proyecto creado exitosamente',
+        projectId 
+      });
+
+    } catch (error) {
+      console.error('Error al crear proyecto:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor' 
+      });
+    }
+  }
+
+  // Actualizar proyecto
+  async updateProject(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+
+      const { projectId } = req.params;
+      const { titulo, descripcion, linea_investigacion_id, ciclo_academico_id, director_id, estudiante_id, estado, fecha_inicio, fecha_fin } = req.body;
+
+      // Validar que el proyecto existe
+      const existingProject = await this.projectModel.findById(projectId);
+      if (!existingProject) {
+        return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
+      }
+
+      // Validar fechas si se proporcionan
+      if (fecha_inicio && fecha_fin && new Date(fecha_fin) <= new Date(fecha_inicio)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'La fecha de fin debe ser posterior a la fecha de inicio' 
+        });
+      }
+
+      // Actualizar el proyecto
+      const updateData = {
+        titulo,
+        descripcion,
+        linea_investigacion_id,
+        ciclo_academico_id,
+        director_id,
+        estudiante_id,
+        estado,
+        fecha_inicio,
+        fecha_fin
+      };
+
+      await this.projectModel.update(projectId, updateData);
+      
+      res.json({ success: true, message: 'Proyecto actualizado exitosamente.' });
+    } catch (error) {
+      console.error('Error updating project:', error);
+      res.status(500).json({ success: false, message: 'Error al actualizar el proyecto.' });
+    }
+  }
+
+  // Cambiar estado del proyecto
+  async changeProjectStatus(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+
+      const { projectId } = req.params; // Cambiar de 'id' a 'projectId'
+      const { estado } = req.body;
+
+      // Verificar que el ID no sea undefined
+      if (!projectId) {
+        return res.status(400).json({ success: false, message: 'ID de proyecto requerido.' });
+      }
+
+      // Validar estado
+      const validStates = ['borrador', 'enviado', 'en_revision', 'aprobado', 'rechazado', 'en_desarrollo', 'finalizado'];
+      if (!validStates.includes(estado)) {
+        return res.status(400).json({ success: false, message: 'Estado no válido.' });
+      }
+
+      // Verificar que el proyecto existe
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
+      }
+
+      // Actualizar estado usando updateStatus del modelo
+      await this.projectModel.updateStatus(projectId, estado);
+      
+      res.json({ success: true, message: 'Estado del proyecto actualizado exitosamente.' });
+    } catch (error) {
+      console.error('Error changing project status:', error);
+      res.status(500).json({ success: false, message: 'Error al cambiar el estado del proyecto.' });
+    }
+  }
+
+  // Completar proyecto
+  async completeProject(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+
+      const { projectId } = req.params;
+      
+      // Verificar que el ID no sea undefined
+      if (!projectId) {
+        return res.status(400).json({ success: false, message: 'ID de proyecto requerido.' });
+      }
+
+      // Verificar que el proyecto existe
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
+      }
+
+      // Verificar que el proyecto no esté ya finalizado
+      if (project.estado === 'finalizado') {
+        return res.status(400).json({ success: false, message: 'El proyecto ya está finalizado.' });
+      }
+
+      // Actualizar estado a finalizado y establecer fecha de finalización
+      const updateData = {
+        estado: 'finalizado',
+        fecha_finalizacion: new Date()
+      };
+      
+      await this.projectModel.update(projectId, updateData);
+      
+      res.json({ success: true, message: 'Proyecto completado exitosamente.' });
+    } catch (error) {
+      console.error('Error completing project:', error);
+      res.status(500).json({ success: false, message: 'Error al completar el proyecto.' });
+    }
+  }
+
+  // Obtener detalles del proyecto
+  async getProjectDetails(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+
+      const { projectId } = req.params; // Cambiar de 'id' a 'projectId'
+      
+      // Verificar que el ID no sea undefined
+      if (!projectId) {
+        return res.status(400).json({ success: false, message: 'ID de proyecto requerido.' });
+      }
+      
+      // Obtener proyecto con detalles usando findWithDetails con condición
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
+      }
+      
+      const project = projects[0];
+      res.json({ success: true, project });
+    } catch (error) {
+      console.error('Error getting project details:', error);
+      res.status(500).json({ success: false, message: 'Error al obtener los detalles del proyecto.' });
+    }
+  }
+
+  // Eliminar proyecto
+  async deleteProject(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+
+      const { projectId } = req.params; // Cambiar de 'id' a 'projectId'
+      
+      // Verificar que el ID no sea undefined
+      if (!projectId) {
+        return res.status(400).json({ success: false, message: 'ID de proyecto requerido.' });
+      }
+      
+      // Verificar que el proyecto existe
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
+      }
+
+      // Verificar que el proyecto no tenga entregables asociados
+      const deliverables = await this.deliverableModel.findByProject(projectId); // Cambiar método
+      if (deliverables && deliverables.length > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'No se puede eliminar el proyecto porque tiene entregables asociados.' 
+        });
+      }
+
+      // Eliminar el proyecto
+      await this.projectModel.delete(projectId);
+
+      res.json({ success: true, message: 'Proyecto eliminado exitosamente.' });
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      res.status(500).json({ success: false, message: 'Error al eliminar el proyecto.' });
+    }
+  }
+
+  // Método para mostrar reportes del sistema
+  async reports(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener estadísticas de usuarios
+      const allUsers = await this.userModel.findWithRole();
+      const userStats = {
+        total: allUsers.length,
+        active: allUsers.filter(u => u.activo).length,
+        inactive: allUsers.filter(u => !u.activo).length,
+        byRole: {}
+      };
+      
+      // Contar usuarios por rol
+      allUsers.forEach(user => {
+        const roleName = user.rol_nombre || 'Sin rol';
+        userStats.byRole[roleName] = (userStats.byRole[roleName] || 0) + 1;
+      });
+
+      // Obtener estadísticas de proyectos
+      const allProjects = await this.projectModel.findWithDetails();
+      const projectStats = {
+        total: allProjects.length,
+        active: allProjects.filter(p => p.estado === 'Activo').length,
+        completed: allProjects.filter(p => p.estado === 'Completado').length,
+        pending: allProjects.filter(p => p.estado === 'Pendiente').length,
+        cancelled: allProjects.filter(p => p.estado === 'Cancelado').length,
+        byLine: {},
+        byCycle: {}
+      };
+      
+      // Contar proyectos por línea de investigación
+      allProjects.forEach(project => {
+        const line = project.linea_nombre || 'Sin línea';
+        projectStats.byLine[line] = (projectStats.byLine[line] || 0) + 1;
+        
+        const cycle = project.ciclo_nombre || 'Sin ciclo';
+        projectStats.byCycle[cycle] = (projectStats.byCycle[cycle] || 0) + 1;
+      });
+
+      // Obtener estadísticas de entregables
+      const allDeliverables = await this.deliverableModel.findWithProject();
+      const deliverableStats = {
+        total: allDeliverables.length,
+        pending: allDeliverables.filter(d => d.estado === 'Pendiente').length,
+        inProgress: allDeliverables.filter(d => d.estado === 'En Progreso').length,
+        completed: allDeliverables.filter(d => d.estado === 'Completado').length,
+        overdue: allDeliverables.filter(d => {
+          const today = new Date();
+          const dueDate = new Date(d.fecha_limite);
+          return dueDate < today && d.estado !== 'Completado';
+        }).length
+      };
+
+      // Obtener estadísticas de roles
+      const allRoles = await this.roleModel.findAll();
+      const roleStats = {
+        total: allRoles.length,
+        active: allRoles.filter(r => r.activo).length,
+        inactive: allRoles.filter(r => !r.activo).length
+      };
+
+      // Datos para gráficos (últimos 6 meses)
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      
+      const recentProjects = allProjects.filter(p => {
+        const createdDate = new Date(p.fecha_creacion);
+        return createdDate >= sixMonthsAgo;
+      });
+      
+      const recentDeliverables = allDeliverables.filter(d => {
+        const createdDate = new Date(d.fecha_creacion);
+        return createdDate >= sixMonthsAgo;
+      });
+
+      // Actividad mensual
+      const monthlyActivity = {
+        projects: {},
+        deliverables: {}
+      };
+      
+      // Generar datos mensuales
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyActivity.projects[monthKey] = 0;
+        monthlyActivity.deliverables[monthKey] = 0;
+      }
+      
+      recentProjects.forEach(project => {
+        const date = new Date(project.fecha_creacion);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyActivity.projects[monthKey] !== undefined) {
+          monthlyActivity.projects[monthKey]++;
+        }
+      });
+      
+      recentDeliverables.forEach(deliverable => {
+        const date = new Date(deliverable.fecha_creacion);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyActivity.deliverables[monthKey] !== undefined) {
+          monthlyActivity.deliverables[monthKey]++;
+        }
+      });
+
+      res.render('admin/reports', {
+        title: 'Reportes del Sistema',
+        user,
+        userStats,
+        projectStats,
+        deliverableStats,
+        roleStats,
+        monthlyActivity,
+        recentProjects: recentProjects.slice(0, 10),
+        recentDeliverables: recentDeliverables.slice(0, 10),
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin reports:', error);
+      req.flash('error', 'Error al cargar los reportes');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Método para gestionar configuraciones del sistema
+  async settings(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+  
+      // Obtener configuraciones actuales del sistema
+      const systemConfig = {
+        // Configuraciones generales
+        siteName: process.env.SITE_NAME || 'Sistema Académico',
+        siteDescription: process.env.SITE_DESCRIPTION || 'Sistema de gestión académica',
+        adminEmail: process.env.ADMIN_EMAIL || 'admin@sistema.edu',
+        
+        // Configuraciones de base de datos
+        dbHost: process.env.DB_HOST || 'localhost',
+        dbName: process.env.DB_NAME || 'sistema_academico',
+        
+        // Configuraciones de archivos
+        maxFileSize: process.env.MAX_FILE_SIZE || '10MB',
+        allowedFileTypes: process.env.ALLOWED_FILE_TYPES || 'pdf,doc,docx,jpg,png',
+        
+        // Configuraciones de notificaciones
+        emailNotifications: process.env.EMAIL_NOTIFICATIONS === 'true',
+        smsNotifications: process.env.SMS_NOTIFICATIONS === 'true',
+        
+        // Configuraciones de seguridad
+        sessionTimeout: process.env.SESSION_TIMEOUT || '30',
+        passwordMinLength: process.env.PASSWORD_MIN_LENGTH || '8',
+        requirePasswordChange: process.env.REQUIRE_PASSWORD_CHANGE === 'true',
+        
+        // Configuraciones académicas
+        defaultProjectDuration: process.env.DEFAULT_PROJECT_DURATION || '12',
+        evaluationDeadlineDays: process.env.EVALUATION_DEADLINE_DAYS || '7',
+        autoAssignEvaluators: process.env.AUTO_ASSIGN_EVALUATORS === 'true'
+      };
+  
+      // Obtener estadísticas del sistema para mostrar en configuración
+      const systemStats = {
+        totalUsers: (await this.userModel.findWithRole()).length,
+        totalProjects: (await this.projectModel.findAll()).length,
+        totalRoles: (await this.roleModel.findAll()).length,
+        diskUsage: '0 MB', // Placeholder - se puede implementar cálculo real
+        lastBackup: 'No disponible' // Placeholder - se puede implementar sistema de backup
+      };
+  
+      res.render('admin/settings', {
+        title: 'Configuración del Sistema',
+        user,
+        systemConfig,
+        systemStats,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin settings:', error);
+      req.flash('error', 'Error al cargar la configuración del sistema');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Método para actualizar configuraciones del sistema
+  async updateSettings(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
+      }
+  
+      const {
+        siteName,
+        siteDescription,
+        adminEmail,
+        maxFileSize,
+        allowedFileTypes,
+        emailNotifications,
+        smsNotifications,
+        sessionTimeout,
+        passwordMinLength,
+        requirePasswordChange,
+        defaultProjectDuration,
+        evaluationDeadlineDays,
+        autoAssignEvaluators
+      } = req.body;
+  
+      // Validar datos requeridos
+      if (!siteName || !adminEmail) {
+        return res.status(400).json({ success: false, message: 'Nombre del sitio y email del administrador son requeridos.' });
+      }
+  
+      // Aquí se implementaría la lógica para actualizar las configuraciones
+      // Por ahora, solo simulamos la actualización exitosa
+      // En una implementación real, se guardarían en base de datos o archivo de configuración
+      
+      req.flash('success', 'Configuraciones actualizadas exitosamente.');
+      res.json({ success: true, message: 'Configuraciones actualizadas exitosamente.' });
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      res.status(500).json({ success: false, message: 'Error al actualizar las configuraciones.' });
+    }
+  }
+
+  // =============================================
+  // MÉTODOS DEL CALENDARIO DE TAREAS
+  // =============================================
+
+  // Mostrar página del calendario
+  async calendar(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener proyectos activos para el selector
+      const projects = await this.projectModel.findAll();
+      const activeProjects = projects.filter(p => p.activo);
+
+      res.render('admin/calendar', {
+        title: 'Calendario de Tareas',
+        user,
+        projects: activeProjects,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin calendar:', error);
+      req.flash('error', 'Error al cargar el calendario de tareas');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Obtener tareas para el calendario
+  async getCalendarTasks(req, res) {
+    try {
+      const { start, end, priority } = req.query;
+      
+      // Obtener tareas con detalles
+      const tasks = await this.taskModel.findWithDetails();
+      
+      // Filtrar por rango de fechas si se proporciona
+      let filteredTasks = tasks;
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        filteredTasks = tasks.filter(task => {
+          const taskDate = new Date(task.fecha_limite);
+          return taskDate >= startDate && taskDate <= endDate;
+        });
+      }
+      
+      // Filtrar por prioridad si se proporciona
+      if (priority && priority !== 'all') {
+        filteredTasks = filteredTasks.filter(task => task.prioridad === priority);
+      }
+      
+      // Formatear tareas para el calendario
+      const calendarTasks = filteredTasks.map(task => ({
+        id: task.id,
+        title: task.titulo,
+        description: task.descripcion,
+        start: task.fecha_limite,
+        priority: task.prioridad,
+        status: task.estado,
+        project: {
+          id: task.proyecto_id,
+          name: task.proyecto_titulo
+        },
+        assignee: {
+          name: `${task.asignado_nombre || ''} ${task.asignado_apellido || ''}`.trim(),
+          email: task.asignado_email,
+          avatar: task.asignado_avatar
+        },
+        type: task.tipo || 'task'
+      }));
+      
+      res.json({ success: true, tasks: calendarTasks });
+    } catch (error) {
+      console.error('Error getting calendar tasks:', error);
+      res.status(500).json({ success: false, message: 'Error al obtener las tareas' });
+    }
+  }
+
+  // Crear nueva tarea
+  async createCalendarTask(req, res) {
+    try {
+      const { title, description, date, time, priority, type, project_id } = req.body;
+      
+      // Validar campos requeridos
+      if (!title || !date || !project_id) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Título, fecha y proyecto son requeridos' 
+        });
+      }
+      
+      // Combinar fecha y hora
+      const dateTime = time ? `${date} ${time}` : `${date} 23:59:59`;
+      
+      // Obtener fase por defecto (primera fase activa)
+      const fases = await new BaseModel('fases_proyecto').findAll();
+      const defaultFase = fases.find(f => f.activo) || fases[0];
+      
+      const taskData = {
+        proyecto_id: parseInt(project_id),
+        fase_id: defaultFase?.id || 1,
+        titulo: title,
+        descripcion: description || '',
+        fecha_limite: dateTime,
+        tipo_enfoque: type || 'task'
+      };
+      
+      const taskId = await this.taskModel.createTask(taskData);
+      
+      // Obtener la tarea creada con detalles
+      const newTask = await this.taskModel.findById(taskId);
+      
+      res.json({ 
+        success: true, 
+        message: 'Tarea creada exitosamente',
+        task: {
+          id: newTask.id,
+          title: newTask.titulo,
+          description: newTask.descripcion,
+          start: newTask.fecha_limite,
+          priority: priority || 'medium',
+          status: newTask.estado,
+          type: type || 'task'
+        }
+      });
+    } catch (error) {
+      console.error('Error creating calendar task:', error);
+      res.status(500).json({ success: false, message: 'Error al crear la tarea' });
+    }
+  }
+
+  // Actualizar tarea
+  async updateCalendarTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { title, description, date, time, priority, type, project_id } = req.body;
+      
+      // Validar que la tarea existe
+      const existingTask = await this.taskModel.findById(taskId);
+      if (!existingTask) {
+        return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
+      }
+      
+      // Preparar datos de actualización
+      const updateData = {};
+      if (title) updateData.titulo = title;
+      if (description !== undefined) updateData.descripcion = description;
+      if (project_id) updateData.proyecto_id = parseInt(project_id);
+      if (date) {
+        const dateTime = time ? `${date} ${time}` : `${date} 23:59:59`;
+        updateData.fecha_limite = dateTime;
+      }
+      
+      // Actualizar en base de datos
+      await this.taskModel.update(taskId, updateData);
+      
+      res.json({ 
+        success: true, 
+        message: 'Tarea actualizada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error updating calendar task:', error);
+      res.status(500).json({ success: false, message: 'Error al actualizar la tarea' });
+    }
+  }
+
+  // Eliminar tarea
+  async deleteCalendarTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      
+      // Validar que la tarea existe
+      const existingTask = await this.taskModel.findById(taskId);
+      if (!existingTask) {
+        return res.status(404).json({ success: false, message: 'Tarea no encontrada' });
+      }
+      
+      // Eliminar tarea
+      await this.taskModel.delete(taskId);
+      
+      res.json({ 
+        success: true, 
+        message: 'Tarea eliminada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error deleting calendar task:', error);
+      res.status(500).json({ success: false, message: 'Error al eliminar la tarea' });
+    }
+  }
+
+  // =============================================
+  // MÉTODOS DE GESTIÓN DE INVITACIONES
+  // =============================================
+
+  // Mostrar página de gestión de invitaciones
+  async invitations(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      // Obtener todos los proyectos para el selector
+      const projects = await this.projectModel.findAll();
+      
+      // Obtener estadísticas generales de invitaciones
+      const totalInvitations = await this.projectModel.countAllInvitations();
+      const activeInvitations = await this.projectModel.countActiveInvitations();
+      const totalMembers = await this.projectModel.countAllMembers();
+      
+      const stats = {
+        total: totalInvitations,
+        active: activeInvitations,
+        expired: totalInvitations - activeInvitations,
+        members: totalMembers
+      };
+
+      res.render('admin/invitations', {
+        title: 'Gestión de Invitaciones',
+        user,
+        projects: projects || [],
+        stats,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in admin invitations:', error);
+      req.flash('error', 'Error al cargar la gestión de invitaciones');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  // Obtener invitaciones de un proyecto específico
+  async getProjectInvitations(req, res) {
+    try {
+      const { projectId } = req.params;
+      const { status, search } = req.query;
+      
+      // Obtener invitaciones del proyecto con filtros
+      const invitations = await this.projectModel.getProjectInvitations(projectId, {
+        status,
+        search
+      });
+      
+      res.json({
+        success: true,
+        data: invitations
+      });
+    } catch (error) {
+      console.error('Error getting project invitations:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al obtener las invitaciones del proyecto'
+      });
+    }
+  }
+
+  // Crear nueva invitación
+  async createInvitation(req, res) {
+    try {
+      const { proyecto_id, max_usos, fecha_expiracion, descripcion } = req.body;
+      const user = req.session.user;
+      
+      // Validar datos requeridos
+      if (!proyecto_id || !max_usos) {
+        return res.status(400).json({
+          success: false,
+          message: 'Proyecto y máximo de usos son requeridos'
+        });
+      }
+      
+      // Crear la invitación
+      const invitationData = {
+        proyecto_id: parseInt(proyecto_id),
+        creado_por_id: user.id,
+        max_usos: parseInt(max_usos),
+        fecha_expiracion: fecha_expiracion || null,
+        descripcion: descripcion || null
+      };
+      
+      const invitation = await this.projectModel.createInvitation(invitationData);
+      
+      res.json({
+        success: true,
+        message: 'Código de invitación creado exitosamente',
+        data: invitation
+      });
+    } catch (error) {
+      console.error('Error creating invitation:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al crear el código de invitación'
+      });
+    }
+  }
+
+  // Actualizar invitación (activar/desactivar)
+  async updateInvitation(req, res) {
+    try {
+      const { invitationId } = req.params;
+      const { activo, max_usos, fecha_expiracion, descripcion } = req.body;
+      
+      const updateData = {};
+      if (typeof activo !== 'undefined') updateData.activo = activo;
+      if (max_usos) updateData.max_usos = parseInt(max_usos);
+      if (fecha_expiracion !== undefined) updateData.fecha_expiracion = fecha_expiracion;
+      if (descripcion !== undefined) updateData.descripcion = descripcion;
+      
+      await this.projectModel.updateInvitation(invitationId, updateData);
+      
+      res.json({
+        success: true,
+        message: 'Invitación actualizada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error updating invitation:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al actualizar la invitación'
+      });
+    }
+  }
+
+  // Eliminar invitación
+  async deleteInvitation(req, res) {
+    try {
+      const { invitationId } = req.params;
+      
+      await this.projectModel.deleteInvitation(invitationId);
+      
+      res.json({
+        success: true,
+        message: 'Invitación eliminada exitosamente'
+      });
+    } catch (error) {
+      console.error('Error deleting invitation:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al eliminar la invitación'
+      });
+    }
+  }
+
+  // Obtener estadísticas de invitaciones de un proyecto
+  async getInvitationStats(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      const stats = await this.projectModel.getInvitationStats(projectId);
+      
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error) {
+      console.error('Error getting invitation stats:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al obtener las estadísticas'
+      });
+    }
+  }
+
+  // Obtener miembros de un proyecto
+  async getProjectMembers(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      const members = await this.projectModel.getProjectMembers(projectId);
+      
+      res.json({
+        success: true,
+        data: members
+      });
+    } catch (error) {
+      console.error('Error getting project members:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al obtener los miembros del proyecto'
+      });
+    }
+  }
+
+  // Mostrar página de detalles del proyecto (nueva función)
+  async showProjectDetails(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      const { projectId } = req.params;
+      
+      // Obtener proyecto con detalles
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        req.flash('error', 'Proyecto no encontrado.');
+        return res.redirect('/admin/projects');
+      }
+      
+      const project = projects[0];
+      
+      // Obtener datos adicionales
+      const members = await this.projectModel.getProjectMembers(projectId);
+      const invitations = await this.projectModel.getProjectInvitations(projectId);
+      const tasks = await this.projectModel.getProjectTasks(projectId);
+      const deliverables = await this.deliverableModel.findByProject(projectId);
+      
+      res.render('admin/project-detail', {
+        title: `Admin: ${project.titulo}`,
+        user,
+        project,
+        members,
+        invitations,
+        tasks,
+        deliverables,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error showing project details:', error);
+      req.flash('error', 'Error al cargar los detalles del proyecto');
+      res.redirect('/admin/projects');
+    }
+  }
+
+  // Mostrar formulario para editar proyecto
+  async showEditProject(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para acceder a esta página.');
+        return res.redirect('/dashboard');
+      }
+
+      const { projectId } = req.params;
+      
+      // Obtener proyecto con detalles
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        req.flash('error', 'Proyecto no encontrado.');
+        return res.redirect('/admin/projects');
+      }
+      
+      const project = projects[0];
+      
+      // Obtener datos necesarios para el formulario
+      const lineasInvestigacion = await this.lineasInvestigacionModel.findAll();
+      const ciclosAcademicos = await this.ciclosAcademicosModel.findAll();
+      
+      // Obtener usuarios para asignar como directores/estudiantes
+      const allUsers = await this.userModel.findWithRole();
+      const directores = allUsers.filter(user => 
+          user.rol_nombre === 'Director de Proyecto' || 
+          user.rol_nombre === 'Administrador General'
+      );
+      const estudiantes = allUsers.filter(u => u.rol_nombre === 'Estudiante');
+      
+      res.render('admin/project-edit', {
+        title: `Editar Proyecto: ${project.titulo}`,
+        user,
+        project,
+        lineasInvestigacion,
+        ciclosAcademicos,
+        directores,
+        estudiantes,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error showing edit project:', error);
+      req.flash('error', 'Error al cargar el formulario de edición');
+      res.redirect('/admin/projects');
+    }
+  }
+
+  // =============================================
+  // GESTIÓN DE ENTREGABLES
+  // =============================================
+
+  async deliverables(req, res) {
+    try {
+      const user = req.session.user;
+      const filter = req.query.filter; // 'overdue', 'pending', 'completed', etc.
+      
+      let deliverables = [];
+      
+      if (filter === 'overdue') {
+        deliverables = await this.deliverableModel.findOverdue();
+      } else if (filter === 'pending') {
+        deliverables = await this.deliverableModel.findPending();
+      } else {
+        // Obtener todos los entregables con información del proyecto
+        deliverables = await this.deliverableModel.findWithProject();
+      }
+      
+      // Calcular días vencidos para entregables vencidos
+      deliverables = deliverables.map(deliverable => {
+        const today = new Date();
+        const dueDate = new Date(deliverable.fecha_entrega);
+        const diffTime = today - dueDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return {
+          ...deliverable,
+          dias_vencido: diffDays > 0 && deliverable.estado === 'pendiente' ? diffDays : 0,
+          is_overdue: diffDays > 0 && deliverable.estado === 'pendiente'
+        };
+      });
+      
+      res.render('admin/deliverables', {
+        title: 'Gestión de Entregables',
+        user,
+        deliverables,
+        filter: filter || 'all',
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in deliverables:', error);
+      req.flash('error', 'Error al cargar los entregables');
+      res.redirect('/dashboard/admin');
+    }
+  }
+
+  async showDeliverableDetails(req, res) {
+    try {
+      const user = req.session.user;
+      const deliverableId = req.params.deliverableId;
+      
+      // Obtener detalles del entregable
+      const deliverable = await this.deliverableModel.findById(deliverableId);
+      
+      if (!deliverable) {
+        req.flash('error', 'Entregable no encontrado');
+        return res.redirect('/admin/deliverables');
+      }
+      
+      // Obtener información del proyecto asociado
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      
+      // Calcular días vencidos si aplica
+      const today = new Date();
+      const dueDate = new Date(deliverable.fecha_entrega);
+      const diffTime = today - dueDate;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const deliverableWithDetails = {
+        ...deliverable,
+        project,
+        dias_vencido: diffDays > 0 && deliverable.estado === 'pendiente' ? diffDays : 0,
+        is_overdue: diffDays > 0 && deliverable.estado === 'pendiente'
+      };
+      
+      res.render('admin/deliverable-detail', {
+        title: `Entregable: ${deliverable.titulo}`,
+        user,
+        deliverable: deliverableWithDetails,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in showDeliverableDetails:', error);
+      req.flash('error', 'Error al cargar los detalles del entregable');
+      res.redirect('/admin/deliverables');
+    }
+  }
+
+  async updateDeliverableStatus(req, res) {
+    try {
+      const deliverableId = req.params.deliverableId;
+      const { estado, comentarios } = req.body;
+      
+      const result = await this.deliverableModel.update(deliverableId, {
+        estado,
+        comentarios,
+        fecha_actualizacion: new Date()
+      });
+      
+      if (result.affectedRows > 0) {
+        req.flash('success', 'Estado del entregable actualizado correctamente');
+      } else {
+        req.flash('error', 'No se pudo actualizar el estado del entregable');
+      }
+      
+      res.redirect(`/admin/deliverables/${deliverableId}`);
+    } catch (error) {
+      console.error('Error in updateDeliverableStatus:', error);
+      req.flash('error', 'Error al actualizar el estado del entregable');
+      res.redirect('/admin/deliverables');
+    }
+  }
+
+  // =============================================
+  // GESTIÓN DE TAREAS - WORKFLOW TIPO JIRA
+  // =============================================
+
+  // Mostrar formulario para crear nueva tarea
+  async showNewTask(req, res) {
+    try {
+      const user = req.session.user;
+      const { projectId } = req.params;
+      
+      // Verificar permisos
+      if (!user) {
+        req.flash('error', 'Debes iniciar sesión para acceder.');
+        return res.redirect('/login');
+      }
+
+      // Obtener proyecto
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        req.flash('error', 'Proyecto no encontrado.');
+        return res.redirect('/admin/projects');
+      }
+      
+      const project = projects[0];
+      
+      // Obtener miembros del proyecto para asignación
+      const members = await this.projectModel.getProjectMembers(projectId);
+      
+      // Obtener fases del proyecto
+      const fases = await new BaseModel('fases_proyecto').findAll();
+      
+      res.render('admin/task-create', {
+        title: `Nueva Tarea - ${project.titulo}`,
+        user,
+        project,
+        members,
+        fases,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in showNewTask:', error);
+      req.flash('error', 'Error al cargar el formulario de nueva tarea');
+      res.redirect('/admin/projects');
+    }
+  }
+
+  // Crear nueva tarea
+  async createTask(req, res) {
+    try {
+      const { projectId } = req.params;
+      const {
+        titulo,
+        descripcion,
+        fase_id,
+        fecha_limite,
+        prioridad,
+        asignado_a,
+        estimacion_horas,
+        etiquetas,
+        estado_workflow
+      } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        req.flash('error', 'Debes iniciar sesión para acceder.');
+        return res.redirect('/login');
+      }
+
+      if (!titulo || titulo.trim() === '') {
+        req.flash('error', 'El título es requerido.');
+        return res.redirect(`/admin/projects/${projectId}/tasks/new`);
+      }
+
+      const taskData = {
+        proyecto_id: parseInt(projectId),
+        fase_id: fase_id ? parseInt(fase_id) : 1,
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : '',
+        fecha_limite: fecha_limite || null,
+        prioridad: prioridad || 'media',
+        asignado_a: asignado_a || null,
+        estimacion_horas: estimacion_horas ? parseFloat(estimacion_horas) : null,
+        etiquetas: etiquetas || null,
+        estado_workflow: estado_workflow || 'todo'
+      };
+
+      const taskId = await this.taskModel.createTask(taskData);
+      
+      if (taskId) {
+        // Registrar en historial
+        await this.taskModel.addToHistory(taskId, user.id, 'tarea_creada', {
+          descripcion: 'Tarea creada'
+        });
+        
+        req.flash('success', 'Tarea creada exitosamente.');
+        res.redirect(`/admin/projects/${projectId}/tasks/kanban`);
+      } else {
+        req.flash('error', 'Error al crear la tarea.');
+        res.redirect(`/admin/projects/${projectId}/tasks/new`);
+      }
+    } catch (error) {
+      console.error('Error in createTask:', error);
+      req.flash('error', 'Error al crear la tarea.');
+      res.redirect(`/admin/projects/${req.params.projectId}/tasks/new`);
+    }
+  }
+
+  // Mostrar vista Kanban de tareas
+  async showTaskKanban(req, res) {
+    try {
+      const user = req.session.user;
+      const { projectId } = req.params;
+      
+      // Verificar permisos
+      if (!user) {
+        req.flash('error', 'Debes iniciar sesión para acceder.');
+        return res.redirect('/login');
+      }
+
+      // Obtener proyecto
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        req.flash('error', 'Proyecto no encontrado.');
+        return res.redirect('/admin/projects');
+      }
+      
+      const project = projects[0];
+      
+      // Obtener tareas agrupadas por estado de workflow
+      const tasksGrouped = await this.taskModel.getProjectTasksWithWorkflow(projectId);
+      
+      // Obtener miembros del proyecto para asignación
+      const members = await this.projectModel.getProjectMembers(projectId);
+      
+      res.render('admin/task-kanban', {
+        title: `Tareas - ${project.titulo}`,
+        user,
+        project,
+        tasksGrouped,
+        members,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in showTaskKanban:', error);
+      req.flash('error', 'Error al cargar el tablero de tareas');
+      res.redirect('/admin/projects');
+    }
+  }
+
+  // API para obtener tareas en formato JSON
+  async getTasksAPI(req, res) {
+    try {
+      const { projectId } = req.params;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      const tasksGrouped = await this.taskModel.getProjectTasksWithWorkflow(projectId);
+      
+      res.json({
+        success: true,
+        data: tasksGrouped
+      });
+    } catch (error) {
+      console.error('Error in getTasksAPI:', error);
+      res.status(500).json({ error: 'Error al obtener las tareas' });
+    }
+  }
+
+  // API para obtener tareas de un proyecto (alias para compatibilidad con rutas)
+  async getProjectTasksAPI(req, res) {
+    return this.getTasksAPI(req, res);
+  }
+
+  // Actualizar estado de workflow de una tarea
+  async updateTaskWorkflowStatus(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { status } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      // Validar estado
+      const validStatuses = ['todo', 'in_progress', 'done'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Estado inválido' });
+      }
+
+      const success = await this.taskModel.updateWorkflowStatus(taskId, status, user.id);
+      
+      if (success) {
+        res.json({ success: true, message: 'Estado actualizado correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo actualizar el estado' });
+      }
+    } catch (error) {
+      console.error('Error in updateTaskWorkflowStatus:', error);
+      res.status(500).json({ error: 'Error al actualizar el estado' });
+    }
+  }
+
+  // Asignar tarea a usuario
+  async assignTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { userId } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      const success = await this.taskModel.assignTaskToUser(taskId, userId, user.id);
+      
+      if (success) {
+        res.json({ success: true, message: 'Tarea asignada correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo asignar la tarea' });
+      }
+    } catch (error) {
+      console.error('Error in assignTask:', error);
+      res.status(500).json({ error: 'Error al asignar la tarea' });
+    }
+  }
+
+  // Completar tarea con archivos
+  async completeTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { desarrollo_descripcion, horas_trabajadas } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      // Manejar archivos adjuntos si existen
+      let archivos_adjuntos = [];
+      if (req.files && req.files.length > 0) {
+        archivos_adjuntos = req.files.map(file => ({
+          nombre_original: file.originalname,
+          nombre_archivo: file.filename,
+          ruta: file.path,
+          tipo_mime: file.mimetype,
+          tamaño: file.size
+        }));
+      }
+
+      const completionData = {
+        desarrollo_descripcion,
+        archivos_adjuntos,
+        horas_trabajadas: parseFloat(horas_trabajadas) || 0
+      };
+
+      const success = await this.taskModel.completeTask(taskId, completionData, user.id);
+      
+      if (success) {
+        res.json({ success: true, message: 'Tarea completada correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo completar la tarea' });
+      }
+    } catch (error) {
+      console.error('Error in completeTask:', error);
+      res.status(500).json({ error: 'Error al completar la tarea' });
+    }
+  }
+
+  // Agregar comentario a tarea
+  async addTaskComment(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { comentario, tipo } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      if (!comentario || comentario.trim() === '') {
+        return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+      }
+
+      // Manejar archivo adjunto si existe
+      let archivo_adjunto = null;
+      if (req.file) {
+        archivo_adjunto = {
+          nombre_original: req.file.originalname,
+          nombre_archivo: req.file.filename,
+          ruta: req.file.path,
+          tipo_mime: req.file.mimetype,
+          tamaño: req.file.size
+        };
+      }
+
+      const commentId = await this.taskModel.addComment(
+        taskId, 
+        user.id, 
+        comentario.trim(), 
+        tipo || 'comentario',
+        archivo_adjunto ? JSON.stringify(archivo_adjunto) : null
+      );
+      
+      if (commentId) {
+        res.json({ success: true, message: 'Comentario agregado correctamente', commentId });
+      } else {
+        res.status(400).json({ error: 'No se pudo agregar el comentario' });
+      }
+    } catch (error) {
+      console.error('Error in addTaskComment:', error);
+      res.status(500).json({ error: 'Error al agregar el comentario' });
+    }
+  }
+
+  // Obtener comentarios de una tarea
+  async getTaskComments(req, res) {
+    try {
+      const { taskId } = req.params;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      const comments = await this.taskModel.getComments(taskId);
+      
+      res.json({ success: true, data: comments });
+    } catch (error) {
+      console.error('Error in getTaskComments:', error);
+      res.status(500).json({ error: 'Error al obtener los comentarios' });
+    }
+  }
+
+  // Obtener historial de una tarea
+  async getTaskHistory(req, res) {
+    try {
+      const { taskId } = req.params;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      const history = await this.taskModel.getHistory(taskId);
+      
+      res.json({ success: true, data: history });
+    } catch (error) {
+      console.error('Error in getTaskHistory:', error);
+      res.status(500).json({ error: 'Error al obtener el historial' });
+    }
+  }
+
+
+
+  // Obtener detalles completos de una tarea (para modal)
+  async getTaskDetails(req, res) {
+    try {
+      const { taskId } = req.params;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      const task = await this.taskModel.getTaskDetails(taskId);
+      
+      if (!task) {
+        return res.status(404).json({ error: 'Tarea no encontrada' });
+      }
+
+      // Obtener comentarios
+      const comments = await this.taskModel.getComments(taskId);
+      
+      // Obtener historial
+      const history = await this.taskModel.getHistory(taskId);
+      
+      res.json({ 
+        success: true, 
+        data: {
+          task,
+          comments,
+          history
+        }
+      });
+    } catch (error) {
+      console.error('Error in getTaskDetails:', error);
+      res.status(500).json({ error: 'Error al obtener los detalles de la tarea' });
+    }
+  }
+
+  // Actualizar tarea (título, descripción, etc.)
+  async updateTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { titulo, descripcion, fecha_limite, prioridad, estimacion_horas, etiquetas } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      if (!titulo || titulo.trim() === '') {
+        return res.status(400).json({ error: 'El título es requerido' });
+      }
+
+      // Preparar datos para actualizar
+      const updateData = {
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : '',
+        fecha_limite: fecha_limite || null,
+        prioridad: prioridad || 'media',
+        estimacion_horas: estimacion_horas ? parseFloat(estimacion_horas) : null,
+        etiquetas: etiquetas || null,
+        updated_at: new Date()
+      };
+
+      // Actualizar en base de datos
+      const success = await this.taskModel.update(taskId, updateData);
+      
+      if (success) {
+        // Registrar en historial
+        await this.taskModel.addToHistory(taskId, user.id, 'tarea_actualizada', {
+          descripcion: 'Información de la tarea actualizada'
+        });
+        
+        res.json({ success: true, message: 'Tarea actualizada correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo actualizar la tarea' });
+      }
+    } catch (error) {
+      console.error('Error in updateTask:', error);
+      res.status(500).json({ error: 'Error al actualizar la tarea' });
+    }
+  }
+
+  // Eliminar tarea
+  async deleteTask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      // Verificar permisos (solo admin o director de proyecto)
+      if (user.rol_nombre !== 'Administrador General' && user.rol_nombre !== 'Director de Proyecto') {
+        return res.status(403).json({ error: 'No tienes permisos para eliminar tareas' });
+      }
+
+      const success = await this.taskModel.delete(taskId);
+      
+      if (success) {
+        res.json({ success: true, message: 'Tarea eliminada correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo eliminar la tarea' });
+      }
+    } catch (error) {
+      console.error('Error in deleteTask:', error);
+      res.status(500).json({ error: 'Error al eliminar la tarea' });
+    }
+  }
+}
+
+module.exports = AdminController;

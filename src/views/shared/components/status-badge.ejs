@@ -1,0 +1,13 @@
+<%# 
+  Componente reutilizable para badges de estado
+  Parámetros:
+  - status: estado a mostrar
+  - size: tamaño del badge ('sm', 'md', 'lg')
+%>
+<% 
+    const statusClass = (status || 'pending').toLowerCase().replace(/\s+/g, '-');
+    const sizeClass = size ? 'badge-' + size : '';
+%>
+<span class="status-badge status-<%= statusClass %> <%= sizeClass %>">
+    <%= status || 'Pendiente' %>
+</span>

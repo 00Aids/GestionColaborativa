@@ -1,0 +1,26 @@
+<!-- Scripts globales -->
+<script>
+    // Función para mostrar alertas
+    function showAlert(message, type = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        const container = document.querySelector('.container') || document.body;
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    // Confirmar acciones destructivas
+    function confirmAction(message) {
+        return confirm(message || '¿Estás seguro de realizar esta acción?');
+    }
+</script>
+
+<!-- Scripts específicos de la página -->
+<% if (typeof pageScripts !== 'undefined') { %>
+    <%- pageScripts %>
+<% } %>

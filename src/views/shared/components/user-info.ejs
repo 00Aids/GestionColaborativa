@@ -1,0 +1,36 @@
+<%# 
+  Componente reutilizable para información de usuario
+  Parámetros:
+  - user: objeto del usuario
+  - showRole: mostrar rol (opcional)
+  - showAvatar: mostrar avatar (opcional, por defecto true)
+%>
+<div class="user-info <%= showAvatar !== false ? 'with-avatar' : '' %>">
+    <% if (showAvatar !== false) { %>
+        <div class="user-avatar">
+            <% if (user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="<%= user.nombres || user.name %>">
+            <% } else { %>
+                <%= (user.nombres || user.name || 'U').charAt(0).toUpperCase() %>
+            <% } %>
+        </div>
+    <% } %>
+    
+    <div class="user-details">
+        <div class="user-name">
+            <%= user.nombres || user.name %> <%= user.apellidos || user.lastname || '' %>
+        </div>
+        
+        <% if (showRole && (user.rol_nombre || user.role)) { %>
+            <div class="user-role">
+                <%= user.rol_nombre || user.role %>
+            </div>
+        <% } %>
+        
+        <% if (user.email) { %>
+            <div class="user-email">
+                <%= user.email %>
+            </div>
+        <% } %>
+    </div>
+</div>

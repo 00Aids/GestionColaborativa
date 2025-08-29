@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario de Tareas - Administrador | Sistema de Gestión</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SIDEBAR MODERNO ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header .subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 25px 8px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #667eea;
+            border-left: 3px solid #667eea;
+            transform: translateX(2px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            color: #667eea;
+            border-left: 3px solid #667eea;
+            font-weight: 600;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px 20px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* Asegurar que el content-area muestre ambos elementos */
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            /* Forzar que siempre sea flex row en desktop */
+            flex-direction: row;
+        }
+
+        /* Asegurar que la sección del calendario no ocupe todo el espacio */
+        .calendar-section {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ===== SECCIÓN DEL CALENDARIO ===== */
+
+        .calendar-controls {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .nav-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .current-month {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            min-width: 250px;
+            text-align: center;
+        }
+
+
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        /* ===== GRID DEL CALENDARIO ===== */
+        .calendar-grid {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 15px;
+        }
+
+        .day-header {
+            padding: 20px 15px;
+            text-align: center;
+            font-weight: 700;
+            color: #64748b;
+            background: #f8fafc;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+        }
+
+        .calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 160px;
+            padding: 10px 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-day:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.02);
+        }
+
+        .calendar-day.other-month {
+            background: #f8fafc;
+            color: #cbd5e1;
+        }
+
+        .calendar-day.today {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-number {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        .day-events {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .event-item {
+            padding: 6px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2px;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 20px;
+            max-height: 32px;
+        }
+
+        .event-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== PRIORIDADES POR COLORES ===== */
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .priority-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .event-meeting {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .event-task {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .event-deadline {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .event-reminder {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        /* ===== COLORES BASADOS EN TIEMPO ===== */
+        .time-urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .time-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .time-safe {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        /* ===== SIDEBAR DE AGENDA ===== */
+        .agenda-sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            max-height: calc(100vh - 140px);
+            position: sticky;
+            top: 120px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* Asegurar que el sidebar sea siempre visible */
+            display: block !important;
+            flex-shrink: 0;
+            /* Scroll suave y personalizado */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+            scroll-behavior: smooth;
+            /* Scroll momentum en iOS */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Personalización del scrollbar para WebKit (Chrome, Safari, Edge) */
+        .agenda-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .agenda-sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .agenda-sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .agenda-sidebar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        /* Efecto de fade sutil en los bordes para indicar más contenido */
+        .agenda-sidebar::before {
+            content: '';
+            position: sticky;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.9), transparent);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .agenda-sidebar::after {
+            content: '';
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 15px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.9), transparent);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .agenda-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .agenda-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .today-date {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+
+
+        .agenda-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .agenda-event {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+
+        .agenda-event:hover {
+            background: rgba(102, 126, 234, 0.05);
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .event-time {
+            font-size: 12px;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 60px;
+        }
+
+        .event-details {
+            flex: 1;
+        }
+
+        .event-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .event-description {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .event-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: #f8fafc;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 35px;
+        }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        /* ===== FILTROS DE PRIORIDAD ===== */
+        .priority-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
+
+        .priority-filter {
+            padding: 6px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            background: white;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .priority-filter.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .priority-filter:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .priority-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ===== RESPONSIVE MEJORADO ===== */
+        @media (max-width: 1200px) {
+            .content-area {
+                flex-direction: row;
+                gap: 20px;
+            }
+
+            .agenda-sidebar {
+                width: 300px;
+                order: 1;
+                position: sticky;
+                top: 120px;
+                max-height: calc(100vh - 140px);
+                display: block !important;
+            }
+            
+            .calendar-section {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .priority-filters {
+                gap: 6px;
+            }
+            
+            .priority-filter {
+                padding: 5px 10px;
+                font-size: 10px;
+                gap: 3px;
+            }
+            
+            .priority-dot {
+                width: 5px;
+                height: 5px;
+            }
+        }
+
+        @media (min-width: 1201px) {
+            /* Asegurar que en desktop siempre se muestre el sidebar */
+            .content-area {
+                flex-direction: row !important;
+            }
+            
+            .agenda-sidebar {
+                display: block !important;
+                width: 350px !important;
+                order: 1 !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .calendar-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .calendar-nav {
+                justify-content: center;
+            }
+
+            .view-controls {
+                justify-content: center;
+            }
+
+            .calendar-day {
+                min-height: 100px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                padding: 20px;
+                flex-direction: column;
+            }
+
+            .agenda-sidebar {
+                width: 100%;
+                max-height: 400px;
+                position: relative;
+                top: 0;
+                margin-bottom: 20px;
+                order: -1;
+            }
+            
+            .agenda-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <i class="fas fa-cogs"></i>
+                Panel Admin
+            </h2>
+            <div class="subtitle">Sistema de Gestión</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="/dashboard/admin" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/admin/projects" class="nav-item">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos
+                </a>
+                <a href="/admin/users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </a>
+                <a href="/admin/roles" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Gestión</div>
+                <a href="/admin/invitations" class="nav-item">
+                    <i class="fas fa-envelope-open-text"></i>
+                    Códigos de Invitación
+                </a>
+                <a href="/admin/calendar" class="nav-item active">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendario
+                </a>
+                <a href="/admin/reports" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </a>
+                <a href="/admin/settings" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Sistema</div>
+                <a href="#" class="nav-item" onclick="alert('Función de respaldos en desarrollo'); return false;">
+                    <i class="fas fa-database"></i>
+                    Respaldos
+                </a>
+                <a href="#" class="nav-item" onclick="alert('Función de logs en desarrollo'); return false;">
+                    <i class="fas fa-file-alt"></i>
+                    Logs del Sistema
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Header Superior -->
+        <header class="top-header">
+            <h1 class="page-title">📅 Calendario de Tareas</h1>
+            <div class="user-info">
+                <div class="user-avatar"><%= user.nombres.charAt(0).toUpperCase() %><%= user.apellidos.charAt(0).toUpperCase() %></div>
+                <span><%= user.nombres %> <%= user.apellidos %></span>
+            </div>
+        </header>
+
+        <!-- Área de Contenido -->
+        <div class="content-area">
+            <!-- Sección del Calendario -->
+            <div class="calendar-section">
+                <!-- Controles del Calendario -->
+                <div class="calendar-controls">
+                    <div class="calendar-nav">
+                        <button class="nav-btn" id="prevMonth">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="current-month" id="currentMonth">Diciembre 2024</div>
+                        <button class="nav-btn" id="nextMonth">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" id="newTaskBtn">
+                        <i class="fas fa-plus"></i>
+                        Nueva Tarea
+                    </button>
+                </div>
+
+                <!-- Grid del Calendario -->
+                <div class="calendar-grid">
+                    <div class="calendar-header">
+                        <div class="day-header">Dom</div>
+                        <div class="day-header">Lun</div>
+                        <div class="day-header">Mar</div>
+                        <div class="day-header">Mié</div>
+                        <div class="day-header">Jue</div>
+                        <div class="day-header">Vie</div>
+                        <div class="day-header">Sáb</div>
+                    </div>
+                    <div class="calendar-body" id="calendarBody">
+                        <!-- Los días del calendario se generarán con JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar de Agenda -->
+            <div class="agenda-sidebar">
+                <div class="agenda-content">
+                    <div class="agenda-header">
+                        <h3 class="agenda-title">Mi Agenda</h3>
+                        <button class="btn btn-primary" onclick="taskCalendar.openModal()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="today-date" id="todayDate"></div>
+                    
+                    <!-- Filtros de prioridad -->
+                    <div class="priority-filters">
+                        <div class="priority-filter active" data-priority="all">
+                            <span class="priority-dot" style="background: #64748b;"></span>
+                            Todas
+                        </div>
+                        <div class="priority-filter" data-priority="high">
+                            <span class="priority-dot" style="background: #ef4444;"></span>
+                            Alta
+                        </div>
+                        <div class="priority-filter" data-priority="medium">
+                            <span class="priority-dot" style="background: #f59e0b;"></span>
+                            Media
+                        </div>
+                        <div class="priority-filter" data-priority="low">
+                            <span class="priority-dot" style="background: #10b981;"></span>
+                            Baja
+                        </div>
+                    </div>
+                    
+                    <!-- Sección HOY -->
+                    <div class="agenda-section">
+                        <h4 class="section-title">HOY</h4>
+                        <div id="todayTasks">
+                            <div class="agenda-event" data-priority="high">
+                                <div class="event-time">09:00</div>
+                                <div class="event-details">
+                                    <div class="event-title">Reunión de equipo</div>
+                                    <div class="event-description">Revisión semanal del proyecto</div>
+                                </div>
+                                <div class="event-indicator" style="background: #ef4444;"></div>
+                            </div>
+                            <div class="agenda-event" data-priority="medium">
+                                <div class="event-time">14:30</div>
+                                <div class="event-details">
+                                    <div class="event-title">Entrega de documentos</div>
+                                    <div class="event-description">Documentación técnica</div>
+                                </div>
+                                <div class="event-indicator" style="background: #f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección ESTA SEMANA -->
+                    <div class="agenda-section">
+                        <h4 class="section-title">ESTA SEMANA</h4>
+                        <div id="weekTasks">
+                            <div class="agenda-event" data-priority="high">
+                                <div class="event-time">Mié 15</div>
+                                <div class="event-details">
+                                    <div class="event-title">Presentación cliente</div>
+                                    <div class="event-description">Demo del sistema</div>
+                                </div>
+                                <div class="event-indicator" style="background: #ef4444;"></div>
+                            </div>
+                            <div class="agenda-event" data-priority="low">
+                                <div class="event-time">Vie 17</div>
+                                <div class="event-details">
+                                    <div class="event-title">Revisión de código</div>
+                                    <div class="event-description">Code review semanal</div>
+                                </div>
+                                <div class="event-indicator" style="background: #10b981;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección PRÓXIMO MES -->
+                    <div class="agenda-section">
+                        <h4 class="section-title">PRÓXIMO MES</h4>
+                        <div id="monthTasks">
+                            <div class="agenda-event" data-priority="medium">
+                                <div class="event-time">Feb 5</div>
+                                <div class="event-details">
+                                    <div class="event-title">Capacitación equipo</div>
+                                    <div class="event-description">Nuevas tecnologías</div>
+                                </div>
+                                <div class="event-indicator" style="background: #f59e0b;"></div>
+                            </div>
+                            <div class="agenda-event" data-priority="low">
+                                <div class="event-time">Feb 20</div>
+                                <div class="event-details">
+                                    <div class="event-title">Evaluación trimestral</div>
+                                    <div class="event-description">Revisión de objetivos</div>
+                                </div>
+                                <div class="event-indicator" style="background: #10b981;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Nueva Tarea -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nueva Tarea</h3>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Título de la Tarea</label>
+                    <input type="text" class="form-input" id="taskTitle" placeholder="Ingresa el título de la tarea" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-textarea" id="taskDescription" placeholder="Descripción detallada de la tarea"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" class="form-input" id="taskDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hora</label>
+                        <input type="time" class="form-input" id="taskTime">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Prioridad</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="low">🟢 Baja</option>
+                            <option value="medium">🟡 Media</option>
+                            <option value="high">🔴 Alta</option>
+                            <option value="info">🔵 Informativa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="taskType">
+                            <option value="task">📋 Tarea</option>
+                            <option value="meeting">👥 Reunión</option>
+                            <option value="deadline">⏰ Fecha Límite</option>
+                            <option value="reminder">🔔 Recordatorio</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proyecto Relacionado (Opcional)</label>
+                    <select class="form-select" id="taskProject">
+                        <option value="">Sin proyecto específico</option>
+                        <% if (typeof projects !== 'undefined' && projects.length > 0) { %>
+                            <% projects.forEach(project => { %>
+                                <option value="<%= project.id %>"><%= project.titulo %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Clase principal del Calendario
+        class TaskCalendar {
+            constructor() {
+                this.tasks = []; // Inicializar array vacío
+                this.currentDate = new Date();
+                this.currentView = 'month';
+                this.currentFilter = 'all';
+                this.selectedDate = null;
+                
+                this.init();
+            }
+
+            async loadTasksFromBackend() {
+                try {
+                    console.log('Cargando tareas desde el backend...');
+                    this.showNotification('Cargando tareas...', 'info');
+                    
+                    const response = await fetch('/admin/calendar/tasks', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Limpiar tareas locales y cargar desde backend
+                        this.tasks = data.tasks || [];
+                        console.log(`${this.tasks.length} tareas cargadas (raw):`, this.tasks);
+                        
+                        // Convertir tareas del backend al formato del frontend
+                        this.tasks = this.tasks.map(task => {
+                            // Calcular prioridad automáticamente basándose en la fecha límite
+                            let priority = 'medium'; // valor por defecto
+                            
+                            const taskDate = task.start || task.fecha_limite;
+                            if (taskDate) {
+                                const today = new Date();
+                                const dueDate = new Date(taskDate);
+                                const timeDiff = dueDate.getTime() - today.getTime();
+                                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                                
+                                if (daysDiff <= 7) {
+                                    priority = 'high';    // Menos de 1 semana
+                                } else if (daysDiff <= 14) {
+                                    priority = 'medium';  // Entre 1 y 2 semanas
+                                } else {
+                                    priority = 'low';     // Más de 2 semanas
+                                }
+                                
+                                console.log(`Tarea: "${task.titulo || task.title}" - Días restantes: ${daysDiff} - Prioridad calculada: ${priority}`);
+                            }
+                            
+                            const mappedTask = {
+                                id: task.id,
+                                title: task.titulo || task.title,
+                                description: task.descripcion || task.description,
+                                date: task.start ? task.start.split('T')[0] : (task.fecha_limite ? task.fecha_limite.split('T')[0] : (task.date || '')),
+                                time: task.start ? task.start.split('T')[1]?.substring(0, 5) : (task.fecha_limite ? task.fecha_limite.split('T')[1]?.substring(0, 5) : (task.time || '')),
+                                priority: priority, // Usar la prioridad calculada automáticamente
+                                type: task.type || 'task',
+                                project: task.proyecto_id || task.project,
+                                due_date: task.start ? task.start.split('T')[0] : (task.fecha_limite ? task.fecha_limite.split('T')[0] : (task.date || ''))
+                            };
+                            
+                            console.log(`Tarea final: "${mappedTask.title}" - Prioridad: "${mappedTask.priority}"`);
+                            return mappedTask;
+                        });
+                        
+                        console.log('Tareas finales mapeadas:', this.tasks);
+                        
+                        // Renderizar calendario y actualizar barra lateral
+                        this.renderCalendar();
+                        this.updateAgendaSidebar();
+                        
+                        this.showNotification(`${this.tasks.length} tareas cargadas correctamente`, 'success');
+                    } else {
+                        console.error('Error al cargar tareas:', data.message);
+                        this.showNotification('Error al cargar las tareas', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading tasks:', error);
+                    this.showNotification('Error de conexión al cargar tareas', 'error');
+                }
+            }
+
+            init() {
+                this.updateCurrentMonth();
+                this.updateTodayDate();
+                this.setupEventListeners();
+                this.initPriorityFilters(); // Agregar esta línea
+                this.loadTasksFromBackend(); // Cargar tareas del backend
+            }
+
+            setupEventListeners() {
+                // Navegación del calendario
+                document.getElementById('prevMonth').addEventListener('click', () => this.previousMonth());
+                document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
+                
+                // Modal de tareas
+                document.getElementById('newTaskBtn').addEventListener('click', () => this.openTaskModal());
+                document.getElementById('closeModal').addEventListener('click', () => this.closeTaskModal());
+                document.getElementById('cancelBtn').addEventListener('click', () => this.closeTaskModal());
+                document.getElementById('taskForm').addEventListener('submit', (e) => this.saveTask(e));
+                
+                // Filtros de prioridad
+                document.querySelectorAll('.priority-filter').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        // Buscar el botón más cercano para obtener el data-priority correcto
+                        const button = e.target.closest('.priority-filter');
+                        const priority = button ? button.dataset.priority : null;
+                        
+                        if (priority) {
+                            this.filterByPriority(priority);
+                        } else {
+                            console.error('No se pudo obtener la prioridad del botón clickeado');
+                        }
+                    });
+                });
+                
+                // Inicializar filtros de prioridad
+                this.initPriorityFilters();
+                
+                // Refrescar agenda - removido ya que no existe el botón refreshAgenda
+                
+                // Cerrar modal al hacer clic fuera
+                document.getElementById('taskModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'taskModal') {
+                        this.closeTaskModal();
+                    }
+                });
+            }
+
+            // Inicializar filtros de prioridad
+            initPriorityFilters() {
+                const filters = document.querySelectorAll('.priority-filter');
+                
+                filters.forEach(filter => {
+                    filter.addEventListener('click', (e) => {
+                        // Remover clase active de todos los filtros
+                        filters.forEach(f => f.classList.remove('active'));
+                        
+                        // Agregar clase active al filtro seleccionado
+                        filter.classList.add('active');
+                        
+                        // Obtener la prioridad seleccionada
+                        const selectedPriority = filter.dataset.priority;
+                        
+                        // Filtrar tareas
+                        this.filterTasksByPriority(selectedPriority);
+                    });
+                });
+            }
+            
+            // Filtrar tareas por prioridad
+            filterTasksByPriority(priority) {
+                const allTasks = document.querySelectorAll('.agenda-event');
+                
+                allTasks.forEach(task => {
+                    if (priority === 'all') {
+                        // Mostrar todas las tareas
+                        task.style.display = 'flex';
+                        task.style.opacity = '1';
+                    } else {
+                        // Mostrar solo las tareas de la prioridad seleccionada
+                        const taskPriority = task.dataset.priority;
+                        
+                        if (taskPriority === priority) {
+                            task.style.display = 'flex';
+                            task.style.opacity = '1';
+                            task.style.transform = 'translateX(0)';
+                        } else {
+                            task.style.opacity = '0.3';
+                            task.style.transform = 'translateX(-10px)';
+                            // Opcional: ocultar completamente
+                            // task.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Agregar efecto de transición suave
+                allTasks.forEach(task => {
+                    task.style.transition = 'all 0.3s ease';
+                });
+            }
+
+            renderCalendar() {
+                const calendarBody = document.getElementById('calendarBody');
+                calendarBody.innerHTML = '';
+
+                const year = this.currentDate.getFullYear();
+                const month = this.currentDate.getMonth();
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+
+                for (let i = 0; i < 42; i++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const isCurrentMonth = currentDate.getMonth() === month;
+                    const isToday = dateStr === todayStr;
+
+                    if (!isCurrentMonth) {
+                        dayElement.classList.add('other-month');
+                    }
+                    if (isToday) {
+                        dayElement.classList.add('today');
+                    }
+
+                    dayElement.innerHTML = `
+                        <div class="day-number">${currentDate.getDate()}</div>
+                        <div class="day-events">${this.renderDayTasks(dateStr)}</div>
+                    `;
+
+                    dayElement.addEventListener('click', () => this.openTaskModal(dateStr));
+                    calendarBody.appendChild(dayElement);
+                }
+            }
+
+            // Método para calcular color basado en tiempo restante
+            getTimeBasedColor(dueDate) {
+                const today = new Date();
+                const due = new Date(dueDate);
+                const timeDiff = due.getTime() - today.getTime();
+                const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                
+                if (daysDiff <= 7) {
+                    return 'time-urgent'; // Rojo - 1 semana o menos
+                } else if (daysDiff <= 14) {
+                    return 'time-warning'; // Amarillo - Entre 1 y 2 semanas
+                } else {
+                    return 'time-safe'; // Verde - Más de 2 semanas
+                }
+            }
+
+            renderDayTasks(date) {
+                console.log('=== RENDERIZANDO TAREAS PARA:', date, '===');
+                console.log('Filtro actual:', this.currentFilter);
+                console.log('Total de tareas disponibles:', this.tasks.length);
+                
+                // DEBUG: Mostrar todas las tareas y sus fechas
+                console.log('Todas las tareas con sus fechas:');
+                this.tasks.forEach((task, index) => {
+                    console.log(`  Tarea ${index + 1}: "${task.title}" - Fecha: "${task.date}" - Prioridad: "${task.priority}"`);
+                });
+                
+                // Primero filtrar por fecha
+                const tasksForDate = this.tasks.filter(task => {
+                    const matches = task.date === date;
+                    console.log(`Comparando fecha: "${task.date}" === "${date}" = ${matches}`);
+                    return matches;
+                });
+                console.log(`Tareas para la fecha ${date}:`, tasksForDate);
+                
+                // Luego aplicar filtro de prioridad
+                let dayTasks;
+                if (this.currentFilter === 'all') {
+                    dayTasks = tasksForDate;
+                    console.log('Mostrando todas las tareas para esta fecha');
+                } else {
+                    dayTasks = tasksForDate.filter(task => {
+                        // Usar comparación directa sin toLowerCase para consistencia
+                        const taskPriority = task.priority || 'medium';
+                        const matches = taskPriority === this.currentFilter;
+                        
+                        console.log(`Tarea "${task.title}" - Prioridad: "${taskPriority}" vs Filtro: "${this.currentFilter}" - Coincide: ${matches}`);
+                        return matches;
+                    });
+                    console.log(`Filtro aplicado: ${this.currentFilter} - Tareas encontradas: ${dayTasks.length}`);
+                }
+                
+                console.log(`Tareas finales a mostrar (${dayTasks.length}):`, dayTasks.map(t => `${t.title} (${t.priority})`));
+                
+                return dayTasks.map(task => {
+                    const timeClass = this.getTimeBasedColor(task.due_date || task.date);
+                    // Truncar título si es muy largo
+                    const maxLength = 25;
+                    const truncatedTitle = task.title.length > maxLength 
+                        ? task.title.substring(0, maxLength) + '...' 
+                        : task.title;
+                    
+                    return `<div class="event-item ${timeClass}" title="${task.title}${task.description ? ' - ' + task.description : ''}" data-task-id="${task.id}">${truncatedTitle}</div>`;
+                }).join('');
+            }
+
+            updateCurrentMonth() {
+                const monthNames = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                const monthName = monthNames[this.currentDate.getMonth()];
+                const year = this.currentDate.getFullYear();
+                document.getElementById('currentMonth').textContent = `${monthName} ${year}`;
+            }
+
+            updateTodayDate() {
+                const today = new Date();
+                const options = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                const todayStr = today.toLocaleDateString('es-ES', options);
+                document.getElementById('todayDate').textContent = `Hoy, ${todayStr}`;
+            }
+
+            previousMonth() {
+                this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+                this.renderCalendar();
+                this.updateCurrentMonth();
+            }
+
+            nextMonth() {
+                this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+                this.renderCalendar();
+                this.updateCurrentMonth();
+            }
+
+            changeView(view) {
+                this.currentView = view;
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-view="${view}"]`).classList.add('active');
+                
+                // Aquí se implementarían las diferentes vistas
+                console.log(`Cambiando a vista: ${view}`);
+                // TODO: Implementar vistas de semana y día
+            }
+
+            filterByPriority(priority) {
+                console.log('Aplicando filtro de prioridad:', priority);
+                
+                // Validar que priority no sea undefined o null
+                if (!priority) {
+                    console.error('Priority es undefined o null, usando "all" como fallback');
+                    priority = 'all';
+                }
+                
+                this.currentFilter = priority;
+                
+                // Remover clase active de todos los botones
+                document.querySelectorAll('.priority-filter').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Buscar el botón específico y verificar que existe
+                const targetButton = document.querySelector(`[data-priority="${priority}"]`);
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                    console.log(`Filtro aplicado correctamente: ${priority}`);
+                } else {
+                    console.error(`No se encontró botón con data-priority="${priority}"`);
+                    // Como fallback, activar el botón "Todas"
+                    const allButton = document.querySelector('[data-priority="all"]');
+                    if (allButton) {
+                        allButton.classList.add('active');
+                        this.currentFilter = 'all';
+                        console.log('Fallback aplicado: mostrando todas las tareas');
+                    }
+                }
+                
+                // Actualizar tanto el calendario como la barra lateral
+                this.renderCalendar();
+                this.updateAgendaSidebar();
+            }
+
+            openTaskModal(date = null) {
+                const modal = document.getElementById('taskModal');
+                modal.classList.add('active');
+                
+                if (date) {
+                    document.getElementById('taskDate').value = date;
+                } else {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('taskDate').value = today;
+                }
+            }
+
+            closeTaskModal() {
+                const modal = document.getElementById('taskModal');
+                modal.classList.remove('active');
+                document.getElementById('taskForm').reset();
+            }
+
+            async saveTask(e) {
+                e.preventDefault();
+                
+                // Mostrar estado de carga
+                const submitBtn = document.querySelector('#taskForm button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Guardando...';
+                submitBtn.disabled = true;
+                
+                try {
+                    // Recopilar datos del formulario con los nombres correctos que espera el backend
+                    const taskData = {
+                        title: document.getElementById('taskTitle').value,
+                        description: document.getElementById('taskDescription').value,
+                        date: document.getElementById('taskDate').value,
+                        time: document.getElementById('taskTime').value || '23:59',
+                        project_id: document.getElementById('taskProject').value || null,
+                        priority: 'medium', // Valor por defecto
+                        type: 'task' // Valor por defecto
+                    };
+                    
+                    this.showNotification('Guardando tarea...', 'info');
+                    
+                    // Enviar al backend
+                    const response = await fetch('/admin/calendar/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(taskData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Recargar todas las tareas desde el backend para mantener sincronización
+                        await this.loadTasksFromBackend();
+                        
+                        // Cerrar modal y mostrar notificación
+                        this.closeTaskModal();
+                        this.showNotification('Tarea guardada correctamente', 'success');
+                    } else {
+                        this.showNotification(result.message || 'Error al guardar la tarea', 'error');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error saving task:', error);
+                    this.showNotification('Error de conexión al guardar la tarea', 'error');
+                } finally {
+                    // Restaurar botón
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
+            }
+
+            refreshAgenda() {
+                console.log('Refrescando agenda...');
+                // Actualizar tanto el calendario como la barra lateral
+                this.renderCalendar();
+                this.updateAgendaSidebar();
+            }
+
+            updateAgendaSidebar() {
+                // Buscar el contenedor correcto de la agenda
+                const agendaSidebar = document.querySelector('.agenda-sidebar');
+                if (!agendaSidebar) return;
+                
+                // Encontrar o crear el contenedor de contenido dinámico
+                let agendaContent = agendaSidebar.querySelector('.agenda-content');
+                if (!agendaContent) {
+                    // Crear el contenedor si no existe
+                    agendaContent = document.createElement('div');
+                    agendaContent.className = 'agenda-content';
+                    
+                    // Insertar después de los filtros de prioridad
+                    const priorityFilters = agendaSidebar.querySelector('.priority-filters');
+                    if (priorityFilters) {
+                        priorityFilters.insertAdjacentElement('afterend', agendaContent);
+                    } else {
+                        agendaSidebar.appendChild(agendaContent);
+                    }
+                    
+                    // Ocultar las secciones estáticas
+                    const staticSections = agendaSidebar.querySelectorAll('.agenda-section');
+                    staticSections.forEach(section => section.style.display = 'none');
+                }
+                
+                const today = new Date();
+                const oneWeekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+                const oneMonthFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+                
+                // Aplicar filtro de prioridad a las tareas
+                let filteredTasks = this.tasks;
+                if (this.currentFilter && this.currentFilter !== 'all') {
+                    filteredTasks = this.tasks.filter(task => {
+                        const taskPriority = task.priority || 'medium';
+                        return taskPriority === this.currentFilter;
+                    });
+                    console.log(`Filtro aplicado en sidebar: ${this.currentFilter} - Tareas filtradas: ${filteredTasks.length}`);
+                }
+                
+                // Filtrar tareas por períodos
+                const todayTasks = filteredTasks.filter(task => {
+                    const taskDate = new Date(task.date);
+                    return taskDate.toDateString() === today.toDateString();
+                });
+                
+                const thisWeekTasks = filteredTasks.filter(task => {
+                    const taskDate = new Date(task.date);
+                    return taskDate > today && taskDate <= oneWeekFromNow;
+                });
+                
+                const nextMonthTasks = filteredTasks.filter(task => {
+                    const taskDate = new Date(task.date);
+                    return taskDate > oneWeekFromNow && taskDate <= oneMonthFromNow;
+                });
+                
+                let html = '';
+                
+                // Sección "Hoy"
+                if (todayTasks.length > 0) {
+                    html += '<div class="agenda-section"><div class="section-title">Hoy</div>';
+                    todayTasks.forEach(task => {
+                        const timeClass = this.getTimeBasedColor ? this.getTimeBasedColor(task.due_date || task.date) : `priority-${task.priority}`;
+                        html += `
+                            <div class="agenda-event">
+                                <div class="event-indicator ${timeClass}"></div>
+                                <div class="event-time">${task.time || '09:00'}</div>
+                                <div class="event-details">
+                                    <div class="event-title">${task.title}</div>
+                                    <div class="event-description">${task.description || ''}</div>
+                                </div>
+                            </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                // Sección "Esta Semana"
+                if (thisWeekTasks.length > 0) {
+                    html += '<div class="agenda-section"><div class="section-title">Esta Semana</div>';
+                    thisWeekTasks.forEach(task => {
+                        const timeClass = this.getTimeBasedColor ? this.getTimeBasedColor(task.due_date || task.date) : `priority-${task.priority}`;
+                        
+                        // FIX: Usar el mismo formato que el calendario
+                        // En lugar de: const taskDate = new Date(task.date);
+                        // Usar parsing manual para evitar problemas de zona horaria
+                        const [year, month, day] = task.date.split('-').map(Number);
+                        const taskDate = new Date(year, month - 1, day); // month - 1 porque los meses van de 0-11
+                        
+                        const dayName = taskDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
+                        html += `
+                            <div class="agenda-event">
+                                <div class="event-indicator ${timeClass}"></div>
+                                <div class="event-time">${dayName}</div>
+                                <div class="event-details">
+                                    <div class="event-title">${task.title}</div>
+                                    <div class="event-description">${task.description || ''}</div>
+                                </div>
+                            </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                // Sección "Próximo Mes"
+                if (nextMonthTasks.length > 0) {
+                    html += '<div class="agenda-section"><div class="section-title">Próximo Mes</div>';
+                    nextMonthTasks.forEach(task => {
+                        const timeClass = this.getTimeBasedColor ? this.getTimeBasedColor(task.due_date || task.date) : `priority-${task.priority}`;
+                        
+                        // FIX: Mismo parsing manual
+                        const [year, month, day] = task.date.split('-').map(Number);
+                        const taskDate = new Date(year, month - 1, day);
+                        
+                        const dayName = taskDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+                        html += `
+                            <div class="agenda-event">
+                                <div class="event-indicator ${timeClass}"></div>
+                                <div class="event-time">${dayName}</div>
+                                <div class="event-details">
+                                    <div class="event-title">${task.title}</div>
+                                    <div class="event-description">${task.description || ''}</div>
+                                </div>
+                            </div>`;
+                    });
+                    html += '</div>';
+                }
+                
+                if (html === '') {
+                    html = '<div class="agenda-section"><p style="text-align: center; color: #64748b; padding: 20px;">No hay tareas programadas</p></div>';
+                }
+                
+                agendaContent.innerHTML = html;
+            }
+
+            renderAgendaSection(title, tasks, sectionIndex) {
+                const agendaSections = document.querySelectorAll('.agenda-section');
+                if (agendaSections[sectionIndex]) {
+                    const section = agendaSections[sectionIndex];
+                    
+                    // Limpiar contenido actual excepto el título
+                    const sectionTitle = section.querySelector('.section-title');
+                    section.innerHTML = '';
+                    section.appendChild(sectionTitle);
+                    
+                    if (tasks.length === 0) {
+                        const noTasksDiv = document.createElement('div');
+                        noTasksDiv.className = 'no-tasks';
+                        noTasksDiv.style.cssText = 'padding: 20px; text-align: center; color: #64748b; font-style: italic;';
+                        noTasksDiv.textContent = 'No hay tareas programadas';
+                        section.appendChild(noTasksDiv);
+                        return;
+                    }
+                    
+                    // Agregar tareas reales
+                    tasks.forEach(task => {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = 'agenda-event';
+                        
+                        const priorityClass = `priority-${task.priority}`;
+                        const timeDisplay = task.time || 'Todo el día';
+                        
+                        eventDiv.innerHTML = `
+                            <div class="event-indicator ${priorityClass}"></div>
+                            <div class="event-time">${timeDisplay}</div>
+                            <div class="event-details">
+                                <div class="event-title">${task.title}</div>
+                                <div class="event-description">${task.description || 'Sin descripción'}</div>
+                            </div>
+                        `;
+                        
+                        section.appendChild(eventDiv);
+                    });
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                // Crear notificación temporal
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+                    color: white;
+                    border-radius: 8px;
+                    z-index: 3000;
+                    font-weight: 600;
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+
+        // Inicializar el calendario cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            new TaskCalendar();
+        });
+    </script>
+</body>
+</html>

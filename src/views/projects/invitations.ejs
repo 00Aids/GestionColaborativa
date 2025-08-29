@@ -1,0 +1,231 @@
+<%- include('../layouts/header', { title: title }) %>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- Encabezado -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2><i class="fas fa-key"></i> Gestionar Invitaciones</h2>
+          <p class="text-muted mb-0">Proyecto: <%= project.titulo %></p>
+        </div>
+        <div>
+          <a href="/projects/<%= project.id %>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Proyecto
+          </a>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvitationModal">
+            <i class="fas fa-plus"></i> Nueva Invitación
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <% if (typeof error !== 'undefined' && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+      
+      <% if (typeof success !== 'undefined' && success.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <!-- Invitaciones Activas -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-ticket-alt"></i> Códigos de Invitación Activos</h5>
+        </div>
+        <div class="card-body">
+          <% if (invitations && invitations.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Usos</th>
+                    <th>Expiración</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% invitations.forEach(invitation => { %>
+                    <tr>
+                      <td>
+                        <code class="fs-6 fw-bold text-primary"><%= invitation.codigo_invitacion %></code>
+                        <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyToClipboard('<%= invitation.codigo_invitacion %>')">
+                          <i class="fas fa-copy"></i>
+                        </button>
+                      </td>
+                      <td>
+                        <span class="badge bg-info">
+                          <%= invitation.usos_actuales %>/<%= invitation.max_usos %>
+                        </span>
+                      </td>
+                      <td>
+                        <% if (invitation.fecha_expiracion) { %>
+                          <%= new Date(invitation.fecha_expiracion).toLocaleDateString('es-ES') %>
+                          <% if (new Date() > new Date(invitation.fecha_expiracion)) { %>
+                            <span class="badge bg-danger ms-1">Expirado</span>
+                          <% } %>
+                        <% } else { %>
+                          <span class="text-muted">Sin expiración</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (invitation.activo && invitation.usos_actuales < invitation.max_usos && (!invitation.fecha_expiracion || new Date() <= new Date(invitation.fecha_expiracion))) { %>
+                          <span class="badge bg-success">Activo</span>
+                        <% } else { %>
+                          <span class="badge bg-secondary">Inactivo</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <%= new Date(invitation.created_at).toLocaleDateString('es-ES') %>
+                      </td>
+                      <td>
+                        <% if (invitation.activo) { %>
+                          <form method="POST" action="/projects/<%= project.id %>/invitations/<%= invitation.id %>" style="display: inline;">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de desactivar esta invitación?')">
+                              <i class="fas fa-ban"></i> Desactivar
+                            </button>
+                          </form>
+                        <% } else { %>
+                          <span class="text-muted">Desactivado</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="text-center py-4">
+              <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No hay códigos de invitación</h5>
+              <p class="text-muted">Crea un código de invitación para que otros estudiantes puedan unirse al proyecto.</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Miembros del Proyecto -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-users"></i> Miembros del Proyecto</h5>
+        </div>
+        <div class="card-body">
+          <% if (members && members.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Se unió</th>
+                    <th>Código usado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% members.forEach(member => { %>
+                    <tr>
+                      <td><%= member.nombres %> <%= member.apellidos %></td>
+                      <td><%= member.email %></td>
+                      <td>
+                        <span class="badge bg-primary"><%= member.rol_en_proyecto %></span>
+                      </td>
+                      <td><%= new Date(member.created_at).toLocaleDateString('es-ES') %></td>
+                      <td>
+                        <% if (member.codigo_invitacion) { %>
+                          <code><%= member.codigo_invitacion %></code>
+                        <% } else { %>
+                          <span class="text-muted">Creador</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="text-center py-4">
+              <i class="fas fa-users fa-3x text-muted mb-3"></i>
+              <h5 class="text-muted">No hay miembros adicionales</h5>
+              <p class="text-muted">Los estudiantes que se unan con códigos de invitación aparecerán aquí.</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para crear nueva invitación -->
+<div class="modal fade" id="createInvitationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-plus"></i> Crear Nueva Invitación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/projects/<%= project.id %>/invitations">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="max_uses" class="form-label">Máximo de usos</label>
+            <input type="number" class="form-control" id="max_uses" name="max_uses" value="1" min="1" max="50">
+            <div class="form-text">Número máximo de estudiantes que pueden usar este código</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="expires_in_days" class="form-label">Expiración (días)</label>
+            <input type="number" class="form-control" id="expires_in_days" name="expires_in_days" min="1" max="365">
+            <div class="form-text">Dejar vacío para que no expire</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear Invitación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Función para copiar código al portapapeles
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    // Mostrar notificación de éxito
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-check"></i> Código copiado al portapapeles
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remover el toast después de que se oculte
+    toast.addEventListener('hidden.bs.toast', function() {
+      document.body.removeChild(toast);
+    });
+  }).catch(function(err) {
+    alert('Error al copiar: ' + err);
+  });
+}
+</script>
+
+<%- include('../layouts/footer') %>

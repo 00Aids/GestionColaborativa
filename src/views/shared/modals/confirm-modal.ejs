@@ -1,0 +1,50 @@
+<%# 
+  Modal de confirmación reutilizable
+  Parámetros:
+  - title: título del modal
+  - message: mensaje de confirmación
+  - confirmText: texto del botón confirmar (opcional)
+  - cancelText: texto del botón cancelar (opcional)
+  - onConfirm: función JavaScript a ejecutar
+%>
+<div id="confirmModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeConfirmModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><%= typeof title !== 'undefined' ? title : 'Confirmar Acción' %></h3>
+            <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><%= typeof message !== 'undefined' ? message : '¿Estás seguro de que deseas realizar esta acción?' %></p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeConfirmModal()">
+                <%= typeof cancelText !== 'undefined' ? cancelText : 'Cancelar' %>
+            </button>
+            <button class="btn btn-danger" onclick="executeConfirmAction()">
+                <%= typeof confirmText !== 'undefined' ? confirmText : 'Confirmar' %>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let confirmAction = null;
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    confirmAction = null;
+}
+
+function showConfirmModal(onConfirmCallback) {
+    confirmAction = onConfirmCallback;
+    document.getElementById('confirmModal').style.display = 'block';
+}
+
+function executeConfirmAction() {
+    if (confirmAction && typeof confirmAction === 'function') {
+        confirmAction();
+    }
+    closeConfirmModal();
+}
+</script>

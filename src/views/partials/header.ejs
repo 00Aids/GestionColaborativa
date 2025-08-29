@@ -1,0 +1,32 @@
+<header class="header">
+    <div class="header-left">
+        <div class="logo">
+            📚 Sistema Académico
+        </div>
+        <nav>
+            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
+            <a href="/projects" class="btn btn-secondary">Proyectos</a>
+            <% if (user && (user.rol_nombre === 'Administrador' || user.rol_nombre === 'Coordinador')) { %>
+                <a href="/admin" class="btn btn-secondary">Administración</a>
+            <% } %>
+        </nav>
+    </div>
+    <div class="header-right">
+        <div class="user-info">
+            <span>👤 <%= user.nombre %> <%= user.apellido %></span>
+            <span class="badge"><%= user.rol_nombre %></span>
+        </div>
+        <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
+    </div>
+</header>
+
+<style>
+.badge {
+    background: #5a67d8;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+</style>

@@ -1,0 +1,48 @@
+<%# 
+  Componente reutilizable para tarjetas de tareas/entregables
+  Parámetros:
+  - task: objeto de la tarea/entregable
+  - type: 'task' o 'deliverable'
+  - showProject: mostrar información del proyecto (opcional)
+%>
+<div class="task-card <%= type || 'task' %>-card">
+    <div class="task-header">
+        <div class="task-title"><%= task.titulo || task.title || task.name %></div>
+        <% if (task.fecha_entrega || task.due_date) { %>
+            <div class="task-due-date">
+                <% 
+                    const dueDate = new Date(task.fecha_entrega || task.due_date);
+                    const now = new Date();
+                    const isOverdue = dueDate < now;
+                    const isUpcoming = (dueDate - now) / (1000 * 60 * 60 * 24) <= 3;
+                %>
+                <span class="due-date <%= isOverdue ? 'overdue' : (isUpcoming ? 'upcoming' : '') %>">
+                    <%= dueDate.toLocaleDateString() %>
+                </span>
+            </div>
+        <% } %>
+    </div>
+    
+    <% if (task.descripcion || task.description) { %>
+        <div class="task-description">
+            <%= task.descripcion || task.description %>
+        </div>
+    <% } %>
+    
+    <div class="task-meta">
+        <% if (showProject && (task.proyecto_titulo || task.project_title)) { %>
+            <div class="meta-item">
+                <span class="meta-label">Proyecto:</span>
+                <span class="meta-value"><%= task.proyecto_titulo || task.project_title %></span>
+            </div>
+        <% } %>
+        
+        <% if (task.estado || task.status) { %>
+            <div class="meta-item">
+                <span class="status-badge status-<%= (task.estado || task.status).toLowerCase().replace(' ', '-') %>">
+                    <%= task.estado || task.status %>
+                </span>
+            </div>
+        <% } %>
+    </div>
+</div>

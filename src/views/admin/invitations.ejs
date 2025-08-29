@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sistema Académico</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SIDEBAR MODERNO ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header .subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 25px 8px;
+            margin-bottom: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-left-color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .content-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content-header h1 {
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .content-header p {
+            color: #64748b;
+            margin: 0;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        /* ===== TABLES ===== */
+        .table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            border-color: #f1f5f9;
+            vertical-align: middle;
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 6px 12px;
+        }
+
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .badge-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        /* ===== STATS CARDS ===== */
+        .stats-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .stats-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .stats-card .label {
+            color: #64748b;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+
+        /* ===== MODALS ===== */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #f1f5f9;
+            padding: 25px;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #f1f5f9;
+            padding: 25px;
+        }
+
+        /* ===== FORM CONTROLS ===== */
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-select {
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 16px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <i class="fas fa-cogs"></i>
+                Panel Admin
+            </h2>
+            <div class="subtitle">Sistema de Gestión</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="/dashboard/admin" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/admin/projects" class="nav-item">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos
+                </a>
+                <a href="/admin/users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </a>
+                <a href="/admin/roles" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Gestión</div>
+                <a href="/admin/invitations" class="nav-item active">
+                    <i class="fas fa-envelope-open-text"></i>
+                    Códigos de Invitación
+                </a>
+                <a href="/admin/calendar" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendario
+                </a>
+                <a href="/admin/reports" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </a>
+                <a href="/admin/settings" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Sistema</div>
+                <a href="#" class="nav-item" onclick="alert('Función de respaldos en desarrollo'); return false;">
+                    <i class="fas fa-database"></i>
+                    Respaldos
+                </a>
+                <a href="#" class="nav-item" onclick="alert('Función de logs en desarrollo'); return false;">
+                    <i class="fas fa-file-alt"></i>
+                    Logs del Sistema
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">Gestión de Invitaciones</h1>
+                    <p class="mb-0">Administra códigos de invitación para proyectos</p>
+                </div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createInvitationModal">
+                    <i class="fas fa-plus me-2"></i>Generar Código
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="number" id="active-codes"><%= stats.active || 0 %></div>
+                    <div class="label">Códigos Activos</div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="number" id="total-uses"><%= stats.members || 0 %></div>
+                    <div class="label">Miembros Unidos</div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="number" id="expired-codes"><%= stats.expired || 0 %></div>
+                    <div class="label">Códigos Expirados</div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stats-card">
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="number" id="total-invitations"><%= stats.total || 0 %></div>
+                    <div class="label">Total Invitaciones</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="projectFilter" class="form-label">Filtrar por Proyecto</label>
+                        <select class="form-select" id="projectFilter">
+                            <option value="">Todos los proyectos</option>
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.forEach(project => { %>
+                                    <option value="<%= project.id %>"><%= project.titulo %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Estado</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">Todos</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                            <option value="expired">Expirados</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="searchInput" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Buscar por código o descripción...">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button class="btn btn-primary" onclick="loadInvitations()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Invitaciones -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Proyecto</th>
+                                <th>Creado por</th>
+                                <th>Usos</th>
+                                <th>Expiración</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invitationsTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>
+                                    Cargando invitaciones...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear Invitación -->
+    <div class="modal fade" id="createInvitationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generar Código de Invitación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createInvitationForm">
+                        <div class="mb-3">
+                            <label for="modalProjectSelect" class="form-label">Proyecto *</label>
+                            <select class="form-select" id="modalProjectSelect" name="proyecto_id" required>
+                                <option value="">Seleccionar proyecto...</option>
+                                <% if (projects && projects.length > 0) { %>
+                                    <% projects.forEach(project => { %>
+                                        <option value="<%= project.id %>"><%= project.titulo %></option>
+                                    <% }); %>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="maxUsos" class="form-label">Máximo de Usos *</label>
+                            <input type="number" class="form-control" id="maxUsos" name="max_usos" min="1" max="100" value="10" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fechaExpiracion" class="form-label">Fecha de Expiración (Opcional)</label>
+                            <input type="datetime-local" class="form-control" id="fechaExpiracion" name="fecha_expiracion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción (Opcional)</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Descripción del código de invitación..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="createInvitation()">Generar Código</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Invitación -->
+    <div class="modal fade" id="editInvitationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Invitación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editInvitationForm">
+                        <input type="hidden" id="editInvitationId">
+                        <div class="mb-3">
+                            <label for="editMaxUsos" class="form-label">Máximo de Usos</label>
+                            <input type="number" class="form-control" id="editMaxUsos" name="max_usos" min="1" max="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFechaExpiracion" class="form-label">Fecha de Expiración</label>
+                            <input type="datetime-local" class="form-control" id="editFechaExpiracion" name="fecha_expiracion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="editDescripcion" name="descripcion" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editActivo" name="activo">
+                                <label class="form-check-label" for="editActivo">
+                                    Código activo
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="updateInvitation()">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let currentInvitations = [];
+
+        // Cargar invitaciones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInvitations();
+        });
+
+        // Función para cargar invitaciones
+        async function loadInvitations() {
+            const projectId = document.getElementById('projectFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value;
+
+            try {
+                let url = '/admin/invitations';
+                if (projectId) {
+                    url += `/${projectId}`;
+                    const params = new URLSearchParams();
+                    if (status) params.append('status', status);
+                    if (search) params.append('search', search);
+                    if (params.toString()) url += `?${params.toString()}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    currentInvitations = data.data || [];
+                    renderInvitationsTable();
+                } else {
+                    showAlert('Error al cargar las invitaciones', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión', 'danger');
+            }
+        }
+
+        // Función para renderizar la tabla de invitaciones
+        function renderInvitationsTable() {
+            const tbody = document.getElementById('invitationsTableBody');
+            
+            if (currentInvitations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="fas fa-inbox me-2"></i>
+                            No se encontraron invitaciones
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = currentInvitations.map(invitation => {
+                const isActive = invitation.activo && (!invitation.fecha_expiracion || new Date(invitation.fecha_expiracion) > new Date());
+                const isExpired = invitation.fecha_expiracion && new Date(invitation.fecha_expiracion) <= new Date();
+                
+                let statusBadge = '';
+                if (!invitation.activo) {
+                    statusBadge = '<span class="badge badge-secondary">Inactivo</span>';
+                } else if (isExpired) {
+                    statusBadge = '<span class="badge badge-danger">Expirado</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-success">Activo</span>';
+                }
+
+                const expirationDate = invitation.fecha_expiracion ? 
+                    new Date(invitation.fecha_expiracion).toLocaleDateString('es-ES') : 
+                    'Sin expiración';
+
+                return `
+                    <tr>
+                        <td><code>${invitation.codigo_invitacion}</code></td>
+                        <td>${invitation.proyecto_titulo || 'N/A'}</td>
+                        <td>${invitation.creado_por_nombre} ${invitation.creado_por_apellido}</td>
+                        <td>${invitation.usos_actuales}/${invitation.max_usos}</td>
+                        <td>${expirationDate}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-1" onclick="editInvitation(${invitation.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteInvitation(${invitation.id})" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Función para crear invitación
+        async function createInvitation() {
+            const form = document.getElementById('createInvitationForm');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/admin/invitations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Código de invitación creado exitosamente', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('createInvitationModal')).hide();
+                    form.reset();
+                    loadInvitations();
+                } else {
+                    showAlert(data.message || 'Error al crear la invitación', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión', 'danger');
+            }
+        }
+
+        // Función para editar invitación
+        function editInvitation(invitationId) {
+            const invitation = currentInvitations.find(inv => inv.id === invitationId);
+            if (!invitation) return;
+
+            document.getElementById('editInvitationId').value = invitation.id;
+            document.getElementById('editMaxUsos').value = invitation.max_usos;
+            document.getElementById('editFechaExpiracion').value = invitation.fecha_expiracion ? 
+                new Date(invitation.fecha_expiracion).toISOString().slice(0, 16) : '';
+            document.getElementById('editDescripcion').value = invitation.descripcion || '';
+            document.getElementById('editActivo').checked = invitation.activo;
+
+            new bootstrap.Modal(document.getElementById('editInvitationModal')).show();
+        }
+
+        // Función para actualizar invitación
+        async function updateInvitation() {
+            const invitationId = document.getElementById('editInvitationId').value;
+            const form = document.getElementById('editInvitationForm');
+            const formData = new FormData(form);
+            
+            const data = Object.fromEntries(formData);
+            data.activo = document.getElementById('editActivo').checked;
+
+            try {
+                const response = await fetch(`/admin/invitations/${invitationId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('Invitación actualizada exitosamente', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editInvitationModal')).hide();
+                    loadInvitations();
+                } else {
+                    showAlert(result.message || 'Error al actualizar la invitación', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión', 'danger');
+            }
+        }
+
+        // Función para eliminar invitación
+        async function deleteInvitation(invitationId) {
+            if (!confirm('¿Estás seguro de que deseas eliminar esta invitación?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/invitations/${invitationId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('Invitación eliminada exitosamente', 'success');
+                    loadInvitations();
+                } else {
+                    showAlert(data.message || 'Error al eliminar la invitación', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión', 'danger');
+            }
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        // Event listeners para filtros
+        document.getElementById('projectFilter').addEventListener('change', loadInvitations);
+        document.getElementById('statusFilter').addEventListener('change', loadInvitations);
+        document.getElementById('searchInput').addEventListener('input', debounce(loadInvitations, 500));
+
+        // Función debounce para la búsqueda
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // DEBUG temporal - verificar datos de proyectos
+        console.log('=== DEBUG FRONTEND ===');
+        console.log('Projects data:', <%- JSON.stringify(projects) %>);
+        console.log('Projects length:', <%- projects ? projects.length : 'null' %>);
+        console.log('=== END DEBUG FRONTEND ===');
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

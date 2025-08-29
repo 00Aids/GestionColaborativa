@@ -1,0 +1,84 @@
+<div class="task-card" onclick="openTaskModal(<%= task.id || 0 %>)" data-task-id="<%= task.id || '' %>">
+    <div class="task-header">
+        <h3 class="task-title"><%= task.titulo %></h3>
+        <span class="task-priority priority-<%= task.prioridad || 'media' %>">
+            <%= task.prioridad || 'media' %>
+        </span>
+    </div>
+    
+    <% if (task.descripcion) { %>
+        <div class="task-description">
+            <%= task.descripcion %>
+        </div>
+    <% } %>
+    
+    <div class="task-meta">
+        <div class="task-assignee">
+            <% if (task.asignado_nombres) { %>
+                <div class="assignee-avatar">
+                    <%= task.asignado_nombres.charAt(0).toUpperCase() %><%= task.asignado_apellidos.charAt(0).toUpperCase() %>
+                </div>
+                <span><%= task.asignado_nombres %> <%= task.asignado_apellidos %></span>
+            <% } else { %>
+                <span style="color: #94a3b8; font-style: italic;">Sin asignar</span>
+            <% } %>
+        </div>
+        
+        <% if (task.fecha_limite) { %>
+            <div class="task-due-date <%= new Date(task.fecha_limite) < new Date() ? 'overdue' : '' %>">
+                <i class="fas fa-calendar-alt"></i>
+                <span><%= new Date(task.fecha_limite).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' }) %></span>
+            </div>
+        <% } %>
+    </div>
+    
+
+    
+    <!-- Indicadores adicionales -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 12px; color: #64748b;">
+        <div style="display: flex; gap: 10px;">
+            <!-- Comentarios -->
+            <% if (task.comentarios_count && task.comentarios_count > 0) { %>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-comment"></i>
+                    <%= task.comentarios_count %>
+                </span>
+            <% } %>
+            
+            <!-- Archivos adjuntos -->
+            <% if (task.archivos_adjuntos && task.archivos_adjuntos.length > 0) { %>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-paperclip"></i>
+                    <%= task.archivos_adjuntos.length %>
+                </span>
+            <% } %>
+            
+            <!-- Estimación de tiempo -->
+            <% if (task.estimacion_horas) { %>
+                <span style="display: flex; align-items: center; gap: 4px;">
+                    <i class="fas fa-clock"></i>
+                    <%= task.estimacion_horas %>h
+                </span>
+            <% } %>
+        </div>
+        
+        <!-- Estado de completado -->
+        <% if (task.estado_workflow === 'done') { %>
+            <span style="display: flex; align-items: center; gap: 4px; color: #10b981;">
+                <i class="fas fa-check-circle"></i>
+                <span>Completada</span>
+            </span>
+        <% } %>
+    </div>
+    
+    <!-- Etiquetas si existen -->
+    <% if (task.etiquetas && task.etiquetas.length > 0) { %>
+        <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
+            <% task.etiquetas.forEach(etiqueta => { %>
+                <span style="padding: 2px 6px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 10px; font-weight: 500;">
+                    <%= etiqueta %>
+                </span>
+            <% }) %>
+        </div>
+    <% } %>
+</div>

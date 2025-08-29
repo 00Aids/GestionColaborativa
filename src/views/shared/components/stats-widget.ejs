@@ -1,0 +1,15 @@
+<%# 
+  Componente reutilizable para widgets de estadísticas
+  Parámetros:
+  - number: número a mostrar
+  - label: etiqueta descriptiva
+  - icon: icono opcional (emoji o clase CSS)
+  - color: color del widget (opcional)
+%>
+<div class="stat-card <%= color ? 'stat-' + color : '' %>">
+    <% if (typeof icon !== 'undefined') { %>
+        <div class="stat-icon"><%= icon %></div>
+    <% } %>
+    <div class="stat-number"><%= number || 0 %></div>
+    <div class="stat-label"><%= label %></div>
+</div>

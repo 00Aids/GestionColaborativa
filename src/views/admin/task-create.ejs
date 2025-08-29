@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Tarea - Sistema Académico</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR MODERNO ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 25px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: transparent;
+        }
+
+        .top-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===== FORM CONTAINER ===== */
+        .form-container {
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .form-subtitle {
+            color: #64748b;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 25px;
+                margin: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-graduation-cap"></i> Admin Panel</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard/admin" class="nav-item">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="/admin/users" class="nav-item">
+                <i class="fas fa-users"></i> Usuarios
+            </a>
+            <a href="/admin/roles" class="nav-item">
+                <i class="fas fa-user-shield"></i> Roles
+            </a>
+            <a href="/admin/projects" class="nav-item active">
+                <i class="fas fa-project-diagram"></i> Proyectos
+            </a>
+            <a href="/admin/deliverables" class="nav-item">
+                <i class="fas fa-tasks"></i> Entregables
+            </a>
+            <a href="/admin/calendar" class="nav-item">
+                <i class="fas fa-calendar"></i> Calendario
+            </a>
+            <a href="/admin/invitations" class="nav-item">
+                <i class="fas fa-envelope"></i> Invitaciones
+            </a>
+            <a href="/admin/reports" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+            <a href="/admin/settings" class="nav-item">
+                <i class="fas fa-cog"></i> Configuración
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="breadcrumb">
+                <a href="/admin/projects"><i class="fas fa-project-diagram"></i> Proyectos</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/admin/projects/<%= project.id %>"><%= project.titulo %></a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/admin/projects/<%= project.id %>/tasks">Tareas</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Nueva Tarea</span>
+            </div>
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <%= user.nombres.charAt(0).toUpperCase() %><%= user.apellidos.charAt(0).toUpperCase() %>
+                </div>
+                <div class="user-info">
+                    <h4><%= user.nombres %> <%= user.apellidos %></h4>
+                    <span><%= user.rol_nombre %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container">
+            <div class="form-card">
+                <div class="form-header">
+                    <h1 class="form-title">
+                        <i class="fas fa-plus-circle" style="color: #667eea;"></i>
+                        Nueva Tarea
+                    </h1>
+                    <p class="form-subtitle">Crea una nueva tarea para el proyecto <%= project.titulo %></p>
+                </div>
+
+                <form action="/admin/projects/<%= project.id %>/tasks" method="POST" enctype="multipart/form-data">
+                    <!-- Información Básica -->
+                    <div class="form-group">
+                        <label for="titulo" class="form-label">Título de la Tarea <span class="required">*</span></label>
+                        <input type="text" id="titulo" name="titulo" class="form-input" required 
+                               placeholder="Ingresa el título de la tarea">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" name="descripcion" class="form-textarea" 
+                                  placeholder="Describe los detalles de la tarea"></textarea>
+                    </div>
+
+                    <!-- Configuración de Tarea -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prioridad" class="form-label">Prioridad <span class="required">*</span></label>
+                            <select id="prioridad" name="prioridad" class="form-select" required>
+                                <option value="">Seleccionar prioridad</option>
+                                <option value="baja">Baja</option>
+                                <option value="media" selected>Media</option>
+                                <option value="alta">Alta</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fase_id" class="form-label">Fase del Proyecto</label>
+                            <select id="fase_id" name="fase_id" class="form-select">
+                                <option value="">Sin fase específica</option>
+                                <% if (fases && fases.length > 0) { %>
+                                    <% fases.forEach(fase => { %>
+                                        <option value="<%= fase.id %>"><%= fase.nombre %></option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Asignación y Fechas -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="asignado_a" class="form-label">Asignar a</label>
+                            <select id="asignado_a" name="asignado_a" class="form-select">
+                                <option value="">Sin asignar</option>
+                                <% if (members && members.length > 0) { %>
+                                    <% members.forEach(member => { %>
+                                        <option value="<%= member.id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                            <div class="form-help">Selecciona un miembro del proyecto para asignar esta tarea</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fecha_limite" class="form-label">Fecha Límite</label>
+                            <input type="date" id="fecha_limite" name="fecha_limite" class="form-input">
+                            <div class="form-help">Fecha opcional para completar la tarea</div>
+                        </div>
+                    </div>
+
+                    <!-- Estimación de Tiempo -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="estimacion_horas" class="form-label">Estimación (horas)</label>
+                            <input type="number" id="estimacion_horas" name="estimacion_horas" class="form-input" 
+                                   min="0" step="0.5" placeholder="Ej: 8">
+                            <div class="form-help">Tiempo estimado para completar la tarea</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="estado_workflow" class="form-label">Estado Inicial</label>
+                            <select id="estado_workflow" name="estado_workflow" class="form-select">
+                                <option value="todo" selected>Por Hacer</option>
+                                <option value="in_progress">En Progreso</option>
+                            </select>
+                            <div class="form-help">Estado inicial de la tarea</div>
+                        </div>
+                    </div>
+
+                    <!-- Etiquetas -->
+                    <div class="form-group">
+                        <label for="etiquetas" class="form-label">Etiquetas</label>
+                        <input type="text" id="etiquetas" name="etiquetas" class="form-input" 
+                               placeholder="frontend, backend, diseño (separadas por comas)">
+                        <div class="form-help">Etiquetas para categorizar la tarea, separadas por comas</div>
+                    </div>
+
+                    <!-- Archivos Adjuntos -->
+                    <div class="form-group">
+                        <label for="archivos" class="form-label">Archivos Adjuntos</label>
+                        <input type="file" id="archivos" name="archivos" class="form-input" multiple 
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif">
+                        <div class="form-help">Puedes adjuntar múltiples archivos relacionados con la tarea</div>
+                    </div>
+
+
+
+                    <!-- Acciones del Formulario -->
+                    <div class="form-actions">
+                        <a href="/admin/projects/<%= project.id %>/tasks" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Crear Tarea
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+
+        // Validación del formulario
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const titulo = document.getElementById('titulo').value.trim();
+            const prioridad = document.getElementById('prioridad').value;
+            
+            if (!titulo) {
+                e.preventDefault();
+                alert('El título de la tarea es obligatorio');
+                document.getElementById('titulo').focus();
+                return;
+            }
+            
+            if (!prioridad) {
+                e.preventDefault();
+                alert('Debe seleccionar una prioridad');
+                document.getElementById('prioridad').focus();
+                return;
+            }
+            
+            // Validar fecha límite no sea en el pasado
+            const fechaLimite = document.getElementById('fecha_limite').value;
+            if (fechaLimite) {
+                const fechaSeleccionada = new Date(fechaLimite);
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fechaSeleccionada < hoy) {
+                    e.preventDefault();
+                    alert('La fecha límite no puede ser en el pasado');
+                    document.getElementById('fecha_limite').focus();
+                    return;
+                }
+            }
+        });
+
+        // Configurar fecha mínima para fecha límite
+        document.addEventListener('DOMContentLoaded', function() {
+            const fechaLimiteInput = document.getElementById('fecha_limite');
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaLimiteInput.min = hoy;
+        });
+    </script>
+</body>
+</html>

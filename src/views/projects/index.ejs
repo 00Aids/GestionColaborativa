@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyectos - <%= title %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #5a67d8;
+            font-size: 18px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            width: 300px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .role-badge {
+            background: #e6fffa;
+            color: #234e52;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 20px;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .create-btn {
+            background: #5a67d8;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .create-btn:hover {
+            background: #4c51bf;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-btn {
+            background: #38b2ac;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .projects-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .project-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .project-meta {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-propuesta {
+            background: #fef5e7;
+            color: #744210;
+        }
+
+        .status-aprobado {
+            background: #f0fff4;
+            color: #22543d;
+        }
+
+        .status-en-desarrollo {
+            background: #ebf8ff;
+            color: #2a4365;
+        }
+
+        .status-finalizado {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .project-description {
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .project-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .project-participants {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .view-btn {
+            background: #5a67d8;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .view-btn:hover {
+            background: #4c51bf;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #4a5568;
+        }
+
+        .pagination .current {
+            background: #5a67d8;
+            color: white;
+            border-color: #5a67d8;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 15px;
+            }
+
+            .search-bar {
+                width: 200px;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">Sistema de Gestión de Proyectos</div>
+            <form class="search-bar" method="GET">
+                <input type="text" name="search" placeholder="Buscar proyectos..." value="<%= search || '' %>">
+            </form>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <span><%= user.nombres %> <%= user.apellidos %></span>
+                <span class="role-badge"><%= user.rol_nombre %></span>
+            </div>
+            <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        <% if (success) { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+        <% if (error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Mis Proyectos</h1>
+            <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
+                <a href="/projects/create" class="create-btn">+ Nuevo Proyecto</a>
+            <% } %>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <form method="GET">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Estado</label>
+                        <select name="estado">
+                            <option value="">Todos los estados</option>
+                            <option value="propuesta" <%= estado === 'propuesta' ? 'selected' : '' %>>Propuesta</option>
+                            <option value="aprobado" <%= estado === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
+                            <option value="en-desarrollo" <%= estado === 'en-desarrollo' ? 'selected' : '' %>>En Desarrollo</option>
+                            <option value="finalizado" <%= estado === 'finalizado' ? 'selected' : '' %>>Finalizado</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Buscar</label>
+                        <input type="text" name="search" placeholder="Título, descripción..." value="<%= search || '' %>">
+                    </div>
+                </div>
+                <button type="submit" class="filter-btn">Filtrar</button>
+            </form>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid">
+            <% if (projects && projects.length > 0) { %>
+                <% projects.forEach(project => { %>
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div>
+                                <h3 class="project-title"><%= project.titulo %></h3>
+                                <div class="project-meta">
+                                    Creado: <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString() : 'N/A' %>
+                                </div>
+                            </div>
+                            <span class="status-badge status-<%= project.estado || 'propuesta' %>">
+                                <%= project.estado || 'Propuesta' %>
+                            </span>
+                        </div>
+                        
+                        <p class="project-description">
+                            <%= project.descripcion ? project.descripcion.substring(0, 150) + '...' : 'Sin descripción' %>
+                        </p>
+                        
+                        <div class="project-footer">
+                            <div class="project-participants">
+                                <span>Estudiante: <%= project.estudiante_nombre || 'No asignado' %></span>
+                                <span>Director: <%= project.director_nombre || 'No asignado' %></span>
+                            </div>
+                            <a href="/projects/<%= project.id %>" class="view-btn">Ver Detalles</a>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="empty-state">
+                    <h3>No hay proyectos</h3>
+                    <p>No se encontraron proyectos que coincidan con los criterios de búsqueda.</p>
+                    <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
+                        <a href="/projects/create" class="create-btn" style="margin-top: 20px; display: inline-block;">Crear mi primer proyecto</a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>">« Anterior</a>
+                <% } %>
+                
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <% if (i === currentPage) { %>
+                        <span class="current"><%= i %></span>
+                    <% } else { %>
+                        <a href="?page=<%= i %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>"><%= i %></a>
+                    <% } %>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>">Siguiente »</a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

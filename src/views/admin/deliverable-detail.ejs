@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SIDEBAR MODERNO ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 0;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+            gap: 15px;
+        }
+
+        .nav-link:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .content-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px 40px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .content-header h1 i {
+            color: #667eea;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            margin: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        .deliverable-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .detail-status {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .overdue-badge {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .detail-section {
+            background: rgba(248, 249, 250, 0.8);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .detail-section h3 {
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        
+        .detail-item label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 140px;
+            margin-right: 15px;
+        }
+        
+        .detail-item span {
+            color: #6c757d;
+            flex: 1;
+        }
+        
+        .comments-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            color: #495057;
+        }
+        
+        .status-form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-pendiente {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+        }
+        
+        .status-en-progreso {
+            background: linear-gradient(135deg, #cce5ff 0%, #74b9ff 100%);
+            color: #004085;
+        }
+        
+        .status-completado {
+            background: linear-gradient(135deg, #d4edda 0%, #00b894 100%);
+            color: #155724;
+        }
+        
+        .status-aprobado {
+            background: linear-gradient(135deg, #d1ecf1 0%, #00cec9 100%);
+            color: #0c5460;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin: 20px 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: rgba(212, 237, 218, 0.9);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: rgba(248, 215, 218, 0.9);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>
+                <i class="fas fa-shield-alt"></i>
+                Admin Panel
+            </h2>
+            <div class="subtitle">Sistema de Gestión</div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="/dashboard/admin" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/projects" class="nav-link">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/deliverables" class="nav-link active">
+                    <i class="fas fa-tasks"></i>
+                    Entregables
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/users" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/roles" class="nav-link">
+                    <i class="fas fa-user-tag"></i>
+                    Roles
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/calendar" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendario
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/reports" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/admin/settings" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/auth/logout" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Botón de menú móvil -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="main-content">
+        <div class="content-header">
+            <h1><i class="fas fa-file-alt"></i> <%= deliverable.titulo %></h1>
+            <div class="header-actions">
+                <a href="/admin/deliverables" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Entregables
+                </a>
+            </div>
+        </div>
+        
+        <!-- Mensajes -->
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <%= success %>
+            </div>
+        <% } %>
+        
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> <%= error %>
+            </div>
+        <% } %>
+        
+        <!-- Información del Entregable -->
+        <div class="content-card">
+            <div class="deliverable-detail-header">
+                <div class="detail-status">
+                    <span class="status-badge status-<%= deliverable.estado.toLowerCase().replace(' ', '-') %>">
+                        <%= deliverable.estado %>
+                    </span>
+                    <% if (deliverable.is_overdue) { %>
+                        <span class="overdue-badge">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Vencido hace <%= deliverable.dias_vencido %> día<%= deliverable.dias_vencido !== 1 ? 's' : '' %>
+                        </span>
+                    <% } %>
+                </div>
+            </div>
+            
+            <div class="detail-grid">
+                <div class="detail-section">
+                    <h3><i class="fas fa-info-circle"></i> Información General</h3>
+                    <div class="detail-item">
+                        <label>Título:</label>
+                        <span><%= deliverable.titulo %></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Descripción:</label>
+                        <span><%= deliverable.descripcion || 'Sin descripción' %></span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Fecha de entrega:</label>
+                        <span><%= new Date(deliverable.fecha_entrega).toLocaleDateString() %></span>
+                    </div>
+                    <% if (deliverable.fase_nombre) { %>
+                        <div class="detail-item">
+                            <label>Fase:</label>
+                            <span><%= deliverable.fase_nombre %></span>
+                        </div>
+                    <% } %>
+                </div>
+                
+                <div class="detail-section">
+                    <h3><i class="fas fa-project-diagram"></i> Información del Proyecto</h3>
+                    <% if (deliverable.project) { %>
+                        <div class="detail-item">
+                            <label>Proyecto:</label>
+                            <span><%= deliverable.project.titulo %></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Estudiante:</label>
+                            <span><%= deliverable.estudiante_nombres %> <%= deliverable.estudiante_apellidos %></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Estado del proyecto:</label>
+                            <span><%= deliverable.project.estado %></span>
+                        </div>
+                    <% } else { %>
+                        <p>No hay información del proyecto disponible.</p>
+                    <% } %>
+                </div>
+            </div>
+            
+            <% if (deliverable.comentarios) { %>
+                <div class="detail-section">
+                    <h3><i class="fas fa-comments"></i> Comentarios</h3>
+                    <div class="comments-box">
+                        <%= deliverable.comentarios %>
+                    </div>
+                </div>
+            <% } %>
+            
+            <!-- Formulario para actualizar estado -->
+            <div class="detail-section">
+                <h3><i class="fas fa-edit"></i> Actualizar Estado</h3>
+                <form action="/admin/deliverables/<%= deliverable.id %>/status" method="POST" class="status-form">
+                    <div class="form-group">
+                        <label for="estado">Estado:</label>
+                        <select id="estado" name="estado" class="form-control" required>
+                            <option value="pendiente" <%= deliverable.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                            <option value="en_progreso" <%= deliverable.estado === 'en_progreso' ? 'selected' : '' %>>En Progreso</option>
+                            <option value="completado" <%= deliverable.estado === 'completado' ? 'selected' : '' %>>Completado</option>
+                            <option value="aprobado" <%= deliverable.estado === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
+                            <option value="rechazado" <%= deliverable.estado === 'rechazado' ? 'selected' : '' %>>Rechazado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="comentarios">Comentarios:</label>
+                        <textarea id="comentarios" name="comentarios" class="form-control" rows="4" placeholder="Agregar comentarios sobre el entregable..."><%= deliverable.comentarios || '' %></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Actualizar Estado
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Toggle sidebar en móvil
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Cerrar sidebar al hacer clic fuera en móvil
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!sidebar.contains(event.target) && 
+                !toggle.contains(event.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

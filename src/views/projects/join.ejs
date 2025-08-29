@@ -1,0 +1,111 @@
+<%- include('../layouts/header', { title: title }) %>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">
+            <i class="fas fa-users"></i>
+            Unirse a un Proyecto
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Mensajes de error y éxito -->
+          <% if (typeof error !== 'undefined' && error.length > 0) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <%= error %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+          
+          <% if (typeof success !== 'undefined' && success.length > 0) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <%= success %>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          <% } %>
+
+          <!-- Información sobre el sistema -->
+          <div class="alert alert-info mb-4">
+            <h6><i class="fas fa-info-circle"></i> ¿Cómo funciona?</h6>
+            <p class="mb-0">
+              Si tienes un código de invitación de un proyecto, ingrésalo abajo para unirte automáticamente.
+              El código te lo debe proporcionar el creador del proyecto.
+            </p>
+          </div>
+
+          <!-- Formulario para ingresar código -->
+          <form action="/projects/join" method="POST" id="joinForm">
+            <div class="mb-3">
+              <label for="invitation_code" class="form-label">
+                <i class="fas fa-key"></i>
+                Código de Invitación *
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="invitation_code" 
+                name="invitation_code" 
+                placeholder="Ingresa el código de invitación"
+                required
+                maxlength="20"
+                style="text-transform: uppercase;"
+              >
+              <div class="form-text">
+                El código debe tener entre 6 y 20 caracteres
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="/dashboard" class="btn btn-secondary me-md-2">
+                <i class="fas fa-arrow-left"></i>
+                Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                <i class="fas fa-sign-in-alt"></i>
+                Unirse al Proyecto
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Información adicional -->
+      <div class="card mt-4">
+        <div class="card-body">
+          <h6><i class="fas fa-question-circle"></i> ¿No tienes un código?</h6>
+          <p class="mb-0">
+            Contacta al creador del proyecto para que te proporcione un código de invitación válido.
+            Los códigos pueden tener fecha de expiración y límites de uso.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Validación del formulario
+document.getElementById('joinForm').addEventListener('submit', function(e) {
+  const code = document.getElementById('invitation_code').value.trim();
+  const submitBtn = document.getElementById('submitBtn');
+  
+  if (code.length < 6) {
+    e.preventDefault();
+    alert('El código debe tener al menos 6 caracteres');
+    return;
+  }
+  
+  // Deshabilitar botón para evitar envíos múltiples
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+});
+
+// Convertir a mayúsculas automáticamente
+document.getElementById('invitation_code').addEventListener('input', function(e) {
+  e.target.value = e.target.value.toUpperCase();
+});
+</script>
+
+<%- include('../layouts/footer') %>

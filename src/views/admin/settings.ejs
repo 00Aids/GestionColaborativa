@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración del Sistema - Administrador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h2 {
+            color: #2d3748;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .sidebar-header p {
+            color: #718096;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .sidebar-nav {
+            padding: 20px 0;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .nav-section {
+            margin-bottom: 30px;
+        }
+        
+        .nav-section-title {
+            color: #a0aec0;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 20px 10px;
+            margin-bottom: 10px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+            margin: 2px 10px;
+            border-radius: 0 25px 25px 0;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            color: #667eea;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .nav-item-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            min-height: 100vh;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #4a5568;
+            cursor: pointer;
+        }
+        
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 25px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info h4 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .user-info span {
+            color: #718096;
+            font-size: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        /* Settings Content */
+        .settings-container {
+            padding: 30px;
+        }
+        
+        .page-title {
+            margin-bottom: 30px;
+        }
+        
+        .page-title h1 {
+            font-size: 32px;
+            color: #2d3748;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .page-title p {
+            color: #718096;
+            font-size: 16px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .settings-form {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .system-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+        
+        .info-title {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #718096;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+            color: #22543d;
+        }
+        
+        .alert-error {
+            background: rgba(245, 101, 101, 0.1);
+            border: 1px solid rgba(245, 101, 101, 0.3);
+            color: #742a2a;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Panel Admin</h2>
+            <p>Sistema de Gestión</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="/dashboard/admin" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+                <a href="/admin/projects" class="nav-item">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos
+                    <span class="nav-item-badge">Nuevo</span>
+                </a>
+                <a href="/admin/calendar" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendario
+                </a>
+                <a href="/admin/reports" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Gestión</div>
+                <a href="/admin/users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </a>
+                <a href="/admin/roles" class="nav-item">
+                    <i class="fas fa-user-tag"></i>
+                    Roles
+                </a>
+                <a href="/admin/invitations" class="nav-item">
+                    <i class="fas fa-envelope"></i>
+                    Invitaciones
+                </a>
+                <a href="/admin/settings" class="nav-item active">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Sistema</div>
+                <a href="#" class="nav-item" onclick="alert('Función en desarrollo')">
+                    <i class="fas fa-database"></i>
+                    Respaldos
+                </a>
+                <a href="#" class="nav-item" onclick="alert('Función en desarrollo')">
+                    <i class="fas fa-file-alt"></i>
+                    Logs del Sistema
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Buscar configuraciones...">
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-info">
+                    <h4><% if (user && user.nombres && user.apellidos) { %><%= user.nombres %> <%= user.apellidos %><% } else { %>Usuario<% } %></h4>
+                    <span>Administrador General</span>
+                </div>
+                <div class="user-avatar">
+                    <% if (user && user.nombres) { %><%= user.nombres.charAt(0).toUpperCase() %><% } else { %>A<% } %>
+                </div>
+                <a href="/auth/logout" style="color: #e53e3e; text-decoration: none; margin-left: 15px; font-weight: 500;">Cerrar Sesión</a>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-container">
+            <div class="page-title">
+                <h1>Configuración del Sistema</h1>
+                <p>Gestiona las configuraciones generales del sistema académico</p>
+            </div>
+
+            <!-- Alertas -->
+            <% if (success && success.length > 0) { %>
+                <div class="alert alert-success">
+                    <%= success %>
+                </div>
+            <% } %>
+            <% if (error && error.length > 0) { %>
+                <div class="alert alert-error">
+                    <%= error %>
+                </div>
+            <% } %>
+
+            <div class="settings-grid">
+                <!-- Formulario de Configuración -->
+                <div class="settings-form">
+                    <form id="settingsForm">
+                        <!-- Configuraciones Generales -->
+                        <div class="settings-section">
+                            <h2 class="section-title">Configuraciones Generales</h2>
+                            <div class="form-group">
+                                <label for="siteName">Nombre del Sitio</label>
+                                <input type="text" id="siteName" name="siteName" value="<%= systemConfig.siteName %>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="siteDescription">Descripción del Sitio</label>
+                                <textarea id="siteDescription" name="siteDescription"><%= systemConfig.siteDescription %></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="adminEmail">Email del Administrador</label>
+                                <input type="email" id="adminEmail" name="adminEmail" value="<%= systemConfig.adminEmail %>" required>
+                            </div>
+                        </div>
+
+                        <!-- Configuraciones de Archivos -->
+                        <div class="settings-section">
+                            <h2 class="section-title">Configuraciones de Archivos</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="maxFileSize">Tamaño Máximo de Archivo</label>
+                                    <input type="text" id="maxFileSize" name="maxFileSize" value="<%= systemConfig.maxFileSize %>">
+                                </div>
+                                <div class="form-group">
+                                    <label for="allowedFileTypes">Tipos de Archivo Permitidos</label>
+                                    <input type="text" id="allowedFileTypes" name="allowedFileTypes" value="<%= systemConfig.allowedFileTypes %>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuraciones de Notificaciones -->
+                        <div class="settings-section">
+                            <h2 class="section-title">Configuraciones de Notificaciones</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="emailNotifications" name="emailNotifications" <%= systemConfig.emailNotifications ? 'checked' : '' %>>
+                                        <label for="emailNotifications">Notificaciones por Email</label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="smsNotifications" name="smsNotifications" <%= systemConfig.smsNotifications ? 'checked' : '' %>>
+                                        <label for="smsNotifications">Notificaciones por SMS</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuraciones de Seguridad -->
+                        <div class="settings-section">
+                            <h2 class="section-title">Configuraciones de Seguridad</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="sessionTimeout">Tiempo de Sesión (minutos)</label>
+                                    <input type="number" id="sessionTimeout" name="sessionTimeout" value="<%= systemConfig.sessionTimeout %>" min="5" max="120">
+                                </div>
+                                <div class="form-group">
+                                    <label for="passwordMinLength">Longitud Mínima de Contraseña</label>
+                                    <input type="number" id="passwordMinLength" name="passwordMinLength" value="<%= systemConfig.passwordMinLength %>" min="6" max="20">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="requirePasswordChange" name="requirePasswordChange" <%= systemConfig.requirePasswordChange ? 'checked' : '' %>>
+                                    <label for="requirePasswordChange">Requerir cambio de contraseña periódico</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuraciones Académicas -->
+                        <div class="settings-section">
+                            <h2 class="section-title">Configuraciones Académicas</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="defaultProjectDuration">Duración por Defecto de Proyectos (meses)</label>
+                                    <input type="number" id="defaultProjectDuration" name="defaultProjectDuration" value="<%= systemConfig.defaultProjectDuration %>" min="1" max="24">
+                                </div>
+                                <div class="form-group">
+                                    <label for="evaluationDeadlineDays">Días Límite para Evaluaciones</label>
+                                    <input type="number" id="evaluationDeadlineDays" name="evaluationDeadlineDays" value="<%= systemConfig.evaluationDeadlineDays %>" min="1" max="30">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="autoAssignEvaluators" name="autoAssignEvaluators" <%= systemConfig.autoAssignEvaluators ? 'checked' : '' %>>
+                                    <label for="autoAssignEvaluators">Asignación automática de evaluadores</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="save-btn" id="saveBtn">Guardar Configuraciones</button>
+                    </form>
+                </div>
+
+                <!-- Información del Sistema -->
+                <div class="system-info">
+                    <h3 class="info-title">Información del Sistema</h3>
+                    <div class="info-item">
+                        <span class="info-label">Total de Usuarios:</span>
+                        <span class="info-value"><%= systemStats.totalUsers %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total de Proyectos:</span>
+                        <span class="info-value"><%= systemStats.totalProjects %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Total de Roles:</span>
+                        <span class="info-value"><%= systemStats.totalRoles %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Uso de Disco:</span>
+                        <span class="info-value"><%= systemStats.diskUsage %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Último Backup:</span>
+                        <span class="info-value"><%= systemStats.lastBackup %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Settings form submission
+        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.textContent;
+            
+            // Deshabilitar botón y mostrar estado de carga
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Guardando...';
+            
+            try {
+                const formData = new FormData(this);
+                const data = {};
+                
+                // Convertir FormData a objeto
+                for (let [key, value] of formData.entries()) {
+                    if (this.querySelector(`[name="${key}"]`).type === 'checkbox') {
+                        data[key] = true;
+                    } else {
+                        data[key] = value;
+                    }
+                }
+                
+                // Agregar checkboxes no marcados como false
+                const checkboxes = this.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.checked) {
+                        data[checkbox.name] = false;
+                    }
+                });
+                
+                const response = await fetch('/admin/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Mostrar mensaje de éxito
+                    showAlert('Configuraciones guardadas exitosamente', 'success');
+                } else {
+                    showAlert(result.message || 'Error al guardar las configuraciones', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error al guardar las configuraciones', 'error');
+            } finally {
+                // Restaurar botón
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        });
+        
+        function showAlert(message, type) {
+            // Remover alertas existentes
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Crear nueva alerta
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            // Insertar antes del grid de configuraciones
+            const settingsGrid = document.querySelector('.settings-grid');
+            settingsGrid.parentNode.insertBefore(alert, settingsGrid);
+            
+            // Remover después de 5 segundos
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

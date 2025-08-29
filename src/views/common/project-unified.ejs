@@ -1,0 +1,63 @@
+<%# 
+  Vista unificada de proyectos que puede ser usada por todos los roles
+  Parámetros:
+  - projects: array de proyectos
+  - user: usuario actual
+  - canCreate: puede crear proyectos
+  - canEdit: puede editar proyectos
+  - viewMode: 'grid' o 'list'
+%>
+<div class="projects-container">
+    <div class="projects-header">
+        <h2>Proyectos</h2>
+        <div class="projects-actions">
+            <% if (canCreate) { %>
+                <a href="/projects/create" class="btn btn-primary">+ Nuevo Proyecto</a>
+            <% } %>
+            <div class="view-toggle">
+                <button class="view-btn <%= viewMode === 'grid' ? 'active' : '' %>" onclick="setViewMode('grid')">⊞</button>
+                <button class="view-btn <%= viewMode === 'list' ? 'active' : '' %>" onclick="setViewMode('list')">☰</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="projects-grid <%= viewMode || 'grid' %>">
+        <% if (projects && projects.length > 0) { %>
+            <% projects.forEach(project => { %>
+                <%- include('../shared/components/project-card', {
+                    project: project,
+                    showActions: canEdit,
+                    compact: viewMode === 'list'
+                }) %>
+            <% }) %>
+        <% } else { %>
+            <div class="empty-state">
+                <h3>No hay proyectos disponibles</h3>
+                <p>Aún no se han creado proyectos en el sistema.</p>
+                <% if (canCreate) { %>
+                    <a href="/projects/create" class="btn btn-primary">Crear Primer Proyecto</a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function setViewMode(mode) {
+    const container = document.querySelector('.projects-grid');
+    container.className = 'projects-grid ' + mode;
+    
+    // Update active button
+    document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[onclick="setViewMode('${mode}')"]`).classList.add('active');
+    
+    // Save preference
+    localStorage.setItem('projectsViewMode', mode);
+}
+
+// Load saved view mode
+document.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('projectsViewMode') || 'grid';
+    setViewMode(savedMode);
+});
+</script>

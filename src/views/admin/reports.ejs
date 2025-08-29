@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 25px;
+        }
+
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8e9aaf;
+            padding: 0 20px 10px 20px;
+            border-bottom: 1px solid #f0f2f5;
+            margin-bottom: 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+            color: #667eea;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+            color: #667eea;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #667eea;
+            border-left-color: #667eea;
+            font-weight: 600;
+        }
+
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            right: 20px;
+            width: 6px;
+            height: 6px;
+            background: #667eea;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .nav-item-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: auto;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            min-height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #667eea;
+            cursor: pointer;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+            margin: 0 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-info h4 {
+            font-size: 0.95rem;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .user-info span {
+            font-size: 0.8rem;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Reports Content */
+        .reports-container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .reports-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .reports-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        
+        .reports-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #667eea;
+        }
+        
+        .stat-section h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .breakdown-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .breakdown-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .breakdown-value {
+            font-weight: 600;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .recent-activity {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .recent-activity h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .activity-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background: #f8f9fa;
+            color: #666;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .activity-info p {
+            margin: 2px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .activity-date {
+            color: #667eea;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .export-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .export-section h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.3rem;
+        }
+        
+        .export-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .export-btn.pdf {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .export-btn.excel {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+        }
+        
+        .export-btn.csv {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            color: #27ae60;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border-left: 4px solid #e74c3c;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .search-container {
+                display: none;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .export-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-cogs"></i> Panel Admin</h2>
+            <p>Sistema de Gestión</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="/dashboard/admin" class="nav-item">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/admin/projects" class="nav-item">
+                    <i class="fas fa-project-diagram"></i>
+                    Proyectos
+                </a>
+                <a href="/admin/users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Usuarios
+                </a>
+                <a href="/admin/roles" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    Roles
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Gestión</div>
+                <a href="/admin/invitations" class="nav-item">
+                    <i class="fas fa-envelope"></i>
+                    Códigos de Invitación
+                </a>
+                <a href="/admin/calendar" class="nav-item">
+                    <i class="fas fa-calendar"></i>
+                    Calendario
+                </a>
+                <a href="/admin/reports" class="nav-item active">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes
+                </a>
+                <a href="/admin/settings" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    Configuración
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Sistema</div>
+                <a href="#" class="nav-item" onclick="alert('Función en desarrollo')">
+                    <i class="fas fa-database"></i>
+                    Respaldos
+                </a>
+                <a href="#" class="nav-item" onclick="alert('Función en desarrollo')">
+                    <i class="fas fa-file-alt"></i>
+                    Logs del Sistema
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Buscar reportes, estadísticas...">
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-info">
+                    <h4><%= user ? user.nombres + ' ' + user.apellidos : 'Administrador' %></h4>
+                    <span>Administrador General</span>
+                </div>
+                <div class="user-avatar">
+                    <%= user ? user.nombres.charAt(0).toUpperCase() : 'A' %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Content -->
+        <div class="reports-container">
+            <!-- Alertas -->
+            <% if (success && success.length > 0) { %>
+                <div class="alert alert-success">
+                    <%= success[0] %>
+                </div>
+            <% } %>
+            
+            <% if (error && error.length > 0) { %>
+                <div class="alert alert-error">
+                    <%= error[0] %>
+                </div>
+            <% } %>
+            
+            <!-- Encabezado -->
+            <div class="reports-header">
+                <h1>📊 Reportes del Sistema</h1>
+                <p>Análisis completo de la actividad y estadísticas del sistema</p>
+            </div>
+            
+            <!-- Estadísticas Generales -->
+            <div class="stats-grid">
+                <!-- Estadísticas de Usuarios -->
+                <div class="stat-section">
+                    <h3>👥 Estadísticas de Usuarios</h3>
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-number"><%= userStats.total %></div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= userStats.active %></div>
+                            <div class="stat-label">Activos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= userStats.inactive %></div>
+                            <div class="stat-label">Inactivos</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas de Proyectos -->
+                <div class="stat-section">
+                    <h3>📋 Estadísticas de Proyectos</h3>
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-number"><%= projectStats.total %></div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= projectStats.active %></div>
+                            <div class="stat-label">Activos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= projectStats.completed %></div>
+                            <div class="stat-label">Completados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= projectStats.pending %></div>
+                            <div class="stat-label">Pendientes</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas de Entregables -->
+                <div class="stat-section">
+                    <h3>📄 Estadísticas de Entregables</h3>
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-number"><%= deliverableStats.total %></div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= deliverableStats.completed %></div>
+                            <div class="stat-label">Completados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= deliverableStats.overdue %></div>
+                            <div class="stat-label">Vencidos</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas de Roles -->
+                <div class="stat-section">
+                    <h3>🔐 Estadísticas de Roles</h3>
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-number"><%= roleStats.total %></div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= roleStats.active %></div>
+                            <div class="stat-label">Activos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><%= roleStats.inactive %></div>
+                            <div class="stat-label">Inactivos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráficos y Análisis -->
+            <div class="charts-section">
+                <!-- Actividad Mensual -->
+                <div class="chart-container">
+                    <div class="chart-title">📈 Actividad Mensual</div>
+                    <div class="activity-chart">
+                        Gráfico de actividad mensual<br>
+                        <small>(Proyectos y Entregables creados por mes)</small>
+                    </div>
+                </div>
+                
+                <!-- Distribución por Roles -->
+                <div class="chart-container">
+                    <div class="chart-title">👥 Usuarios por Rol</div>
+                    <ul class="breakdown-list">
+                        <% Object.entries(userStats.byRole).forEach(([role, count]) => { %>
+                            <li class="breakdown-item">
+                                <span class="breakdown-label"><%= role %></span>
+                                <span class="breakdown-value"><%= count %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+                
+                <!-- Proyectos por Línea -->
+                <div class="chart-container">
+                    <div class="chart-title">🔬 Proyectos por Línea de Investigación</div>
+                    <ul class="breakdown-list">
+                        <% Object.entries(projectStats.byLine).forEach(([line, count]) => { %>
+                            <li class="breakdown-item">
+                                <span class="breakdown-label"><%= line %></span>
+                                <span class="breakdown-value"><%= count %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+                
+                <!-- Proyectos por Ciclo -->
+                <div class="chart-container">
+                    <div class="chart-title">📅 Proyectos por Ciclo Académico</div>
+                    <ul class="breakdown-list">
+                        <% Object.entries(projectStats.byCycle).forEach(([cycle, count]) => { %>
+                            <li class="breakdown-item">
+                                <span class="breakdown-label"><%= cycle %></span>
+                                <span class="breakdown-value"><%= count %></span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Actividad Reciente -->
+            <div class="recent-activity">
+                <h3>🕒 Actividad Reciente</h3>
+                <div class="activity-tabs">
+                    <button class="tab-button active" onclick="showTab('projects')">Proyectos Recientes</button>
+                    <button class="tab-button" onclick="showTab('deliverables')">Entregables Recientes</button>
+                </div>
+                
+                <div id="projects-tab" class="activity-list">
+                    <% if (recentProjects && recentProjects.length > 0) { %>
+                        <% recentProjects.forEach(project => { %>
+                            <div class="activity-item">
+                                <div class="activity-info">
+                                    <h4><%= project.titulo %></h4>
+                                    <p>Estudiante: <%= project.estudiante_nombres %> <%= project.estudiante_apellidos %></p>
+                                    <p>Estado: <%= project.estado %></p>
+                                </div>
+                                <div class="activity-date">
+                                    <%= new Date(project.fecha_creacion).toLocaleDateString('es-ES') %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="activity-item">
+                            <div class="activity-info">
+                                <p>No hay proyectos recientes</p>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+                
+                <div id="deliverables-tab" class="activity-list" style="display: none;">
+                    <% if (recentDeliverables && recentDeliverables.length > 0) { %>
+                        <% recentDeliverables.forEach(deliverable => { %>
+                            <div class="activity-item">
+                                <div class="activity-info">
+                                    <h4><%= deliverable.titulo %></h4>
+                                    <p>Proyecto: <%= deliverable.proyecto_titulo %></p>
+                                    <p>Estado: <%= deliverable.estado %></p>
+                                </div>
+                                <div class="activity-date">
+                                    <%= new Date(deliverable.fecha_creacion).toLocaleDateString('es-ES') %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="activity-item">
+                            <div class="activity-info">
+                                <p>No hay entregables recientes</p>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <!-- Sección de Exportación -->
+            <div class="export-section">
+                <h3>📥 Exportar Reportes</h3>
+                <p>Descarga los reportes en diferentes formatos para análisis externo</p>
+                <div class="export-buttons">
+                    <a href="#" class="export-btn pdf" onclick="exportReport('pdf')">
+                        📄 Exportar PDF
+                    </a>
+                    <a href="#" class="export-btn excel" onclick="exportReport('excel')">
+                        📊 Exportar Excel
+                    </a>
+                    <a href="#" class="export-btn csv" onclick="exportReport('csv')">
+                        📋 Exportar CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function showTab(tabName) {
+            // Ocultar todas las pestañas
+            document.getElementById('projects-tab').style.display = 'none';
+            document.getElementById('deliverables-tab').style.display = 'none';
+            
+            // Mostrar la pestaña seleccionada
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            
+            // Actualizar botones
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        function exportReport(format) {
+            alert(`Funcionalidad de exportación ${format.toUpperCase()} será implementada próximamente`);
+            // Aquí se implementaría la lógica de exportación
+        }
+    </script>
+</body>
+</html>

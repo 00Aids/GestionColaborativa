@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Proyecto - <%= project.nombre %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header moderno */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .admin-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #555;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        /* Breadcrumb moderno */
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            color: #764ba2;
+        }
+
+        /* Layout principal */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Tarjeta principal del proyecto */
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+
+        .project-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .project-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active { background: #d4edda; color: #155724; }
+        .status-completed { background: #cce5ff; color: #004085; }
+        .status-paused { background: #fff3cd; color: #856404; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+            color: white;
+        }
+
+        /* Sidebar de estadísticas */
+        .stats-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        /* Pestañas modernas */
+        .tabs-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 30px;
+        }
+
+        .tabs-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-content {
+            min-height: 300px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tablas modernas */
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .modern-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modern-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .modern-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Formularios modernos */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Alertas modernas */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .alert-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-left: 4px solid #4caf50;
+        }
+
+        .alert-warning {
+            background: #fff8e1;
+            color: #f57c00;
+            border-left: 4px solid #ff9800;
+        }
+
+        /* Estilos para la barra de progreso */
+        .progress-bar {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            height: 20px;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* Estilos para días restantes */
+        .days-left {
+            font-weight: bold;
+        }
+
+        .days-left[data-days] {
+            font-weight: 600;
+            color: #28a745; /* Default green for more than 7 days */
+        }
+
+        /* Estilos para badges de prioridad */
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-alta {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-media {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+
+        .priority-baja {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-sidebar {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .project-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .action-buttons {
+                justify-content: center;
+            }
+            
+            .tabs-nav {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-project-diagram"></i>
+                Admin Panel
+            </div>
+            <div class="header-right">
+                <div class="admin-badge">Administrador</div>
+                <div class="user-info">
+                    <div class="user-avatar"><%= user.nombres.charAt(0).toUpperCase() %></div>
+                    <span><%= user.nombres %> <%= user.apellidos %></span>
+                </div>
+                <a href="/auth/logout" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </header>
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/admin/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+            <span> / </span>
+            <a href="/admin/projects"><i class="fas fa-folder"></i> Proyectos</a>
+            <span> / </span>
+            <span><%= project.nombre %></span>
+        </nav>
+
+        <!-- Layout principal -->
+        <div class="main-layout">
+            <!-- Tarjeta principal del proyecto -->
+            <div class="project-card">
+                <div class="project-header">
+                    <div>
+                        <h1 class="project-title"><%= project.nombre %></h1>
+                        <div class="project-meta">
+                            <span><i class="fas fa-calendar"></i> Creado: <%= new Date(project.fecha_creacion).toLocaleDateString('es-ES') %></span>
+                            <span><i class="fas fa-clock"></i> Fecha límite: <%= project.fecha_limite ? new Date(project.fecha_limite).toLocaleDateString('es-ES') : 'No definida' %></span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="status-badge status-<%= project.estado.toLowerCase() %>">
+                            <i class="fas fa-circle"></i>
+                            <%= project.estado %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="project-description">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;"><i class="fas fa-info-circle"></i> Descripción</h3>
+                    <p style="line-height: 1.6; color: #555;"><%= project.descripcion || 'Sin descripción disponible' %></p>
+                </div>
+
+                <div class="action-buttons" style="margin-top: 25px;">
+                    <a href="/admin/projects/<%= project.id %>/edit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Editar Proyecto
+                    </a>
+                    <button onclick="showInviteModal()" class="btn btn-success">
+                        <i class="fas fa-user-plus"></i> Invitar Miembros
+                    </button>
+                    <button onclick="generateReport()" class="btn btn-warning">
+                        <i class="fas fa-chart-bar"></i> Generar Reporte
+                    </button>
+                    <% if (project.estado !== 'completado') { %>
+                    <button onclick="confirmAction('¿Completar proyecto?', 'Esta acción marcará el proyecto como completado.', () => completeProject(<%= project.id %>))" class="btn btn-success">
+                        <i class="fas fa-check"></i> Completar
+                    </button>
+                    <% } %>
+                    <button onclick="confirmAction('¿Eliminar proyecto?', 'Esta acción no se puede deshacer.', () => deleteProject(<%= project.id %>))" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar de estadísticas -->
+            <div class="stats-sidebar">
+                <div class="stats-card">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50; text-align: center;">
+                        <i class="fas fa-chart-pie"></i> Estadísticas
+                    </h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number"><%= members.length %></span>
+                            <span class="stat-label">Miembros</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number"><%= tasks.filter(t => t.estado === 'completada').length %></span>
+                            <span class="stat-label">Tareas Completadas</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number"><%= deliverables.length %></span>
+                            <span class="stat-label">Entregables</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number"><%= invitations.length %></span>
+                            <span class="stat-label">Invitaciones</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">
+                        <i class="fas fa-tasks"></i> Progreso de Tareas
+                    </h4>
+                    <% 
+                        const totalTasks = tasks.length;
+                        const completedTasks = tasks.filter(t => t.estado === 'completada').length;
+                        const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                    %>
+                    <div style="background: #f1f3f4; border-radius: 10px; padding: 3px; margin-bottom: 10px;">
+                        <div class="progress-bar" data-progress="<%= progress %>"></div>
+                    </div>
+                    <p style="text-align: center; color: #666; font-size: 14px;">
+                        <%= completedTasks %>/<%= totalTasks %> tareas (<%= progress %>%)
+                    </p>
+                </div>
+
+                <div class="stats-card">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">
+                        <i class="fas fa-clock"></i> Información Temporal
+                    </h4>
+                    <div style="font-size: 14px; color: #666; line-height: 1.6;">
+                        <p><strong>Creado:</strong> <%= new Date(project.fecha_creacion).toLocaleDateString('es-ES') %></p>
+                        <% if (project.fecha_limite) { %>
+                        <p><strong>Fecha límite:</strong> <%= new Date(project.fecha_limite).toLocaleDateString('es-ES') %></p>
+                        <% 
+                            const daysLeft = Math.ceil((new Date(project.fecha_limite) - new Date()) / (1000 * 60 * 60 * 24));
+                        %>
+                        <p><strong>Días restantes:</strong> 
+                            <span class="days-left" data-days="<%= daysLeft %>">
+                                <%= daysLeft > 0 ? daysLeft : 'Vencido' %>
+                            </span>
+                        </p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestañas de gestión -->
+        <div class="tabs-container">
+            <div class="tabs-nav">
+                <button class="tab-button active" onclick="showTab('members')">
+                    <i class="fas fa-users"></i> Miembros
+                </button>
+                <button class="tab-button" onclick="showTab('tasks')">
+                    <i class="fas fa-tasks"></i> Tareas
+                </button>
+                <button class="tab-button" onclick="showTab('deliverables')">
+                    <i class="fas fa-file-alt"></i> Entregables
+                </button>
+                <button class="tab-button" onclick="showTab('invitations')">
+                    <i class="fas fa-envelope"></i> Invitaciones
+                </button>
+                <button class="tab-button" onclick="showTab('activity')">
+                    <i class="fas fa-history"></i> Actividad
+                </button>
+            </div>
+
+            <div class="tab-content">
+                <!-- Pestaña de Miembros -->
+                <div id="members" class="tab-pane active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-users"></i> Miembros del Proyecto (<%= members.length %>)</h3>
+                        <button onclick="showInviteModal()" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Agregar Miembro
+                        </button>
+                    </div>
+                    
+                    <% if (members.length > 0) { %>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Rol</th>
+                                <th>Fecha de Unión</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% members.forEach(member => { %>
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="user-avatar" style="width: 32px; height: 32px; font-size: 14px;">
+                                            <%= member.nombres.charAt(0).toUpperCase() %>
+                                        </div>
+                                        <div>
+                                            <strong><%= member.nombres %> <%= member.apellidos %></strong>
+                                            <br><small style="color: #666;"><%= member.email %></small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge" style="background: #e3f2fd; color: #1565c0;">
+                                        <%= member.rol_nombre %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(member.fecha_union).toLocaleDateString('es-ES') %></td>
+                                <td>
+                                    <span class="status-badge status-active">Activo</span>
+                                </td>
+                                <td>
+                                    <button onclick="editMemberRole(<%= member.usuario_id %>)" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmAction('¿Remover miembro?', 'Esta acción removerá al usuario del proyecto.', () => removeMember(<%= member.usuario_id %>))" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No hay miembros asignados a este proyecto.
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- Pestaña de Tareas -->
+                <div id="tasks" class="tab-pane">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-tasks"></i> Tareas del Proyecto (<%= tasks.length %>)</h3>
+                        <button onclick="createTask()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nueva Tarea
+                        </button>
+                    </div>
+                    
+                    <% if (tasks.length > 0) { %>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Tarea</th>
+                                <th>Asignado a</th>
+                                <th>Prioridad</th>
+                                <th>Estado</th>
+                                <th>Fecha Límite</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% tasks.forEach(task => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= task.titulo %></strong>
+                                    <% if (task.descripcion) { %>
+                                    <br><small style="color: #666;"><%= task.descripcion.substring(0, 50) %>...</small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (task.asignado_nombres) { %>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="user-avatar" style="width: 24px; height: 24px; font-size: 12px;">
+                                            <%= task.asignado_nombres.charAt(0).toUpperCase() %>
+                                        </div>
+                                        <%= task.asignado_nombres %> <%= task.asignado_apellidos %>
+                                    </div>
+                                    <% } else { %>
+                                    <span style="color: #999;">Sin asignar</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="priority-badge priority-<%= task.prioridad %>">
+                                        <%= task.prioridad %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= task.estado.replace(' ', '-') %>">
+                                        <%= task.estado %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= task.fecha_limite ? new Date(task.fecha_limite).toLocaleDateString('es-ES') : 'Sin fecha' %>
+                                </td>
+                                <td>
+                                    <button onclick="editTask(<%= task.id %>)" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmAction('¿Eliminar tarea?', 'Esta acción no se puede deshacer.', () => deleteTask(<%= task.id %>))" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No hay tareas creadas para este proyecto.
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- Pestaña de Entregables -->
+                <div id="deliverables" class="tab-pane">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-file-alt"></i> Entregables (<%= deliverables.length %>)</h3>
+                        <button onclick="createDeliverable()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Entregable
+                        </button>
+                    </div>
+                    
+                    <% if (deliverables.length > 0) { %>
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Entregable</th>
+                                <th>Creado por</th>
+                                <th>Fecha de Creación</th>
+                                <th>Fecha Límite</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% deliverables.forEach(deliverable => { %>
+                            <tr>
+                                <td>
+                                    <strong><%= deliverable.titulo %></strong>
+                                    <% if (deliverable.descripcion) { %>
+                                    <br><small style="color: #666;"><%= deliverable.descripcion.substring(0, 50) %>...</small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div class="user-avatar" style="width: 24px; height: 24px; font-size: 12px;">
+                                            <%= deliverable.estudiante_nombres.charAt(0).toUpperCase() %>
+                                        </div>
+                                        <%= deliverable.estudiante_nombres %> <%= deliverable.estudiante_apellidos %>
+                                    </div>
+                                </td>
+                                <td><%= new Date(deliverable.fecha_creacion).toLocaleDateString('es-ES') %></td>
+                                <td>
+                                    <%= deliverable.fecha_limite ? new Date(deliverable.fecha_limite).toLocaleDateString('es-ES') : 'Sin fecha' %>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= deliverable.estado.replace(' ', '-') %>">
+                                        <%= deliverable.estado %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="viewDeliverable(<%= deliverable.id %>)" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="editDeliverable(<%= deliverable.id %>)" class="btn btn-warning" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="confirmAction('¿Eliminar entregable?', 'Esta acción no se puede deshacer.', () => deleteDeliverable(<%= deliverable.id %>))" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                    <% } else { %>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        No hay entregables creados para este proyecto.
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- Pestaña de Invitaciones -->
+                <div id="invitations" class="tab-pane">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3><i class="fas fa-user-plus"></i> Gestión de Invitaciones</h3>
+                        <button class="btn btn-primary" id="sendInvitationBtn">
+                            <i class="fas fa-paper-plane"></i> Enviar Invitación
+                        </button>
+                    </div>
+
+                    <!-- Estadísticas de Invitaciones -->
+                    <div style="background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px; color: #2c3e50;">Estadísticas de Invitaciones</h4>
+                        <div id="invitationStats">
+                            <!-- Las estadísticas se cargarán dinámicamente -->
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Invitaciones -->
+                    <div style="background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px);">
+                        <h4 style="margin-bottom: 15px; color: #2c3e50;">Invitaciones Activas</h4>
+                        <div style="overflow-x: auto;">
+                            <table class="modern-table" id="invitationsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario/Email</th>
+                                        <th>Estado</th>
+                                        <th>Fecha Envío</th>
+                                        <th>Fecha Expiración</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Las invitaciones se cargarán dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña de Actividad -->
+                <div id="activity" class="tab-pane">
+                    <h3><i class="fas fa-history"></i> Actividad Reciente</h3>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        El registro de actividad estará disponible próximamente.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include shared modal -->
+    <%- include('../shared/modals/confirm-modal') %>
+
+    <script>
+        // Gestión de pestañas
+        function showTab(tabName) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // Desactivar todos los botones
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostrar la pestaña seleccionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activar el botón correspondiente
+            event.target.classList.add('active');
+        }
+
+        // Funciones de confirmación
+        function confirmAction(title, message, callback) {
+            // Configurar el modal con los parámetros
+            const modal = document.getElementById('confirmModal');
+            modal.querySelector('.modal-header h3').textContent = title;
+            modal.querySelector('.modal-body p').textContent = message;
+            
+            // Mostrar el modal con la función callback
+            showConfirmModal(callback);
+        }
+
+        // Funciones de gestión de proyecto
+        function completeProject(projectId) {
+            fetch(`/admin/projects/${projectId}/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al completar el proyecto: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al completar el proyecto');
+            });
+        }
+
+        function deleteProject(projectId) {
+            fetch(`/admin/projects/${projectId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/admin/projects';
+                } else {
+                    alert('Error al eliminar el proyecto: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar el proyecto');
+            });
+        }
+
+        // Sistema de Invitaciones
+        class InvitationManager {
+            constructor(projectId) {
+                this.projectId = projectId;
+                this.initializeEventListeners();
+                this.loadInvitations();
+            }
+
+            initializeEventListeners() {
+                // Botón Invitar Miembros
+                document.getElementById('inviteMembersBtn')?.addEventListener('click', () => {
+                    this.showInvitationModal();
+                });
+
+                // Botón Agregar Miembro
+                document.getElementById('addMemberBtn')?.addEventListener('click', () => {
+                    this.showInvitationModal();
+                });
+
+                // Botón Enviar Invitación
+                document.getElementById('sendInvitationBtn')?.addEventListener('click', () => {
+                    this.showInvitationModal();
+                });
+
+                // Botón Generar Código
+                document.getElementById('generateCodeBtn')?.addEventListener('click', () => {
+                    this.generateQuickCode();
+                });
+
+                // Formulario de invitación
+                document.getElementById('invitationForm')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendInvitation();
+                });
+            }
+
+            showInvitationModal() {
+                const modalHtml = `
+                    <div class="modal fade" id="invitationModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Invitar Miembros al Proyecto</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="text-center">
+                                        <h6 class="mb-3">Generar Código de Invitación</h6>
+                                        <p class="text-muted mb-4">Genera un código que las personas pueden usar para unirse al proyecto</p>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Máximo de usos:</label>
+                                            <input type="number" class="form-control" id="maxUses" value="1" min="1" max="10">
+                                            <small class="text-muted">Número de personas que pueden usar este código</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Expira en (días):</label>
+                                            <input type="number" class="form-control" id="expiresInDays" value="7" min="1" max="30">
+                                        </div>
+                                        
+                                        <button type="button" class="btn btn-success btn-lg" onclick="invitationManager.generateQuickCode()">
+                                            <i class="fas fa-code"></i> Generar Código
+                                        </button>
+                                        
+                                        <div id="generatedCodeResult" class="mt-4" style="display: none;">
+                                            <div class="alert alert-success">
+                                                <h6><strong>¡Código generado exitosamente!</strong></h6>
+                                                <div class="input-group mt-3">
+                                                    <input type="text" class="form-control form-control-lg text-center fw-bold" id="generatedCode" readonly>
+                                                    <button class="btn btn-outline-secondary" onclick="invitationManager.copyCode()">
+                                                        <i class="fas fa-copy"></i> Copiar
+                                                    </button>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <small class="text-muted">Comparte este código con las personas que quieres invitar</small><br>
+                                                    <small class="text-muted">Expira en <span id="expirationInfo"></span> días</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remover modal existente si existe
+                document.getElementById('invitationModal')?.remove();
+                
+                // Agregar nuevo modal
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('invitationModal'));
+                modal.show();
+            }
+
+            async sendInvitation() {
+                const email = document.getElementById('invitationEmail').value;
+                const mensaje = document.getElementById('invitationMessage').value;
+
+                try {
+                    const response = await fetch(`/projects/${this.projectId}/invitations`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, mensaje })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showAlert('Invitación enviada exitosamente', 'success');
+                        bootstrap.Modal.getInstance(document.getElementById('invitationModal')).hide();
+                        this.loadInvitations();
+                    } else {
+                        this.showAlert(result.error || 'Error al enviar invitación', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showAlert('Error de conexión', 'danger');
+                }
+            }
+
+            async generateQuickCode() {
+                try {
+                    const maxUses = document.getElementById('maxUses')?.value || 1;
+                    const expiresInDays = document.getElementById('expiresInDays')?.value || 7;
+                    
+                    const response = await fetch(`/projects/${this.projectId}/invitations/quick`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            max_uses: parseInt(maxUses),
+                            expires_in_days: parseInt(expiresInDays)
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('generatedCode').value = data.codigo;
+                        document.getElementById('expirationInfo').textContent = expiresInDays;
+                        document.getElementById('generatedCodeResult').style.display = 'block';
+                        
+                        // Mostrar notificación de éxito
+                        this.showNotification('Código generado exitosamente', 'success');
+                    } else {
+                        this.showNotification('Error al generar código: ' + (data.error || 'Error desconocido'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showNotification('Error al generar código de invitación', 'error');
+                }
+            }
+
+            copyCode() {
+                const codeInput = document.getElementById('generatedCode');
+                codeInput.select();
+                document.execCommand('copy');
+                this.showAlert('Código copiado al portapapeles', 'info');
+            }
+
+            async loadInvitations() {
+                try {
+                    const response = await fetch(`/projects/${this.projectId}/invitations`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.updateInvitationsTable(result.invitations);
+                        this.updateInvitationStats(result.stats);
+                    }
+                } catch (error) {
+                    console.error('Error loading invitations:', error);
+                }
+            }
+
+            updateInvitationsTable(invitations) {
+                const tableBody = document.querySelector('#invitationsTable tbody');
+                if (!tableBody) return;
+
+                if (invitations.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                <i class="fas fa-inbox"></i>
+                                <p class="mt-2">No hay invitaciones pendientes</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tableBody.innerHTML = invitations.map(invitation => `
+                    <tr>
+                        <td>
+                            ${invitation.invitado_email || invitation.invitado_nombre || 'Código general'}
+                        </td>
+                        <td>
+                            <span class="badge bg-${this.getStatusColor(invitation.estado)}">
+                                ${this.getStatusText(invitation.estado)}
+                            </span>
+                        </td>
+                        <td>${new Date(invitation.created_at).toLocaleDateString()}</td>
+                        <td>${new Date(invitation.fecha_expiracion).toLocaleDateString()}</td>
+                        <td>
+                            ${invitation.estado === 'pendiente' ? `
+                                <button class="btn btn-sm btn-outline-danger" onclick="invitationManager.cancelInvitation(${invitation.id})">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            updateInvitationStats(stats) {
+                const statsContainer = document.getElementById('invitationStats');
+                if (!statsContainer) return;
+
+                statsContainer.innerHTML = `
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <div class="stat-number">${stats.total}</div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <div class="stat-number text-warning">${stats.pendientes}</div>
+                                <div class="stat-label">Pendientes</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <div class="stat-number text-success">${stats.aceptadas}</div>
+                                <div class="stat-label">Aceptadas</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="stat-item">
+                                <div class="stat-number text-danger">${stats.rechazadas}</div>
+                                <div class="stat-label">Rechazadas</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getStatusColor(status) {
+                const colors = {
+                    'pendiente': 'warning',
+                    'aceptada': 'success',
+                    'rechazada': 'danger',
+                    'expirada': 'secondary'
+                };
+                return colors[status] || 'secondary';
+            }
+
+            getStatusText(status) {
+                const texts = {
+                    'pendiente': 'Pendiente',
+                    'aceptada': 'Aceptada',
+                    'rechazada': 'Rechazada',
+                    'expirada': 'Expirada'
+                };
+                return texts[status] || status;
+            }
+
+            async cancelInvitation(invitationId) {
+                if (!confirm('¿Estás seguro de que quieres cancelar esta invitación?')) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/projects/${this.projectId}/invitations/${invitationId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showAlert('Invitación cancelada', 'success');
+                        this.loadInvitations();
+                    } else {
+                        this.showAlert(result.error || 'Error al cancelar invitación', 'danger');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showAlert('Error de conexión', 'danger');
+                }
+            }
+
+            showAlert(message, type) {
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                const container = document.querySelector('.container-fluid') || document.body;
+                container.insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => {
+                    const alert = container.querySelector('.alert');
+                    if (alert) {
+                        bootstrap.Alert.getOrCreateInstance(alert).close();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Inicializar el gestor de invitaciones
+        let invitationManager;
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectId = '<%= project.id %>';
+            invitationManager = new InvitationManager(projectId);
+            
+            // Configurar barra de progreso
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                const progress = progressBar.getAttribute('data-progress');
+                progressBar.style.width = progress + '%';
+            }
+
+            // Configurar color de días restantes
+            const daysLeftElement = document.querySelector('.days-left');
+            if (daysLeftElement) {
+                const days = parseInt(daysLeftElement.getAttribute('data-days'));
+                let color = '#dc3545'; // rojo por defecto (vencido)
+                if (days > 7) color = '#28a745'; // verde
+                else if (days > 0) color = '#ffc107'; // amarillo
+                daysLeftElement.style.color = color;
+            }
+        });
+
+        // Funciones de gestión de miembros
+        function showInviteModal() {
+            if (invitationManager) {
+                invitationManager.showInvitationModal();
+            } else {
+                alert('Sistema de invitaciones no disponible');
+            }
+        }
+
+        function editMemberRole(userId) {
+            // Implementar edición de rol
+            alert('Función de edición de rol en desarrollo');
+        }
+
+        function removeMember(userId) {
+            fetch(`/admin/projects/<%= project.id %>/members/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al remover miembro: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al remover miembro');
+            });
+        }
+
+        // Funciones de gestión de tareas
+        function createTask() {
+            window.location.href = `/admin/projects/<%= project.id %>/tasks/new`;
+        }
+
+        function editTask(taskId) {
+            window.location.href = `/admin/projects/<%= project.id %>/tasks/${taskId}/edit`;
+        }
+
+        function deleteTask(taskId) {
+            fetch(`/admin/projects/<%= project.id %>/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error al eliminar tarea: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar tarea');
+            });
+        }
+
+        // Funciones de gestión de entregables
+        function createDeliverable() {
+            // Esta funcionalidad no está implementada en el backend
+            alert('Funcionalidad de crear entregables no disponible desde esta vista');
+        }
+
+        function viewDeliverable(deliverableId) {
+            window.location.href = `/admin/deliverables/${deliverableId}`;
+        }
+
+        function editDeliverable(deliverableId) {
+            // Esta funcionalidad no está implementada en el backend
+            alert('Funcionalidad de editar entregables no disponible');
+        }
+
+        function deleteDeliverable(deliverableId) {
+            // Esta funcionalidad no está implementada en el backend
+            alert('Funcionalidad de eliminar entregables no disponible');
+        }
+
+        // Funciones de gestión de invitaciones
+        function resendInvitation(invitationId) {
+            fetch(`/admin/invitations/${invitationId}/resend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Invitación reenviada exitosamente');
+                } else {
+                    alert('Error al reenviar invitación: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al reenviar invitación');
+            });
+        }
+
+        function cancelInvitation(invitationId) {
+            if (invitationManager) {
+                invitationManager.cancelInvitation(invitationId);
+            } else {
+                fetch(`/admin/invitations/${invitationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error al cancelar invitación: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cancelar invitación');
+                });
+            }
+        }
+
+        // Función de generación de reportes
+        function generateReport() {
+            window.open(`/admin/projects/<%= project.id %>/report`, '_blank');
+        }
+    </script>
+</body>
+</html>

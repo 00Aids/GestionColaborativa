@@ -1,0 +1,62 @@
+<%# 
+  Componente reutilizable para tarjetas de proyecto
+  Parámetros:
+  - project: objeto del proyecto
+  - showActions: mostrar botones de acción (opcional)
+  - compact: versión compacta (opcional)
+%>
+<div class="project-card <%= compact ? 'compact' : '' %>">
+    <div class="project-header">
+        <div class="project-title"><%= project.titulo || project.title %></div>
+        <span class="status-badge status-<%= (project.estado || project.status || 'pending').toLowerCase().replace(' ', '-') %>">
+            <%= project.estado || project.status || 'Pendiente' %>
+        </span>
+    </div>
+    
+    <div class="project-info">
+        <% if (project.estudiante_nombres || project.student_name) { %>
+            <div class="info-item">
+                <span class="info-label">Estudiante:</span>
+                <span class="info-value">
+                    <%= project.estudiante_nombres || project.student_name %> 
+                    <%= project.estudiante_apellidos || '' %>
+                </span>
+            </div>
+        <% } %>
+        
+        <% if (project.director_nombres || project.director_name) { %>
+            <div class="info-item">
+                <span class="info-label">Director:</span>
+                <span class="info-value">
+                    <%= project.director_nombres || project.director_name %> 
+                    <%= project.director_apellidos || '' %>
+                </span>
+            </div>
+        <% } %>
+        
+        <% if (project.linea_investigacion_nombre || project.research_line) { %>
+            <div class="info-item">
+                <span class="info-label">Línea:</span>
+                <span class="info-value"><%= project.linea_investigacion_nombre || project.research_line %></span>
+            </div>
+        <% } %>
+        
+        <% if (project.created_at || project.fecha_creacion) { %>
+            <div class="info-item">
+                <span class="info-label">Fecha:</span>
+                <span class="info-value">
+                    <%= new Date(project.created_at || project.fecha_creacion).toLocaleDateString() %>
+                </span>
+            </div>
+        <% } %>
+    </div>
+    
+    <% if (showActions) { %>
+        <div class="project-actions">
+            <a href="/projects/<%= project.id %>" class="btn btn-sm btn-primary">Ver Detalles</a>
+            <% if (project.can_edit) { %>
+                <a href="/projects/<%= project.id %>/edit" class="btn btn-sm btn-secondary">Editar</a>
+            <% } %>
+        </div>
+    <% } %>
+</div>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Evaluador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .role-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .welcome-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .evaluation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .evaluation-item:last-child {
+            border-bottom: none;
+        }
+
+        .evaluation-info h4 {
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+
+        .evaluation-meta {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .evaluate-btn {
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: background 0.3s;
+        }
+
+        .evaluate-btn:hover {
+            background: #218838;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">Sistema de Gestión de Proyectos</div>
+            <div class="user-info">
+                <span>Bienvenido, <%= user ? user.name : 'Evaluador' %></span>
+                <span class="role-badge">Evaluador</span>
+                <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert alert-success"><%= success %></div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-error"><%= error %></div>
+        <% } %>
+
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1>Dashboard del Evaluador</h1>
+            <p>Gestiona y realiza evaluaciones de proyectos y entregables asignados.</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number"><%= stats ? stats.totalEvaluations : '0' %></div>
+                <div class="stat-label">Evaluaciones Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats ? stats.pendingEvaluations : '0' %></div>
+                <div class="stat-label">Evaluaciones Pendientes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats ? stats.completedEvaluations : '0' %></div>
+                <div class="stat-label">Evaluaciones Completadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats ? stats.overdueEvaluations : '0' %></div>
+                <div class="stat-label">Evaluaciones Vencidas</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-grid">
+            <!-- Pending Evaluations -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Evaluaciones Pendientes</h3>
+                </div>
+                <div class="card-content">
+                    <% if (pendingEvaluations && pendingEvaluations.length > 0) { %>
+                        <% pendingEvaluations.forEach(evaluation => { %>
+                            <div class="evaluation-item">
+                                <div class="evaluation-info">
+                                    <h4><%= evaluation.project_title %></h4>
+                                    <div class="evaluation-meta">
+                                        Estudiante: <%= evaluation.student_name %> | 
+                                        Tipo: <%= evaluation.type %> | 
+                                        Fecha límite: <%= evaluation.due_date ? new Date(evaluation.due_date).toLocaleDateString() : 'N/A' %>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="status-badge status-pending">Pendiente</span>
+                                    <a href="/evaluations/<%= evaluation.id %>/evaluate" class="evaluate-btn">Evaluar</a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>No hay evaluaciones pendientes.</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Recent Evaluations -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Evaluaciones Recientes</h3>
+                </div>
+                <div class="card-content">
+                    <% if (recentEvaluations && recentEvaluations.length > 0) { %>
+                        <% recentEvaluations.forEach(evaluation => { %>
+                            <div class="evaluation-item">
+                                <div class="evaluation-info">
+                                    <h4><%= evaluation.project_title %></h4>
+                                    <div class="evaluation-meta">
+                                        Estudiante: <%= evaluation.student_name %> | 
+                                        Calificación: <%= evaluation.score || 'N/A' %> | 
+                                        Fecha: <%= evaluation.evaluated_at ? new Date(evaluation.evaluated_at).toLocaleDateString() : 'N/A' %>
+                                    </div>
+                                </div>
+                                <span class="status-badge status-completed">Completada</span>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>No hay evaluaciones recientes.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Acciones Rápidas</h3>
+            </div>
+            <div class="card-content">
+                <div class="quick-actions">
+                    <a href="/evaluations" class="action-btn">Ver Todas las Evaluaciones</a>
+                    <a href="/evaluations/pending" class="action-btn">Evaluaciones Pendientes</a>
+                    <a href="/evaluations/completed" class="action-btn">Evaluaciones Completadas</a>
+                    <a href="/reports/evaluations" class="action-btn">Reportes de Evaluación</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
