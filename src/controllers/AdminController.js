@@ -449,8 +449,39 @@ class AdminController {
         return res.redirect('/dashboard');
       }
 
+      // Obtener parámetros de filtros de la URL
+      const {
+        search = '',
+        status = '',
+        linea = '',
+        sort = '',
+        dateFilter = '',
+        dateFrom = '',
+        dateTo = '',
+        director = '',
+        estudiante = '',
+        progreso = ''
+      } = req.query;
+
       // Obtener todos los proyectos con detalles
-      const allProjects = await this.projectModel.findWithDetails();
+      let allProjects = await this.projectModel.findWithDetails();
+      
+      // Aplicar filtro de búsqueda por título
+      if (search) {
+        allProjects = allProjects.filter(project => 
+          project.titulo.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      // Aplicar filtro por estado
+      if (status) {
+        allProjects = allProjects.filter(project => project.estado === status);
+      }
+      
+      // Aplicar filtro por línea de investigación
+      if (linea) {
+        allProjects = allProjects.filter(project => project.linea_investigacion_id == linea);
+      }
       
       // Obtener proyectos recientes (últimos 10)
       const recentProjects = allProjects.slice(0, 10);
@@ -497,9 +528,16 @@ class AdminController {
           totalPages: 1,
           totalItems: allProjects.length
         },
-        search: '',
-        statusFilter: '',
-        lineaFilter: '',
+        search,
+        statusFilter: status,
+        lineaFilter: linea,
+        sortFilter: sort,
+        dateFilter,
+        dateFrom,
+        dateTo,
+        director,
+        estudiante,
+        progreso,
         success: req.flash('success'),
         error: req.flash('error')
       });

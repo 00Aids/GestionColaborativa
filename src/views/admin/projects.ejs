@@ -1723,21 +1723,7 @@
             </div>
         </div>
 
-        <!-- Invitation System -->
-        <div class="invitation-section fade-in">
-            <div class="invitation-header">
-                <h3><i class="fas fa-user-plus"></i> Sistema de Invitaciones</h3>
-                <button class="btn btn-success" onclick="generateInvitationCode()">
-                    <i class="fas fa-plus"></i> Generar Código
-                </button>
-            </div>
-            <div class="invitation-code" id="invitationCodeSection" style="display: none;">
-                <div class="code-display" id="generatedCode">INV-2024-XXXX</div>
-                <button class="btn btn-primary btn-sm" onclick="copyInvitationCode()">
-                    <i class="fas fa-copy"></i> Copiar Código
-                </button>
-            </div>
-        </div>
+
 
         <!-- Projects Content -->
         <div class="projects-content fade-in">
@@ -1878,9 +1864,7 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div class="dropdown-menu">
-                                            <a href="#" onclick="inviteToProject(<%= project.id %>)">
-                                                <i class="fas fa-user-plus"></i> Invitar miembros
-                                            </a>
+
                                             <a href="#" onclick="duplicateProject(<%= project.id %>)">
                                                 <i class="fas fa-copy"></i> Duplicar proyecto
                                             </a>
@@ -1961,9 +1945,7 @@
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         <% } %>
-                                        <button class="btn btn-info btn-sm" data-project-id="<%= project.id %>" onclick="inviteToProject(this.dataset.projectId)" title="Invitar miembros">
-                                            <i class="fas fa-user-plus"></i>
-                                        </button>
+
                                         <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="deleteProject(this.dataset.projectId)" title="Eliminar proyecto definitivamente">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -2383,7 +2365,7 @@
 
         // Real-time Search
         let searchTimeout;
-        function handleRealTimeSearch(event) {
+        function handleRealTimeSearch(value) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 applyFilters();
@@ -2391,11 +2373,46 @@
         }
 
         // Export Functions
-        function exportProjects(format) {
+        function exportProjects(format = 'excel') {
             const params = new URLSearchParams(window.location.search);
             params.append('export', format);
             
             window.open(`/admin/projects/export?${params.toString()}`, '_blank');
+        }
+
+        // Load dynamic filter options
+        function loadFilterOptions() {
+            // Load directors
+            fetch('/admin/users?role=director')
+                .then(response => response.json())
+                .then(data => {
+                    const directorSelect = document.getElementById('directorFilter');
+                    if (data.users) {
+                        data.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.name;
+                            directorSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading directors:', error));
+
+            // Load students
+            fetch('/admin/users?role=student')
+                .then(response => response.json())
+                .then(data => {
+                    const studentSelect = document.getElementById('estudianteFilter');
+                    if (data.users) {
+                        data.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.name;
+                            studentSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading students:', error));
         }
 
         // Kanban View
@@ -2546,19 +2563,21 @@
             const status = document.getElementById('statusFilter').value;
             const linea = document.getElementById('lineaFilter').value;
             const sortBy = document.getElementById('sortFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
             
             // Advanced filters
-            const dateFrom = document.getElementById('dateFrom')?.value;
-            const dateTo = document.getElementById('dateTo')?.value;
+            const dateFrom = document.getElementById('startDate')?.value;
+            const dateTo = document.getElementById('endDate')?.value;
             const director = document.getElementById('directorFilter')?.value;
             const estudiante = document.getElementById('estudianteFilter')?.value;
-            const progreso = document.getElementById('progresoFilter')?.value;
+            const progreso = document.getElementById('progressFilter')?.value;
             
             const params = new URLSearchParams();
             if (search) params.append('search', search);
             if (status) params.append('status', status);
             if (linea) params.append('linea', linea);
             if (sortBy) params.append('sort', sortBy);
+            if (dateFilter) params.append('dateFilter', dateFilter);
             if (dateFrom) params.append('dateFrom', dateFrom);
             if (dateTo) params.append('dateTo', dateTo);
             if (director) params.append('director', director);
@@ -2566,6 +2585,23 @@
             if (progreso) params.append('progreso', progreso);
             
             window.location.href = '/admin/projects?' + params.toString();
+        }
+
+        function applyAdvancedFilters() {
+            applyFilters();
+        }
+
+        function resetAdvancedFilters() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('directorFilter').value = '';
+            document.getElementById('estudianteFilter').value = '';
+            document.getElementById('progressFilter').value = '';
+            applyFilters();
+        }
+
+        function applySorting() {
+            applyFilters();
         }
 
         function clearFilters() {
@@ -2701,82 +2737,7 @@
             }
         }
 
-        function inviteToProject(id) {
-            // Crear modal de invitación
-            const modalHTML = `
-                <div id="invitationModal" class="modal" style="display: block;">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Invitar Miembros al Proyecto</h3>
-                            <span class="close" onclick="closeModal('invitationModal')">&times;</span>
-                        </div>
-                        <div class="modal-body">
-                            <form id="invitationForm" onsubmit="createInvitation(event, ${id})">
-                                <div class="form-group">
-                                    <label for="maxUses">Máximo de usos:</label>
-                                    <input type="number" id="maxUses" name="max_uses" min="1" max="10" value="1" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="expiresIn">Expira en (días):</label>
-                                    <input type="number" id="expiresIn" name="expires_in_days" min="1" max="30" value="7" required>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="button" class="btn btn-secondary" onclick="closeModal('invitationModal')">
-                                        <i class="fas fa-times"></i> Cancelar
-                                    </button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane"></i> Crear Invitación
-                                    </button>
-                                </div>
-                            </form>
-                            <div id="invitationResult" style="display: none; margin-top: 20px;">
-                                <div class="alert alert-success">
-                                    <strong>¡Invitación creada!</strong><br>
-                                    Código: <span id="invitationCode" style="font-family: monospace; font-weight: bold;"></span>
-                                    <button type="button" class="btn btn-sm btn-secondary" onclick="copyInvitationCode()" style="margin-left: 10px;">
-                                        <i class="fas fa-copy"></i> Copiar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Agregar modal al DOM
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
 
-        function createInvitation(event, projectId) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            
-            fetch(`/admin/invitations`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    proyecto_id: projectId,
-                    max_uses: parseInt(formData.get('max_uses')),
-                    expires_in_days: parseInt(formData.get('expires_in_days'))
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('invitationCode').textContent = data.invitation.codigo;
-                    document.getElementById('invitationResult').style.display = 'block';
-                    document.getElementById('invitationForm').style.display = 'none';
-                } else {
-                    alert('Error al crear la invitación: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al crear la invitación');
-            });
-        }
 
         function saveProject(event) {
             event.preventDefault();
@@ -2841,20 +2802,7 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        // Invitation System
-        function generateInvitationCode() {
-            const code = 'INV-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            document.getElementById('generatedCode').textContent = code;
-            document.getElementById('invitationCodeSection').style.display = 'block';
-        }
 
-        function copyInvitationCode() {
-            const codeElement = document.getElementById('invitationCode') || document.getElementById('generatedCode');
-            const code = codeElement.textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('Código copiado al portapapeles: ' + code);
-            });
-        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -2916,6 +2864,9 @@
                     el.style.transform = 'translateY(0)';
                 }, index * 100);
             });
+            
+            // Initialize dynamic filters
+            loadFilterOptions();
         });
     </script>
 </body>
