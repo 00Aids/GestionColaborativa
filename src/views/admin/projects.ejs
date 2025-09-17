@@ -542,7 +542,7 @@
             border: 1px solid #e1e8ed;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .project-card::before {
@@ -666,23 +666,8 @@
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
 
-        .card-checkbox {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            z-index: 10;
-        }
-
-        .project-checkbox {
-            width: 18px;
-            height: 18px;
-            accent-color: #667eea;
-            cursor: pointer;
-        }
-
         .header-left {
             flex: 1;
-            padding-left: 40px;
         }
 
         .header-right {
@@ -857,16 +842,18 @@
 
         .dropdown-menu {
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             right: 0;
             background: white;
-            border: 1px solid #e9ecef;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            min-width: 180px;
-            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            min-width: 200px;
+            z-index: 9999;
             display: none;
-            overflow: hidden;
+            overflow: visible;
+            margin-bottom: 4px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         .dropdown-menu.show {
@@ -876,16 +863,28 @@
         .dropdown-menu a {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            color: #333;
+            gap: 12px;
+            padding: 14px 18px;
+            color: #495057;
             text-decoration: none;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
         }
 
         .dropdown-menu a:hover {
             background: #f8f9fa;
+            color: #212529;
+        }
+
+        .dropdown-menu a i {
+            width: 16px;
+            text-align: center;
+            font-size: 0.875rem;
         }
 
         .dropdown-menu a.text-danger {
@@ -893,13 +892,19 @@
         }
 
         .dropdown-menu a.text-danger:hover {
-            background: #fff5f5;
+            background: #f8d7da;
+            color: #721c24;
         }
 
         .dropdown-divider {
             height: 1px;
             background: #e9ecef;
-            margin: 8px 0;
+            margin: 6px 0;
+            border: none;
+        }
+
+        .dropdown {
+            position: relative;
         }
 
         /* Empty State */
@@ -1651,18 +1656,7 @@
                 
                 <!-- Controles de vista y acciones -->
                 <div class="view-controls">
-                    <div class="bulk-actions" id="bulkActions" style="display: none;">
-                        <span class="selected-count" id="selectedCount">0 seleccionados</span>
-                        <button class="btn btn-warning btn-sm" onclick="bulkEdit()">
-                            <i class="fas fa-edit"></i> Editar
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </button>
-                        <button class="btn btn-success btn-sm" onclick="bulkApprove()">
-                            <i class="fas fa-check"></i> Aprobar
-                        </button>
-                    </div>
+
                     
                     <div class="view-toggle">
                         <button class="view-btn active" onclick="toggleView('grid')" id="gridBtn" title="Vista de tarjetas">
@@ -1752,10 +1746,7 @@
                 <% if (projects && projects.length > 0) { %>
                     <% projects.forEach(project => { %>
                         <div class="project-card modern-card" data-project-id="<%= project.id %>">
-                            <!-- Checkbox para selección múltiple -->
-                            <div class="card-checkbox">
-                                <input type="checkbox" class="project-checkbox" value="<%= project.id %>" onchange="updateBulkActions()">
-                            </div>
+
                             
                             <!-- Header con estado y prioridad -->
                             <div class="project-header">
@@ -1898,7 +1889,7 @@
                                             </a>
                                             <div class="dropdown-divider"></div>
                                             <a href="#" onclick="deleteProject(<%= project.id %>)" class="text-danger">
-                                                <i class="fas fa-trash"></i> Eliminar
+                                                <i class="fas fa-trash"></i> Eliminar definitivamente
                                             </a>
                                         </div>
                                     </div>
@@ -1973,7 +1964,7 @@
                                         <button class="btn btn-info btn-sm" data-project-id="<%= project.id %>" onclick="inviteToProject(this.dataset.projectId)" title="Invitar miembros">
                                             <i class="fas fa-user-plus"></i>
                                         </button>
-                                        <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="deleteProject(this.dataset.projectId)" title="Eliminar proyecto">
+                                        <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="deleteProject(this.dataset.projectId)" title="Eliminar proyecto definitivamente">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -2374,122 +2365,7 @@
             }
         }
 
-        // Bulk Selection Management
-        let selectedProjects = new Set();
 
-        function toggleSelectAll() {
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const projectCheckboxes = document.querySelectorAll('.project-checkbox');
-            
-            projectCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
-                toggleProjectSelection(checkbox.value, checkbox.checked);
-            });
-            
-            updateBulkActions();
-        }
-
-        function toggleProjectSelection(projectId, isSelected) {
-            if (isSelected) {
-                selectedProjects.add(projectId);
-            } else {
-                selectedProjects.delete(projectId);
-            }
-            updateBulkActions();
-        }
-
-        function updateBulkActions() {
-            const bulkActions = document.getElementById('bulkActions');
-            const selectedCount = document.getElementById('selectedCount');
-            
-            if (selectedProjects.size > 0) {
-                bulkActions.style.display = 'flex';
-                selectedCount.textContent = selectedProjects.size;
-            } else {
-                bulkActions.style.display = 'none';
-            }
-        }
-
-        function clearSelection() {
-            selectedProjects.clear();
-            document.querySelectorAll('.project-checkbox').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            document.getElementById('selectAll').checked = false;
-            updateBulkActions();
-        }
-
-        // Bulk Actions
-        function bulkApprove() {
-            if (selectedProjects.size === 0) return;
-            
-            if (confirm(`¿Aprobar ${selectedProjects.size} proyecto(s) seleccionado(s)?`)) {
-                const promises = Array.from(selectedProjects).map(projectId => 
-                    fetch(`/admin/projects/${projectId}/status`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ estado: 'aprobado' })
-                    })
-                );
-                
-                Promise.all(promises)
-                    .then(() => {
-                        alert('Proyectos aprobados exitosamente');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al aprobar algunos proyectos');
-                    });
-            }
-        }
-
-        function bulkReject() {
-            if (selectedProjects.size === 0) return;
-            
-            if (confirm(`¿Rechazar ${selectedProjects.size} proyecto(s) seleccionado(s)?`)) {
-                const promises = Array.from(selectedProjects).map(projectId => 
-                    fetch(`/admin/projects/${projectId}/status`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ estado: 'rechazado' })
-                    })
-                );
-                
-                Promise.all(promises)
-                    .then(() => {
-                        alert('Proyectos rechazados');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al rechazar algunos proyectos');
-                    });
-            }
-        }
-
-        function bulkDelete() {
-            if (selectedProjects.size === 0) return;
-            
-            if (confirm(`¿Eliminar ${selectedProjects.size} proyecto(s) seleccionado(s)? Esta acción no se puede deshacer.`)) {
-                const promises = Array.from(selectedProjects).map(projectId => 
-                    fetch(`/admin/projects/${projectId}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' }
-                    })
-                );
-                
-                Promise.all(promises)
-                    .then(() => {
-                        alert('Proyectos eliminados exitosamente');
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al eliminar algunos proyectos');
-                    });
-            }
-        }
 
         // Advanced Filters
         function toggleAdvancedFilters() {
@@ -2518,10 +2394,6 @@
         function exportProjects(format) {
             const params = new URLSearchParams(window.location.search);
             params.append('export', format);
-            
-            if (selectedProjects.size > 0) {
-                params.append('selected', Array.from(selectedProjects).join(','));
-            }
             
             window.open(`/admin/projects/export?${params.toString()}`, '_blank');
         }
@@ -2757,7 +2629,7 @@
         }
 
         function deleteProject(id) {
-            if (confirm('¿Estás seguro de que deseas eliminar este proyecto?')) {
+            if (confirm('¿Estás seguro de que deseas eliminar DEFINITIVAMENTE este proyecto? Esta acción no se puede deshacer y se perderán todos los datos asociados.')) {
                 fetch(`/admin/projects/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -2999,6 +2871,29 @@
                 !toggleBtn.contains(event.target) && 
                 sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
+            }
+        });
+
+        // Dropdown functionality
+        function toggleDropdown(button) {
+            const dropdown = button.nextElementSibling;
+            const isOpen = dropdown.style.display === 'block';
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+            
+            // Toggle current dropdown
+            dropdown.style.display = isOpen ? 'none' : 'block';
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.style.display = 'none';
+                });
             }
         });
 
