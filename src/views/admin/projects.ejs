@@ -639,6 +639,300 @@
             flex-wrap: wrap;
         }
 
+        /* ===== MODERN PROJECT CARDS ===== */
+        .modern-card {
+            position: relative;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e8ed;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .modern-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .modern-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-checkbox {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+        }
+
+        .project-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .header-left {
+            flex: 1;
+            padding-left: 40px;
+        }
+
+        .header-right {
+            flex-shrink: 0;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .project-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .project-description {
+            margin: 16px 0;
+            color: #555;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .project-team {
+            display: flex;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+        }
+
+        .member-avatar.student {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .member-avatar.director {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .member-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .member-role {
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .member-name {
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-details {
+            margin: 16px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .detail-item i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .progress-section {
+            margin: 16px 0;
+        }
+
+        .progress-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .project-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .primary-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .secondary-actions {
+            position: relative;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #666;
+        }
+
+        .dropdown-toggle:hover {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            min-width: 180px;
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: #333;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu a:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-menu a.text-danger {
+            color: #dc3545;
+        }
+
+        .dropdown-menu a.text-danger:hover {
+            background: #fff5f5;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 8px 0;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+            color: #667eea;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .empty-state p {
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .empty-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         /* Table View */
         .projects-table {
             width: 100%;
@@ -927,6 +1221,204 @@
             border-left-color: #ef4444;
             color: #991b1b;
         }
+
+        /* ===== KANBAN STYLES ===== */
+        .kanban-view {
+            padding: 20px 0;
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .kanban-column {
+            flex: 0 0 300px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+
+        .kanban-column-header {
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .kanban-column-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .kanban-column-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .kanban-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .kanban-card:active {
+            cursor: grabbing;
+        }
+
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .kanban-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .kanban-card .project-id {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .kanban-card .card-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #6c757d;
+        }
+
+        .btn-icon:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .btn-icon.btn-success {
+            color: #28a745;
+        }
+
+        .btn-icon.btn-success:hover {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .btn-icon.btn-danger {
+            color: #dc3545;
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .kanban-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+            line-height: 1.4;
+        }
+
+        .kanban-card-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .kanban-card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .kanban-card-meta > div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .kanban-card-meta i {
+            width: 12px;
+            text-align: center;
+        }
+
+        /* Drag and Drop Styles */
+        .kanban-column.drag-over {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .kanban-column.drag-over .kanban-column-body {
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        /* Responsive Kanban */
+        @media (max-width: 768px) {
+            .kanban-board {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .kanban-column {
+                flex: none;
+                max-height: 400px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1088,42 +1580,150 @@
             </div>
         </div>
 
-        <!-- Controls Section -->
+        <!-- Advanced Controls Section -->
         <div class="controls-section fade-in">
             <div class="controls-header">
                 <div class="search-filters">
-                    <input type="text" class="search-box" placeholder="🔍 Buscar proyectos..." 
-                           value="<%= search || '' %>" onkeyup="handleSearch(event)">
-                    <select class="filter-select" onchange="applyFilters()" id="statusFilter">
-                        <option value="">Todos los estados</option>
-                        <option value="borrador" <%= statusFilter === 'borrador' ? 'selected' : '' %>>Borrador</option>
-                        <option value="enviado" <%= statusFilter === 'enviado' ? 'selected' : '' %>>Enviado</option>
-                        <option value="en_revision" <%= statusFilter === 'en_revision' ? 'selected' : '' %>>En Revisión</option>
-                        <option value="aprobado" <%= statusFilter === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
-                        <option value="rechazado" <%= statusFilter === 'rechazado' ? 'selected' : '' %>>Rechazado</option>
-                        <option value="en_desarrollo" <%= statusFilter === 'en_desarrollo' ? 'selected' : '' %>>En Desarrollo</option>
-                        <option value="finalizado" <%= statusFilter === 'finalizado' ? 'selected' : '' %>>Finalizado</option>
-                    </select>
-                    <select class="filter-select" onchange="applyFilters()" id="lineaFilter">
-                        <option value="">Todas las líneas</option>
-                        <% if (typeof lineasInvestigacion !== 'undefined' && lineasInvestigacion) { %>
-                            <% lineasInvestigacion.forEach(linea => { %>
-                                <option value="<%= linea.id %>" <%= lineaFilter == linea.id ? 'selected' : '' %>>
-                                    <%= linea.nombre %>
-                                </option>
-                            <% }) %>
-                        <% } %>
-                    </select>
-                    <button class="btn btn-outline" onclick="clearFilters()">
-                        <i class="fas fa-times"></i> Limpiar
-                    </button>
+                    <!-- Búsqueda en tiempo real -->
+                    <div class="search-container-advanced">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="search-box" placeholder="🔍 Buscar por título, estudiante, director..." 
+                               value="<%= search || '' %>" oninput="handleRealTimeSearch(this.value)" id="searchInput">
+                        <div class="search-suggestions" id="searchSuggestions" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Filtros avanzados -->
+                    <div class="filters-row">
+                        <select class="filter-select" onchange="applyFilters()" id="statusFilter">
+                            <option value="">📋 Todos los estados</option>
+                            <option value="borrador" <%= statusFilter === 'borrador' ? 'selected' : '' %>>📝 Borrador</option>
+                            <option value="enviado" <%= statusFilter === 'enviado' ? 'selected' : '' %>>📤 Enviado</option>
+                            <option value="en_revision" <%= statusFilter === 'en_revision' ? 'selected' : '' %>>👀 En Revisión</option>
+                            <option value="aprobado" <%= statusFilter === 'aprobado' ? 'selected' : '' %>>✅ Aprobado</option>
+                            <option value="rechazado" <%= statusFilter === 'rechazado' ? 'selected' : '' %>>❌ Rechazado</option>
+                            <option value="en_desarrollo" <%= statusFilter === 'en_desarrollo' ? 'selected' : '' %>>🚀 En Desarrollo</option>
+                            <option value="finalizado" <%= statusFilter === 'finalizado' ? 'selected' : '' %>>🏆 Finalizado</option>
+                        </select>
+                        
+                        <select class="filter-select" onchange="applyFilters()" id="lineaFilter">
+                            <option value="">🔬 Todas las líneas</option>
+                            <% if (typeof lineasInvestigacion !== 'undefined' && lineasInvestigacion) { %>
+                                <% lineasInvestigacion.forEach(linea => { %>
+                                    <option value="<%= linea.id %>" <%= lineaFilter == linea.id ? 'selected' : '' %>>
+                                        <%= linea.nombre %>
+                                    </option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                        
+                        <!-- Filtro por fecha -->
+                        <select class="filter-select" onchange="applyFilters()" id="dateFilter">
+                            <option value="">📅 Todas las fechas</option>
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta semana</option>
+                            <option value="month">Este mes</option>
+                            <option value="year">Este año</option>
+                        </select>
+                        
+                        <!-- Ordenamiento -->
+                        <select class="filter-select" onchange="applySorting()" id="sortFilter">
+                            <option value="created_desc">🕒 Más recientes</option>
+                            <option value="created_asc">🕒 Más antiguos</option>
+                            <option value="title_asc">🔤 Título A-Z</option>
+                            <option value="title_desc">🔤 Título Z-A</option>
+                            <option value="status_asc">📊 Estado A-Z</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Acciones de filtros -->
+                    <div class="filter-actions">
+                        <button class="btn btn-outline" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                        <button class="btn btn-outline" onclick="toggleAdvancedFilters()">
+                            <i class="fas fa-filter"></i> Filtros Avanzados
+                        </button>
+                        <button class="btn btn-success" onclick="exportProjects()">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
                 </div>
-                <div class="view-toggle">
-                    <button class="view-btn active" onclick="toggleView('grid')" id="gridBtn">
-                        <i class="fas fa-th"></i>
+                
+                <!-- Controles de vista y acciones -->
+                <div class="view-controls">
+                    <div class="bulk-actions" id="bulkActions" style="display: none;">
+                        <span class="selected-count" id="selectedCount">0 seleccionados</span>
+                        <button class="btn btn-warning btn-sm" onclick="bulkEdit()">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="bulkApprove()">
+                            <i class="fas fa-check"></i> Aprobar
+                        </button>
+                    </div>
+                    
+                    <div class="view-toggle">
+                        <button class="view-btn active" onclick="toggleView('grid')" id="gridBtn" title="Vista de tarjetas">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" onclick="toggleView('list')" id="listBtn" title="Vista de lista">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="view-btn" onclick="toggleView('kanban')" id="kanbanBtn" title="Vista Kanban">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filtros avanzados colapsables -->
+            <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Rango de fechas:</label>
+                        <div class="date-range">
+                            <input type="date" id="startDate" class="form-control">
+                            <span>hasta</span>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Director específico:</label>
+                        <select class="form-control" id="directorFilter">
+                            <option value="">Todos los directores</option>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Estudiante específico:</label>
+                        <select class="form-control" id="estudianteFilter">
+                            <option value="">Todos los estudiantes</option>
+                            <!-- Se llenará dinámicamente -->
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Progreso del proyecto:</label>
+                        <select class="form-control" id="progressFilter">
+                            <option value="">Cualquier progreso</option>
+                            <option value="0-25">0% - 25%</option>
+                            <option value="26-50">26% - 50%</option>
+                            <option value="51-75">51% - 75%</option>
+                            <option value="76-100">76% - 100%</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="advanced-actions">
+                    <button class="btn btn-primary" onclick="applyAdvancedFilters()">
+                        <i class="fas fa-search"></i> Aplicar Filtros
                     </button>
-                    <button class="view-btn" onclick="toggleView('list')" id="listBtn">
-                        <i class="fas fa-list"></i>
+                    <button class="btn btn-secondary" onclick="resetAdvancedFilters()">
+                        <i class="fas fa-undo"></i> Resetear
                     </button>
                 </div>
             </div>
@@ -1151,71 +1751,176 @@
             <div class="projects-grid" id="gridView">
                 <% if (projects && projects.length > 0) { %>
                     <% projects.forEach(project => { %>
-                        <div class="project-card">
+                        <div class="project-card modern-card" data-project-id="<%= project.id %>">
+                            <!-- Checkbox para selección múltiple -->
+                            <div class="card-checkbox">
+                                <input type="checkbox" class="project-checkbox" value="<%= project.id %>" onchange="updateBulkActions()">
+                            </div>
+                            
+                            <!-- Header con estado y prioridad -->
                             <div class="project-header">
-                                <div>
-                                    <div class="project-title"><%= project.titulo %></div>
-                                    <div class="project-id">ID: <%= project.id %></div>
+                                <div class="header-left">
+                                    <div class="project-title" title="<%= project.titulo %>">
+                                        <%= project.titulo.length > 50 ? project.titulo.substring(0, 50) + '...' : project.titulo %>
+                                    </div>
+                                    <div class="project-meta">
+                                        <span class="project-id">ID: <%= project.id %></span>
+                                        <span class="project-date">
+                                            <i class="fas fa-calendar"></i>
+                                            <%= project.fecha_creacion ? new Date(project.fecha_creacion).toLocaleDateString() : 'Sin fecha' %>
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="project-status status-<%= project.estado %>">
-                                    <%= project.estado %>
+                                <div class="header-right">
+                                    <div class="project-status status-<%= project.estado %>">
+                                        <% if (project.estado === 'borrador') { %>
+                                            <i class="fas fa-edit"></i> Borrador
+                                        <% } else if (project.estado === 'enviado') { %>
+                                            <i class="fas fa-paper-plane"></i> Enviado
+                                        <% } else if (project.estado === 'en_revision') { %>
+                                            <i class="fas fa-eye"></i> En Revisión
+                                        <% } else if (project.estado === 'aprobado') { %>
+                                            <i class="fas fa-check-circle"></i> Aprobado
+                                        <% } else if (project.estado === 'rechazado') { %>
+                                            <i class="fas fa-times-circle"></i> Rechazado
+                                        <% } else if (project.estado === 'en_desarrollo') { %>
+                                            <i class="fas fa-cogs"></i> En Desarrollo
+                                        <% } else if (project.estado === 'finalizado') { %>
+                                            <i class="fas fa-trophy"></i> Finalizado
+                                        <% } %>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="project-info">
-                                <div class="info-row">
-                                    <span class="info-label">Estudiante:</span>
-                                    <span class="info-value"><%= project.estudiante_nombre || 'No asignado' %></span>
+                            
+                            <!-- Descripción del proyecto -->
+                            <div class="project-description">
+                                <%= project.descripcion ? (project.descripcion.length > 120 ? project.descripcion.substring(0, 120) + '...' : project.descripcion) : 'Sin descripción disponible' %>
+                            </div>
+                            
+                            <!-- Información del equipo -->
+                            <div class="project-team">
+                                <div class="team-member">
+                                    <div class="member-avatar student">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                    <div class="member-info">
+                                        <span class="member-role">Estudiante</span>
+                                        <span class="member-name"><%= project.estudiante_nombre || 'No asignado' %></span>
+                                    </div>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Director:</span>
-                                    <span class="info-value"><%= project.director_nombre || 'No asignado' %></span>
+                                <div class="team-member">
+                                    <div class="member-avatar director">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div class="member-info">
+                                        <span class="member-role">Director</span>
+                                        <span class="member-name"><%= project.director_nombre || 'No asignado' %></span>
+                                    </div>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Línea:</span>
-                                    <span class="info-value"><%= project.linea_investigacion || 'No especificada' %></span>
+                            </div>
+                            
+                            <!-- Información adicional -->
+                            <div class="project-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-microscope"></i>
+                                    <span><%= project.linea_investigacion || 'Línea no especificada' %></span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Inicio del proyecto:</span>
-                                    <span class="info-value"><%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString() : 'No definida' %></span>
+                                <% if (project.fecha_inicio || project.fecha_fin) { %>
+                                <div class="detail-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>
+                                        <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString() : '?' %> - 
+                                        <%= project.fecha_fin ? new Date(project.fecha_fin).toLocaleDateString() : '?' %>
+                                    </span>
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-label">Fin del proyecto:</span>
-                                    <span class="info-value"><%= project.fecha_fin ? new Date(project.fecha_fin).toLocaleDateString() : 'No definida' %></span>
+                                <% } %>
+                            </div>
+                            
+                            <!-- Barra de progreso (simulada basada en estado) -->
+                            <div class="progress-section">
+                                <div class="progress-label">Progreso del proyecto</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 
+                                        <% if (project.estado === 'borrador') { %>10%
+                                        <% } else if (project.estado === 'enviado') { %>25%
+                                        <% } else if (project.estado === 'en_revision') { %>40%
+                                        <% } else if (project.estado === 'aprobado') { %>60%
+                                        <% } else if (project.estado === 'en_desarrollo') { %>80%
+                                        <% } else if (project.estado === 'finalizado') { %>100%
+                                        <% } else { %>0%
+                                        <% } %>"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <% if (project.estado === 'borrador') { %>10%
+                                    <% } else if (project.estado === 'enviado') { %>25%
+                                    <% } else if (project.estado === 'en_revision') { %>40%
+                                    <% } else if (project.estado === 'aprobado') { %>60%
+                                    <% } else if (project.estado === 'en_desarrollo') { %>80%
+                                    <% } else if (project.estado === 'finalizado') { %>100%
+                                    <% } else { %>0%
+                                    <% } %>
+                                </div>
+                            </div>
+                            
+                            <!-- Acciones del proyecto -->
+                            <div class="project-actions">
+                                <div class="primary-actions">
+                                    <button class="btn btn-primary btn-sm" data-project-id="<%= project.id %>" onclick="viewProject(this.dataset.projectId)" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" data-project-id="<%= project.id %>" onclick="editProject(this.dataset.projectId)" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <% if (project.estado === 'enviado' || project.estado === 'en_revision') { %>
+                                        <button class="btn btn-success btn-sm" data-project-id="<%= project.id %>" onclick="approveProject(this.dataset.projectId)" title="Aprobar">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="rejectProject(this.dataset.projectId)" title="Rechazar">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    <% } %>
                                 </div>
                                 
-                            </div>
-                            <div class="project-actions">
-                                <button class="btn btn-primary btn-sm" data-project-id="<%= project.id %>" onclick="viewProject(this.dataset.projectId)" title="Ver proyecto">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-warning btn-sm" data-project-id="<%= project.id %>" onclick="editProject(this.dataset.projectId)" title="Editar proyecto">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <% if (project.estado === 'enviado' || project.estado === 'en_revision') { %>
-                                    <button class="btn btn-success btn-sm" data-project-id="<%= project.id %>" onclick="approveProject(this.dataset.projectId)" title="Aprobar proyecto">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="rejectProject(this.dataset.projectId)" title="Rechazar proyecto">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                <% } %>
-                                <button class="btn btn-info btn-sm" data-project-id="<%= project.id %>" onclick="inviteToProject(this.dataset.projectId)" title="Invitar miembros">
-                                    <i class="fas fa-user-plus"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm" data-project-id="<%= project.id %>" onclick="deleteProject(this.dataset.projectId)" title="Eliminar proyecto">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="secondary-actions">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline btn-sm dropdown-toggle" onclick="toggleDropdown(this)">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a href="#" onclick="inviteToProject(<%= project.id %>)">
+                                                <i class="fas fa-user-plus"></i> Invitar miembros
+                                            </a>
+                                            <a href="#" onclick="duplicateProject(<%= project.id %>)">
+                                                <i class="fas fa-copy"></i> Duplicar proyecto
+                                            </a>
+                                            <a href="#" onclick="exportProject(<%= project.id %>)">
+                                                <i class="fas fa-download"></i> Exportar
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="#" onclick="deleteProject(<%= project.id %>)" class="text-danger">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     <% }) %>
                 <% } else { %>
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
                         <h3>No hay proyectos disponibles</h3>
-                        <p>Comienza creando tu primer proyecto</p>
-                        <button class="btn btn-primary" onclick="openCreateModal()" style="margin-top: 15px;">
-                            <i class="fas fa-plus"></i> Crear Proyecto
-                        </button>
+                        <p>Comienza creando tu primer proyecto o ajusta los filtros de búsqueda</p>
+                        <div class="empty-actions">
+                            <button class="btn btn-primary" onclick="openCreateModal()">
+                                <i class="fas fa-plus"></i> Crear Proyecto
+                            </button>
+                            <button class="btn btn-outline" onclick="clearFilters()">
+                                <i class="fas fa-filter"></i> Limpiar Filtros
+                            </button>
+                        </div>
                     </div>
                 <% } %>
             </div>
@@ -1284,6 +1989,242 @@
                         <% } %>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Kanban View -->
+            <div class="kanban-view" id="kanbanView" style="display: none;">
+                <div class="kanban-board">
+                    <!-- Columna Borrador -->
+                    <div class="kanban-column" data-status="borrador">
+                        <div class="kanban-column-header">
+                            <h3><i class="fas fa-edit"></i> Borrador</h3>
+                            <span class="column-count">
+                                <%= projects ? projects.filter(p => p.estado === 'borrador').length : 0 %>
+                            </span>
+                        </div>
+                        <div class="kanban-column-body">
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.filter(project => project.estado === 'borrador').forEach(project => { %>
+                                    <div class="kanban-card" data-project-id="<%= project.id %>" draggable="true">
+                                        <div class="kanban-card-header">
+                                            <span class="project-id">#<%= project.id %></span>
+                                            <div class="card-actions">
+                                                <button class="btn-icon" onclick="viewProject(<%= project.id %>)" title="Ver">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-icon" onclick="editProject(<%= project.id %>)" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 class="kanban-card-title"><%= project.titulo %></h4>
+                                        <p class="kanban-card-description"><%= project.descripcion ? project.descripcion.substring(0, 100) + '...' : 'Sin descripción' %></p>
+                                        <div class="kanban-card-meta">
+                                            <div class="assignee">
+                                                <i class="fas fa-user"></i>
+                                                <span><%= project.estudiante_nombre || 'Sin asignar' %></span>
+                                            </div>
+                                            <div class="director">
+                                                <i class="fas fa-user-tie"></i>
+                                                <span><%= project.director_nombre || 'Sin director' %></span>
+                                            </div>
+                                            <div class="date">
+                                                <i class="fas fa-calendar"></i>
+                                                <span><%= new Date(project.fecha_creacion).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Columna Enviado -->
+                    <div class="kanban-column" data-status="enviado">
+                        <div class="kanban-column-header">
+                            <h3><i class="fas fa-paper-plane"></i> Enviado</h3>
+                            <span class="column-count">
+                                <%= projects ? projects.filter(p => p.estado === 'enviado').length : 0 %>
+                            </span>
+                        </div>
+                        <div class="kanban-column-body">
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.filter(project => project.estado === 'enviado').forEach(project => { %>
+                                    <div class="kanban-card" data-project-id="<%= project.id %>" draggable="true">
+                                        <div class="kanban-card-header">
+                                            <span class="project-id">#<%= project.id %></span>
+                                            <div class="card-actions">
+                                                <button class="btn-icon" onclick="viewProject(<%= project.id %>)" title="Ver">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-icon btn-success" onclick="approveProject(<%= project.id %>)" title="Aprobar">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn-icon btn-danger" onclick="rejectProject(<%= project.id %>)" title="Rechazar">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 class="kanban-card-title"><%= project.titulo %></h4>
+                                        <p class="kanban-card-description"><%= project.descripcion ? project.descripcion.substring(0, 100) + '...' : 'Sin descripción' %></p>
+                                        <div class="kanban-card-meta">
+                                            <div class="assignee">
+                                                <i class="fas fa-user"></i>
+                                                <span><%= project.estudiante_nombre || 'Sin asignar' %></span>
+                                            </div>
+                                            <div class="director">
+                                                <i class="fas fa-user-tie"></i>
+                                                <span><%= project.director_nombre || 'Sin director' %></span>
+                                            </div>
+                                            <div class="date">
+                                                <i class="fas fa-calendar"></i>
+                                                <span><%= new Date(project.fecha_creacion).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Columna En Revisión -->
+                    <div class="kanban-column" data-status="en_revision">
+                        <div class="kanban-column-header">
+                            <h3><i class="fas fa-search"></i> En Revisión</h3>
+                            <span class="column-count">
+                                <%= projects ? projects.filter(p => p.estado === 'en_revision').length : 0 %>
+                            </span>
+                        </div>
+                        <div class="kanban-column-body">
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.filter(project => project.estado === 'en_revision').forEach(project => { %>
+                                    <div class="kanban-card" data-project-id="<%= project.id %>" draggable="true">
+                                        <div class="kanban-card-header">
+                                            <span class="project-id">#<%= project.id %></span>
+                                            <div class="card-actions">
+                                                <button class="btn-icon" onclick="viewProject(<%= project.id %>)" title="Ver">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-icon btn-success" onclick="approveProject(<%= project.id %>)" title="Aprobar">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn-icon btn-danger" onclick="rejectProject(<%= project.id %>)" title="Rechazar">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 class="kanban-card-title"><%= project.titulo %></h4>
+                                        <p class="kanban-card-description"><%= project.descripcion ? project.descripcion.substring(0, 100) + '...' : 'Sin descripción' %></p>
+                                        <div class="kanban-card-meta">
+                                            <div class="assignee">
+                                                <i class="fas fa-user"></i>
+                                                <span><%= project.estudiante_nombre || 'Sin asignar' %></span>
+                                            </div>
+                                            <div class="director">
+                                                <i class="fas fa-user-tie"></i>
+                                                <span><%= project.director_nombre || 'Sin director' %></span>
+                                            </div>
+                                            <div class="date">
+                                                <i class="fas fa-calendar"></i>
+                                                <span><%= new Date(project.fecha_creacion).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Columna Aprobado -->
+                    <div class="kanban-column" data-status="aprobado">
+                        <div class="kanban-column-header">
+                            <h3><i class="fas fa-check-circle"></i> Aprobado</h3>
+                            <span class="column-count">
+                                <%= projects ? projects.filter(p => p.estado === 'aprobado').length : 0 %>
+                            </span>
+                        </div>
+                        <div class="kanban-column-body">
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.filter(project => project.estado === 'aprobado').forEach(project => { %>
+                                    <div class="kanban-card" data-project-id="<%= project.id %>" draggable="true">
+                                        <div class="kanban-card-header">
+                                            <span class="project-id">#<%= project.id %></span>
+                                            <div class="card-actions">
+                                                <button class="btn-icon" onclick="viewProject(<%= project.id %>)" title="Ver">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-icon" onclick="editProject(<%= project.id %>)" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 class="kanban-card-title"><%= project.titulo %></h4>
+                                        <p class="kanban-card-description"><%= project.descripcion ? project.descripcion.substring(0, 100) + '...' : 'Sin descripción' %></p>
+                                        <div class="kanban-card-meta">
+                                            <div class="assignee">
+                                                <i class="fas fa-user"></i>
+                                                <span><%= project.estudiante_nombre || 'Sin asignar' %></span>
+                                            </div>
+                                            <div class="director">
+                                                <i class="fas fa-user-tie"></i>
+                                                <span><%= project.director_nombre || 'Sin director' %></span>
+                                            </div>
+                                            <div class="date">
+                                                <i class="fas fa-calendar"></i>
+                                                <span><%= new Date(project.fecha_creacion).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <!-- Columna Rechazado -->
+                    <div class="kanban-column" data-status="rechazado">
+                        <div class="kanban-column-header">
+                            <h3><i class="fas fa-times-circle"></i> Rechazado</h3>
+                            <span class="column-count">
+                                <%= projects ? projects.filter(p => p.estado === 'rechazado').length : 0 %>
+                            </span>
+                        </div>
+                        <div class="kanban-column-body">
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.filter(project => project.estado === 'rechazado').forEach(project => { %>
+                                    <div class="kanban-card" data-project-id="<%= project.id %>" draggable="true">
+                                        <div class="kanban-card-header">
+                                            <span class="project-id">#<%= project.id %></span>
+                                            <div class="card-actions">
+                                                <button class="btn-icon" onclick="viewProject(<%= project.id %>)" title="Ver">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn-icon" onclick="editProject(<%= project.id %>)" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h4 class="kanban-card-title"><%= project.titulo %></h4>
+                                        <p class="kanban-card-description"><%= project.descripcion ? project.descripcion.substring(0, 100) + '...' : 'Sin descripción' %></p>
+                                        <div class="kanban-card-meta">
+                                            <div class="assignee">
+                                                <i class="fas fa-user"></i>
+                                                <span><%= project.estudiante_nombre || 'Sin asignar' %></span>
+                                            </div>
+                                            <div class="director">
+                                                <i class="fas fa-user-tie"></i>
+                                                <span><%= project.director_nombre || 'Sin director' %></span>
+                                            </div>
+                                            <div class="date">
+                                                <i class="fas fa-calendar"></i>
+                                                <span><%= new Date(project.fecha_creacion).toLocaleDateString() %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
             </div>
             </div>
         </div>
@@ -1404,20 +2345,321 @@
         function toggleView(view) {
             const gridView = document.getElementById('gridView');
             const listView = document.getElementById('listView');
+            const kanbanView = document.getElementById('kanbanView');
             const gridBtn = document.getElementById('gridBtn');
             const listBtn = document.getElementById('listBtn');
+            const kanbanBtn = document.getElementById('kanbanBtn');
             
+            // Hide all views
+            gridView.style.display = 'none';
+            listView.style.display = 'none';
+            if (kanbanView) kanbanView.style.display = 'none';
+            
+            // Remove active class from all buttons
+            gridBtn.classList.remove('active');
+            listBtn.classList.remove('active');
+            if (kanbanBtn) kanbanBtn.classList.remove('active');
+            
+            // Show selected view
             if (view === 'grid') {
                 gridView.style.display = 'grid';
-                listView.style.display = 'none';
                 gridBtn.classList.add('active');
-                listBtn.classList.remove('active');
-            } else {
-                gridView.style.display = 'none';
+            } else if (view === 'list') {
                 listView.style.display = 'block';
-                gridBtn.classList.remove('active');
                 listBtn.classList.add('active');
+            } else if (view === 'kanban' && kanbanView) {
+                kanbanView.style.display = 'block';
+                kanbanBtn.classList.add('active');
+                initializeKanban();
             }
+        }
+
+        // Bulk Selection Management
+        let selectedProjects = new Set();
+
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const projectCheckboxes = document.querySelectorAll('.project-checkbox');
+            
+            projectCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+                toggleProjectSelection(checkbox.value, checkbox.checked);
+            });
+            
+            updateBulkActions();
+        }
+
+        function toggleProjectSelection(projectId, isSelected) {
+            if (isSelected) {
+                selectedProjects.add(projectId);
+            } else {
+                selectedProjects.delete(projectId);
+            }
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedProjects.size > 0) {
+                bulkActions.style.display = 'flex';
+                selectedCount.textContent = selectedProjects.size;
+            } else {
+                bulkActions.style.display = 'none';
+            }
+        }
+
+        function clearSelection() {
+            selectedProjects.clear();
+            document.querySelectorAll('.project-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.getElementById('selectAll').checked = false;
+            updateBulkActions();
+        }
+
+        // Bulk Actions
+        function bulkApprove() {
+            if (selectedProjects.size === 0) return;
+            
+            if (confirm(`¿Aprobar ${selectedProjects.size} proyecto(s) seleccionado(s)?`)) {
+                const promises = Array.from(selectedProjects).map(projectId => 
+                    fetch(`/admin/projects/${projectId}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'aprobado' })
+                    })
+                );
+                
+                Promise.all(promises)
+                    .then(() => {
+                        alert('Proyectos aprobados exitosamente');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al aprobar algunos proyectos');
+                    });
+            }
+        }
+
+        function bulkReject() {
+            if (selectedProjects.size === 0) return;
+            
+            if (confirm(`¿Rechazar ${selectedProjects.size} proyecto(s) seleccionado(s)?`)) {
+                const promises = Array.from(selectedProjects).map(projectId => 
+                    fetch(`/admin/projects/${projectId}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'rechazado' })
+                    })
+                );
+                
+                Promise.all(promises)
+                    .then(() => {
+                        alert('Proyectos rechazados');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al rechazar algunos proyectos');
+                    });
+            }
+        }
+
+        function bulkDelete() {
+            if (selectedProjects.size === 0) return;
+            
+            if (confirm(`¿Eliminar ${selectedProjects.size} proyecto(s) seleccionado(s)? Esta acción no se puede deshacer.`)) {
+                const promises = Array.from(selectedProjects).map(projectId => 
+                    fetch(`/admin/projects/${projectId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                );
+                
+                Promise.all(promises)
+                    .then(() => {
+                        alert('Proyectos eliminados exitosamente');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al eliminar algunos proyectos');
+                    });
+            }
+        }
+
+        // Advanced Filters
+        function toggleAdvancedFilters() {
+            const advancedFilters = document.getElementById('advancedFilters');
+            const toggleBtn = document.querySelector('.toggle-advanced-btn');
+            
+            if (advancedFilters.style.display === 'none' || !advancedFilters.style.display) {
+                advancedFilters.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Ocultar Filtros Avanzados';
+            } else {
+                advancedFilters.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Mostrar Filtros Avanzados';
+            }
+        }
+
+        // Real-time Search
+        let searchTimeout;
+        function handleRealTimeSearch(event) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                applyFilters();
+            }, 500);
+        }
+
+        // Export Functions
+        function exportProjects(format) {
+            const params = new URLSearchParams(window.location.search);
+            params.append('export', format);
+            
+            if (selectedProjects.size > 0) {
+                params.append('selected', Array.from(selectedProjects).join(','));
+            }
+            
+            window.open(`/admin/projects/export?${params.toString()}`, '_blank');
+        }
+
+        // Kanban View
+        function initializeKanban() {
+            console.log('Initializing Kanban view...');
+            
+            const kanbanCards = document.querySelectorAll('.kanban-card');
+            const kanbanColumns = document.querySelectorAll('.kanban-column');
+            
+            // Add drag event listeners to cards
+            kanbanCards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+            
+            // Add drop event listeners to columns
+            kanbanColumns.forEach(column => {
+                column.addEventListener('dragover', handleDragOver);
+                column.addEventListener('drop', handleDrop);
+                column.addEventListener('dragenter', handleDragEnter);
+                column.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            this.classList.remove('drag-over');
+
+            if (draggedElement !== this) {
+                const projectId = draggedElement.getAttribute('data-project-id');
+                const newStatus = this.getAttribute('data-status');
+                
+                // Update project status via API
+                updateProjectStatus(projectId, newStatus);
+                
+                // Move the card visually
+                const columnBody = this.querySelector('.kanban-column-body');
+                columnBody.appendChild(draggedElement);
+                
+                // Update column counts
+                updateColumnCounts();
+            }
+
+            return false;
+        }
+
+        function updateProjectStatus(projectId, newStatus) {
+            fetch(`/admin/projects/${projectId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Project status updated successfully');
+                    // Show success notification
+                    showNotification('Estado del proyecto actualizado exitosamente', 'success');
+                } else {
+                    console.error('Error updating project status:', data.message);
+                    showNotification('Error al actualizar el estado del proyecto', 'error');
+                    // Revert the visual change
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al actualizar el estado del proyecto', 'error');
+                // Revert the visual change
+                location.reload();
+            });
+        }
+
+        function updateColumnCounts() {
+            const columns = document.querySelectorAll('.kanban-column');
+            columns.forEach(column => {
+                const cards = column.querySelectorAll('.kanban-card');
+                const countElement = column.querySelector('.column-count');
+                if (countElement) {
+                    countElement.textContent = cards.length;
+                }
+            });
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            // Add to page
+            const container = document.querySelector('.main-content');
+            container.insertBefore(notification, container.firstChild);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         // Search and Filter
@@ -1431,11 +2673,25 @@
             const search = document.querySelector('.search-box').value;
             const status = document.getElementById('statusFilter').value;
             const linea = document.getElementById('lineaFilter').value;
+            const sortBy = document.getElementById('sortFilter').value;
+            
+            // Advanced filters
+            const dateFrom = document.getElementById('dateFrom')?.value;
+            const dateTo = document.getElementById('dateTo')?.value;
+            const director = document.getElementById('directorFilter')?.value;
+            const estudiante = document.getElementById('estudianteFilter')?.value;
+            const progreso = document.getElementById('progresoFilter')?.value;
             
             const params = new URLSearchParams();
             if (search) params.append('search', search);
             if (status) params.append('status', status);
             if (linea) params.append('linea', linea);
+            if (sortBy) params.append('sort', sortBy);
+            if (dateFrom) params.append('dateFrom', dateFrom);
+            if (dateTo) params.append('dateTo', dateTo);
+            if (director) params.append('director', director);
+            if (estudiante) params.append('estudiante', estudiante);
+            if (progreso) params.append('progreso', progreso);
             
             window.location.href = '/admin/projects?' + params.toString();
         }

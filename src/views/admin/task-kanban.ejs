@@ -627,13 +627,7 @@
 
         // Función para abrir modal de tarea
         function openTaskModal(taskId) {
-            // Validar que taskId sea válido
-            if (!taskId || taskId === 0) {
-                console.warn('ID de tarea inválido:', taskId);
-                return;
-            }
-            
-            fetch(`/api/tasks/${taskId}/details`)
+            fetch(`/admin/api/tasks/${taskId}/details`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -697,18 +691,47 @@
                                             <strong style="color: #1e293b;">${comment.nombres} ${comment.apellidos}</strong>
                                             <span style="font-size: 12px; color: #64748b;">${new Date(comment.created_at).toLocaleString()}</span>
                                         </div>
-                                        <p style="color: #64748b; margin: 0;">${comment.comentario}</p>
+                                        <p style="color: #64748b; margin: 0; margin-bottom: ${comment.archivo_adjunto ? '10px' : '0'};">${comment.comentario}</p>
+                                        ${comment.archivo_adjunto ? `
+                                            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                                <a href="/uploads/comments/${JSON.parse(comment.archivo_adjunto).nombre_archivo}" 
+                                                   target="_blank" 
+                                                   style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #667eea;">
+                                                    <i class="fas ${getFileIcon(JSON.parse(comment.archivo_adjunto).tipo_mime)}"></i>
+                                                    <span style="font-size: 13px;">${JSON.parse(comment.archivo_adjunto).nombre_original}</span>
+                                                    <span style="font-size: 11px; color: #64748b; margin-left: auto;">${formatFileSize(JSON.parse(comment.archivo_adjunto).tamaño)}</span>
+                                                </a>
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 `).join('') : '<p style="color: #64748b; font-style: italic;">No hay comentarios aún</p>'}
                             </div>
                             
                             <!-- Agregar comentario -->
                             <div style="margin-top: 20px;">
-                                <textarea id="newComment" placeholder="Agregar un comentario..." 
-                                         style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
-                                <button onclick="addComment()" class="btn btn-primary" style="margin-top: 10px;">
-                                    <i class="fas fa-comment"></i> Agregar Comentario
-                                </button>
+                                <form id="commentForm" enctype="multipart/form-data">
+                                    <textarea id="newComment" name="comentario" placeholder="Agregar un comentario..." 
+                                             style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
+                                    
+                                    <!-- Sección de archivo adjunto -->
+                                    <div style="margin-top: 10px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e0;">
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <i class="fas fa-paperclip" style="color: #64748b;"></i>
+                                            <span style="font-size: 14px; color: #64748b;">Adjuntar archivo (opcional)</span>
+                                        </div>
+                                        <input type="file" id="commentFile" name="archivo" 
+                                               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip,.rar"
+                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white;">
+                                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
+                                            Tipos permitidos: PDF, Word, Excel, PowerPoint, imágenes, texto, archivos comprimidos. Máximo 10MB.
+                                        </div>
+                                        <div id="filePreview" style="margin-top: 8px; display: none;"></div>
+                                    </div>
+                                    
+                                    <button type="button" onclick="addComment()" class="btn btn-primary" style="margin-top: 10px;">
+                                        <i class="fas fa-comment"></i> Agregar Comentario
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -786,7 +809,7 @@
         function updateTaskStatus() {
             const newStatus = document.getElementById('taskStatus').value;
             
-            fetch(`/api/tasks/${currentTask.id}/workflow-status`, {
+            fetch(`/admin/api/tasks/${currentTask.id}/workflow-status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -810,26 +833,58 @@
 
 
 
+        // Funciones auxiliares para archivos
+        function getFileIcon(mimeType) {
+            if (!mimeType) return 'fa-file';
+            
+            if (mimeType.includes('pdf')) return 'fa-file-pdf';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
+            if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
+            if (mimeType.includes('image')) return 'fa-file-image';
+            if (mimeType.includes('text')) return 'fa-file-alt';
+            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('compressed')) return 'fa-file-archive';
+            
+            return 'fa-file';
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
         // Función para agregar comentario
         function addComment() {
             const commentText = document.getElementById('newComment').value.trim();
+            const fileInput = document.getElementById('commentFile');
             
-            if (!commentText) {
-                alert('Por favor ingresa un comentario');
+            if (!commentText && !fileInput.files[0]) {
+                alert('Por favor ingresa un comentario o adjunta un archivo');
                 return;
             }
             
-            fetch(`/api/tasks/${currentTask.id}/comments`, {
+            const formData = new FormData();
+            formData.append('comentario', commentText);
+            
+            if (fileInput.files[0]) {
+                formData.append('archivo', fileInput.files[0]);
+            }
+            
+            fetch(`/admin/api/tasks/${currentTask.id}/comments`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ comentario: commentText })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     document.getElementById('newComment').value = '';
+                    fileInput.value = '';
+                    document.getElementById('filePreview').style.display = 'none';
                     // Recargar detalles de la tarea
                     openTaskModal(currentTask.id);
                 } else {
@@ -841,6 +896,30 @@
                 alert('Error al agregar el comentario');
             });
         }
+
+        // Preview de archivo seleccionado
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('commentFile');
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    const preview = document.getElementById('filePreview');
+                    
+                    if (file) {
+                        preview.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                <i class="fas ${getFileIcon(file.type)}" style="color: #667eea;"></i>
+                                <span style="font-size: 13px; color: #1e293b;">${file.name}</span>
+                                <span style="font-size: 11px; color: #64748b; margin-left: auto;">${formatFileSize(file.size)}</span>
+                            </div>
+                        `;
+                        preview.style.display = 'block';
+                    } else {
+                        preview.style.display = 'none';
+                    }
+                });
+            }
+        });
 
         // Función para refrescar el tablero
         function refreshBoard() {

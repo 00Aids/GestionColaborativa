@@ -376,34 +376,34 @@ class Project extends BaseModel {
     try {
       let query = `
         SELECT 
-          pi.*,
-          u.nombres as creado_por_nombres,
-          u.apellidos as creado_por_apellidos,
+          i.*,
+          u.nombres as invitado_por_nombres,
+          u.apellidos as invitado_por_apellidos,
           p.titulo as proyecto_titulo
-        FROM project_invitations pi
-        LEFT JOIN usuarios u ON pi.creado_por_id = u.id
-        LEFT JOIN proyectos p ON pi.proyecto_id = p.id
-        WHERE pi.proyecto_id = ?
+        FROM invitaciones i
+        LEFT JOIN usuarios u ON i.invitado_por = u.id
+        LEFT JOIN proyectos p ON i.proyecto_id = p.id
+        WHERE i.proyecto_id = ?
       `;
       
       const params = [projectId];
       
       if (filters.status) {
         if (filters.status === 'active') {
-          query += ' AND pi.activo = 1 AND (pi.fecha_expiracion IS NULL OR pi.fecha_expiracion > NOW())';
+          query += ' AND i.estado = "pendiente" AND i.fecha_expiracion > NOW()';
         } else if (filters.status === 'inactive') {
-          query += ' AND pi.activo = 0';
+          query += ' AND i.estado IN ("rechazada", "expirada")';
         } else if (filters.status === 'expired') {
-          query += ' AND pi.fecha_expiracion IS NOT NULL AND pi.fecha_expiracion <= NOW()';
+          query += ' AND i.fecha_expiracion <= NOW()';
         }
       }
       
       if (filters.search) {
-        query += ' AND (pi.codigo_invitacion LIKE ? OR pi.descripcion LIKE ?)';
-        params.push(`%${filters.search}%`, `%${filters.search}%`);
+        query += ' AND (i.codigo_invitacion LIKE ? OR i.mensaje LIKE ? OR i.email LIKE ?)';
+        params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
       }
       
-      query += ' ORDER BY pi.created_at DESC';
+      query += ' ORDER BY i.created_at DESC';
       
       const [rows] = await this.db.execute(query, params);
       return rows;

@@ -1,0 +1,208 @@
+================================================================================
+                    RESUMEN DEL PROYECTO - SISTEMA DE GESTIÓN DE PROYECTOS
+================================================================================
+
+📋 DESCRIPCIÓN GENERAL
+======================
+Sistema web de gestión de proyectos académicos con funcionalidades de:
+- Gestión de usuarios y roles
+- Administración de proyectos y tareas
+- Sistema Kanban para seguimiento de tareas
+- Dashboard con métricas y estadísticas
+- Timeline de proyectos
+- Sistema de notificaciones
+
+🔧 MEJORAS IMPLEMENTADAS
+========================
+
+1. CORRECCIÓN DEL SISTEMA KANBAN
+   --------------------------------
+   ✅ Corregida la lógica de estados de tareas en AdminController.js
+   ✅ Implementado método getProjectTasksWithWorkflow() para agrupar tareas
+   ✅ Actualizada vista project-detail.ejs para usar tasksGrouped
+   ✅ Columnas del Kanban: "Por Hacer", "En Progreso", "Completadas"
+   ✅ Eliminada columna "En Revisión" (no existe en el workflow)
+   ✅ Botón "Vista Kanban Completa" con redirección correcta
+
+2. CORRECCIÓN DE MÉTRICAS Y ESTADÍSTICAS
+   ----------------------------------------
+   ✅ Progreso Detallado: Ahora muestra conteos reales de tareas
+   ✅ Dashboard del Proyecto: Métricas actualizadas con datos reales
+   ✅ Métricas de Rendimiento: Cálculos basados en tasksGrouped
+   ✅ Consistencia entre todas las vistas
+
+3. CORRECCIÓN DEL TIMELINE DEL PROYECTO
+   ---------------------------------------
+   ✅ Solucionado problema de "Invalid Date"
+   ✅ Manejo robusto de fechas inválidas con try-catch
+   ✅ Validación de fechas antes de mostrarlas
+   ✅ Valores por defecto seguros para fechas faltantes
+
+📊 ESTRUCTURA DE BASE DE DATOS
+==============================
+
+TABLAS PRINCIPALES:
+------------------
+- users: Usuarios del sistema
+- projects: Proyectos académicos
+- tasks: Tareas de los proyectos
+- roles: Roles de usuarios
+- invitations: Invitaciones a proyectos
+- notifications: Sistema de notificaciones
+- deliverables: Entregables de proyectos
+- evaluations: Evaluaciones
+
+CAMPOS IMPORTANTES:
+------------------
+tasks.estado: 'todo', 'in_progress', 'done'
+projects.fecha_creacion: Fecha de inicio del proyecto
+projects.fecha_limite: Fecha límite del proyecto
+users.rol: Rol del usuario en el sistema
+
+🚀 REQUISITOS PARA FUNCIONAMIENTO
+==================================
+
+1. DEPENDENCIAS DE NODE.JS
+   ------------------------
+   npm install express
+   npm install ejs
+   npm install mysql2
+   npm install bcryptjs
+   npm install express-session
+   npm install multer
+   npm install dotenv
+
+2. BASE DE DATOS MYSQL
+   -------------------
+   - Crear base de datos MySQL
+   - Ejecutar scripts de configuración en src/config/:
+     * schema_clean.sql (estructura de tablas)
+     * initial_data_clean.sql (datos iniciales)
+     * jira_workflow_migration.sql (workflow de tareas)
+     * create_invitations_table.sql (tabla de invitaciones)
+     * add_priority_field.sql (campo de prioridad)
+
+3. CONFIGURACIÓN DE ENTORNO
+   -------------------------
+   Crear archivo .env con:
+   DB_HOST=localhost
+   DB_USER=tu_usuario
+   DB_PASSWORD=tu_contraseña
+   DB_NAME=nombre_base_datos
+   SESSION_SECRET=tu_clave_secreta
+
+4. ESTRUCTURA DE CARPETAS
+   -----------------------
+   public/uploads/profiles/ (fotos de perfil)
+   public/uploads/documents/ (documentos)
+   public/uploads/comments/ (archivos de comentarios)
+
+🎯 FUNCIONALIDADES PRINCIPALES
+===============================
+
+PARA ADMINISTRADORES:
+--------------------
+- Dashboard con métricas generales
+- Gestión completa de proyectos
+- Vista Kanban funcional
+- Timeline de proyectos
+- Gestión de usuarios y roles
+- Sistema de invitaciones
+
+PARA USUARIOS:
+--------------
+- Dashboard personalizado
+- Mis tareas asignadas
+- Participación en proyectos
+- Notificaciones
+- Perfil de usuario
+
+📈 MÉTRICAS IMPLEMENTADAS
+=========================
+
+PROGRESO DETALLADO:
+------------------
+- Porcentaje de completado
+- Tareas completadas vs total
+- Tareas en progreso
+- Tareas por hacer
+
+DASHBOARD DEL PROYECTO:
+----------------------
+- Miembros activos
+- Tareas completadas
+- Tareas en progreso
+- Invitaciones pendientes
+
+MÉTRICAS DE RENDIMIENTO:
+-----------------------
+- Tareas completadas por día
+- Tareas por miembro
+- Porcentaje de progreso general
+
+🔄 WORKFLOW DE TAREAS
+=====================
+
+ESTADOS VÁLIDOS:
+---------------
+1. 'todo' → Por Hacer (columna azul)
+2. 'in_progress' → En Progreso (columna amarilla)
+3. 'done' → Completadas (columna verde)
+
+TRANSICIONES:
+------------
+todo → in_progress → done
+
+🌐 ACCESO AL SISTEMA
+====================
+
+URL LOCAL: http://localhost:3000
+COMANDO INICIO: npm run dev
+
+USUARIOS DE PRUEBA:
+------------------
+(Según datos en initial_data_clean.sql)
+
+📝 ARCHIVOS MODIFICADOS
+=======================
+
+CONTROLADORES:
+--------------
+- src/controllers/AdminController.js (método getProjectTasksWithWorkflow)
+
+VISTAS:
+-------
+- src/views/admin/project-detail.ejs (Kanban, métricas, timeline)
+
+CONFIGURACIÓN:
+--------------
+- src/config/*.sql (scripts de base de datos)
+
+🔍 VERIFICACIÓN DE FUNCIONAMIENTO
+==================================
+
+1. Verificar que npm run dev inicie sin errores
+2. Acceder a http://localhost:3000
+3. Comprobar login de usuarios
+4. Verificar vista de proyectos con:
+   ✅ Kanban con 3 columnas funcionales
+   ✅ Métricas con datos reales
+   ✅ Timeline sin "Invalid Date"
+   ✅ Dashboard con estadísticas correctas
+
+🎉 ESTADO ACTUAL
+================
+
+✅ Sistema Kanban completamente funcional
+✅ Métricas y estadísticas corregidas
+✅ Timeline de proyectos sin errores
+✅ Consistencia de datos en todas las vistas
+✅ Manejo robusto de errores
+✅ Interfaz de usuario mejorada
+
+El proyecto está listo para uso en desarrollo y puede ser desplegado
+siguiendo los requisitos mencionados arriba.
+
+================================================================================
+Fecha de última actualización: $(Get-Date -Format "dd/MM/yyyy HH:mm")
+================================================================================

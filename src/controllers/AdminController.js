@@ -1504,7 +1504,8 @@ class AdminController {
       // Obtener datos adicionales
       const members = await this.projectModel.getProjectMembers(projectId);
       const invitations = await this.projectModel.getProjectInvitations(projectId);
-      const tasks = await this.projectModel.getProjectTasks(projectId);
+      const tasksGrouped = await this.taskModel.getProjectTasksWithWorkflow(projectId);
+      const tasks = [...tasksGrouped.todo, ...tasksGrouped.in_progress, ...tasksGrouped.done];
       const deliverables = await this.deliverableModel.findByProject(projectId);
       
       res.render('admin/project-detail', {
@@ -1514,6 +1515,7 @@ class AdminController {
         members,
         invitations,
         tasks,
+        tasksGrouped,
         deliverables,
         success: req.flash('success'),
         error: req.flash('error')
@@ -2052,7 +2054,69 @@ class AdminController {
     }
   }
 
+  // Crear subtarea
+  async createSubtask(req, res) {
+    try {
+      const { taskId } = req.params;
+      const { titulo, descripcion, asignado_a } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
 
+      if (!titulo || titulo.trim() === '') {
+        return res.status(400).json({ error: 'El título es requerido' });
+      }
+
+      const subtaskData = {
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : '',
+        asignado_a: asignado_a || null
+      };
+
+      const subtaskId = await this.taskModel.createSubtask(taskId, subtaskData, user.id);
+      
+      if (subtaskId) {
+        res.json({ success: true, message: 'Subtarea creada correctamente', subtaskId });
+      } else {
+        res.status(400).json({ error: 'No se pudo crear la subtarea' });
+      }
+    } catch (error) {
+      console.error('Error in createSubtask:', error);
+      res.status(500).json({ error: 'Error al crear la subtarea' });
+    }
+  }
+
+  // Actualizar estado de subtarea
+  async updateSubtaskStatus(req, res) {
+    try {
+      const { subtaskId } = req.params;
+      const { status } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ error: 'No autorizado' });
+      }
+
+      // Validar estado
+      const validStatuses = ['todo', 'in_progress', 'done'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Estado inválido' });
+      }
+
+      const success = await this.taskModel.updateSubtaskStatus(subtaskId, status, user.id);
+      
+      if (success) {
+        res.json({ success: true, message: 'Estado de subtarea actualizado correctamente' });
+      } else {
+        res.status(400).json({ error: 'No se pudo actualizar el estado de la subtarea' });
+      }
+    } catch (error) {
+      console.error('Error in updateSubtaskStatus:', error);
+      res.status(500).json({ error: 'Error al actualizar el estado de la subtarea' });
+    }
+  }
 
   // Obtener detalles completos de una tarea (para modal)
   async getTaskDetails(req, res) {

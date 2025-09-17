@@ -3,6 +3,7 @@ const router = express.Router();
 const AdminController = require('../controllers/AdminController');
 const DashboardController = require('../controllers/DashboardController'); // Agregar esta línea
 const AuthMiddleware = require('../middlewares/auth');
+const uploadMiddleware = require('../middlewares/upload');
 
 // Instanciar los controladores
 const adminController = new AdminController();
@@ -106,6 +107,9 @@ router.get('/invitations', adminController.invitations.bind(adminController));
 // API para obtener invitaciones de un proyecto
 router.get('/invitations/:projectId', adminController.getProjectInvitations.bind(adminController));
 
+// API para obtener invitaciones de un proyecto (ruta alternativa)
+router.get('/projects/:projectId/invitations', adminController.getProjectInvitations.bind(adminController));
+
 // API para crear nueva invitación
 router.post('/invitations', adminController.createInvitation.bind(adminController));
 
@@ -163,7 +167,7 @@ router.put('/api/tasks/:taskId/assign', adminController.assignTask.bind(adminCon
 router.post('/api/tasks/:taskId/complete', adminController.completeTask.bind(adminController));
 
 // Agregar comentario a una tarea
-router.post('/api/tasks/:taskId/comments', adminController.addTaskComment.bind(adminController));
+router.post('/api/tasks/:taskId/comments', uploadMiddleware.single('archivo'), adminController.addTaskComment.bind(adminController));
 
 // Obtener comentarios de una tarea
 router.get('/api/tasks/:taskId/comments', adminController.getTaskComments.bind(adminController));

@@ -447,7 +447,7 @@ function editTask(taskId) {
     document.getElementById('modalTitle').textContent = 'Editar Tarea';
     document.getElementById('taskId').value = taskId;
     
-    fetch(`/api/tasks/${taskId}`)
+    fetch(`/dashboard/api/tasks/${taskId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -474,7 +474,7 @@ function deleteTask(taskId) {
     if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
         showNotification('Eliminando tarea...', 'info', 1000);
         
-        fetch(`/api/tasks/${taskId}`, {
+        fetch(`/dashboard/api/tasks/${taskId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
