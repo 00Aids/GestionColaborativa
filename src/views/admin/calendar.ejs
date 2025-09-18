@@ -712,6 +712,279 @@
             color: #667eea;
         }
 
+        /* ===== MODAL DE DETALLES DE TAREA ===== */
+        .task-details-modal {
+            max-width: 700px;
+            width: 95%;
+        }
+
+        .task-details-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .task-main-info {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .task-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .task-badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .priority-badge, .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .priority-badge.medium {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .priority-badge.low {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .task-description {
+            color: #64748b;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .task-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.1);
+        }
+
+        .info-item i {
+            font-size: 18px;
+            color: #667eea;
+            width: 20px;
+            text-align: center;
+        }
+
+        .info-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .task-progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .progress-percentage {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #f1f5f9;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .task-comments-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .comment-author {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding-top: 20px;
+            border-top: 2px solid #f1f5f9;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        }
+
         /* ===== FILTROS DE PRIORIDAD ===== */
         .priority-filters {
             display: flex;
@@ -1146,6 +1419,109 @@
         </div>
     </div>
 
+    <!-- Modal para Detalles de Tarea -->
+    <div class="modal" id="taskDetailsModal">
+        <div class="modal-content task-details-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    Detalles de la Tarea
+                </h3>
+                <button class="close-btn" id="closeDetailsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="task-details-content">
+                <!-- Información Principal -->
+                <div class="task-main-info">
+                    <div class="task-header">
+                        <h4 class="task-title" id="detailTaskTitle">Título de la Tarea</h4>
+                        <div class="task-badges">
+                            <span class="priority-badge" id="detailTaskPriority">Alta</span>
+                            <span class="status-badge" id="detailTaskStatus">En Progreso</span>
+                        </div>
+                    </div>
+                    <p class="task-description" id="detailTaskDescription">Descripción de la tarea...</p>
+                </div>
+
+                <!-- Información de Fechas y Tiempo -->
+                <div class="task-info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div>
+                            <span class="info-label">Fecha Límite</span>
+                            <span class="info-value" id="detailTaskDate">15 de Diciembre, 2024</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <span class="info-label">Hora</span>
+                            <span class="info-value" id="detailTaskTime">14:30</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <div>
+                            <span class="info-label">Proyecto</span>
+                            <span class="info-value" id="detailTaskProject">Sistema de Gestión</span>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <span class="info-label">Asignado a</span>
+                            <span class="info-value" id="detailTaskAssignee">Juan Pérez</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progreso de la Tarea -->
+                <div class="task-progress-section">
+                    <div class="progress-header">
+                        <span class="progress-label">Progreso</span>
+                        <span class="progress-percentage" id="detailTaskProgress">65%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="detailProgressFill" style="width: 65%"></div>
+                    </div>
+                </div>
+
+                <!-- Comentarios Recientes -->
+                <div class="task-comments-section">
+                    <h5 class="section-title">
+                        <i class="fas fa-comments"></i>
+                        Comentarios Recientes
+                    </h5>
+                    <div class="comments-list" id="detailTaskComments">
+                        <div class="comment-item">
+                            <div class="comment-avatar">JP</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">Juan Pérez</span>
+                                    <span class="comment-time">Hace 2 horas</span>
+                                </div>
+                                <p class="comment-text">Avance del 65% completado. Trabajando en la integración final.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="task-actions">
+                    <button class="btn btn-outline" id="editTaskBtn">
+                        <i class="fas fa-edit"></i>
+                        Editar Tarea
+                    </button>
+                    <button class="btn btn-success" id="completeTaskBtn">
+                        <i class="fas fa-check"></i>
+                        Marcar Completada
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Clase principal del Calendario
         class TaskCalendar {
@@ -1243,6 +1619,7 @@
                 this.updateTodayDate();
                 this.setupEventListeners();
                 this.initPriorityFilters(); // Agregar esta línea
+                this.addTaskClickListeners(); // Agregar event listeners para clicks en tareas
                 this.loadTasksFromBackend(); // Cargar tareas del backend
             }
 
@@ -1283,6 +1660,18 @@
                         this.closeTaskModal();
                     }
                 });
+
+                // Modal de detalles de tarea
+                document.getElementById('closeDetailsModal').addEventListener('click', () => this.closeTaskDetailsModal());
+                document.getElementById('taskDetailsModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'taskDetailsModal') {
+                        this.closeTaskDetailsModal();
+                    }
+                });
+
+                // Botones de acciones en el modal de detalles
+                document.getElementById('editTaskBtn').addEventListener('click', () => this.editTaskFromDetails());
+                document.getElementById('completeTaskBtn').addEventListener('click', () => this.completeTaskFromDetails());
             }
 
             // Inicializar filtros de prioridad
@@ -1376,7 +1765,12 @@
                         <div class="day-events">${this.renderDayTasks(dateStr)}</div>
                     `;
 
-                    dayElement.addEventListener('click', () => this.openTaskModal(dateStr));
+                    dayElement.addEventListener('click', (e) => {
+                        // Solo abrir modal de crear tarea si no se hizo clic en una tarea existente
+                        if (!e.target.closest('.event-item')) {
+                            this.openTaskModal(dateStr);
+                        }
+                    });
                     calendarBody.appendChild(dayElement);
                 }
             }
@@ -1673,7 +2067,7 @@
                     todayTasks.forEach(task => {
                         const timeClass = this.getTimeBasedColor ? this.getTimeBasedColor(task.due_date || task.date) : `priority-${task.priority}`;
                         html += `
-                            <div class="agenda-event">
+                            <div class="agenda-event" data-task-id="${task.id}">
                                 <div class="event-indicator ${timeClass}"></div>
                                 <div class="event-time">${task.time || '09:00'}</div>
                                 <div class="event-details">
@@ -1699,7 +2093,7 @@
                         
                         const dayName = taskDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' });
                         html += `
-                            <div class="agenda-event">
+                            <div class="agenda-event" data-task-id="${task.id}">
                                 <div class="event-indicator ${timeClass}"></div>
                                 <div class="event-time">${dayName}</div>
                                 <div class="event-details">
@@ -1723,7 +2117,7 @@
                         
                         const dayName = taskDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
                         html += `
-                            <div class="agenda-event">
+                            <div class="agenda-event" data-task-id="${task.id}">
                                 <div class="event-indicator ${timeClass}"></div>
                                 <div class="event-time">${dayName}</div>
                                 <div class="event-details">
@@ -1804,6 +2198,196 @@
                 setTimeout(() => {
                     notification.remove();
                 }, 3000);
+            }
+
+            // ===== FUNCIONES DEL MODAL DE DETALLES =====
+            
+            // Abrir modal de detalles de tarea
+            async openTaskDetailsModal(taskId) {
+                try {
+                    const response = await fetch(`/admin/calendar/tasks/${taskId}/details`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.populateTaskDetailsModal(data.task);
+                        document.getElementById('taskDetailsModal').classList.add('active');
+                    } else {
+                        this.showNotification('Error al cargar los detalles de la tarea', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading task details:', error);
+                    this.showNotification('Error de conexión al cargar detalles', 'error');
+                }
+            }
+
+            // Cerrar modal de detalles
+            closeTaskDetailsModal() {
+                document.getElementById('taskDetailsModal').classList.remove('active');
+            }
+
+            // Poblar el modal con los datos de la tarea
+            populateTaskDetailsModal(task) {
+                // Información principal
+                document.getElementById('detailTaskTitle').textContent = task.title || 'Sin título';
+                document.getElementById('detailTaskDescription').textContent = task.description || 'Sin descripción';
+                
+                // Badges de prioridad y estado
+                const priorityBadge = document.getElementById('detailTaskPriority');
+                const statusBadge = document.getElementById('detailTaskStatus');
+                
+                priorityBadge.textContent = this.getPriorityText(task.priority);
+                priorityBadge.className = `priority-badge ${task.priority}`;
+                
+                statusBadge.textContent = this.getStatusText(task.status);
+                
+                // Información de fechas y tiempo
+                document.getElementById('detailTaskDate').textContent = this.formatDate(task.due_date || task.date);
+                document.getElementById('detailTaskTime').textContent = task.time || 'Todo el día';
+                document.getElementById('detailTaskProject').textContent = task.project_name || 'Sin proyecto';
+                document.getElementById('detailTaskAssignee').textContent = task.assignee_name || 'Sin asignar';
+                
+                // Progreso
+                const progress = task.progress || 0;
+                document.getElementById('detailTaskProgress').textContent = `${progress}%`;
+                document.getElementById('detailProgressFill').style.width = `${progress}%`;
+                
+                // Comentarios
+                this.populateComments(task.comments || []);
+                
+                // Guardar ID de tarea para acciones
+                this.currentTaskId = task.id;
+            }
+
+            // Poblar comentarios
+            populateComments(comments) {
+                const commentsContainer = document.getElementById('detailTaskComments');
+                
+                if (!comments || comments.length === 0) {
+                    commentsContainer.innerHTML = `
+                        <div class="no-comments" style="text-align: center; color: #64748b; padding: 20px; font-style: italic;">
+                            No hay comentarios aún
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const commentsHtml = comments.slice(0, 3).map(comment => {
+                    const initials = this.getInitials(comment.author_name || 'Usuario');
+                    const timeAgo = this.getTimeAgo(comment.created_at);
+                    
+                    return `
+                        <div class="comment-item">
+                            <div class="comment-avatar">${initials}</div>
+                            <div class="comment-content">
+                                <div class="comment-header">
+                                    <span class="comment-author">${comment.author_name || 'Usuario'}</span>
+                                    <span class="comment-time">${timeAgo}</span>
+                                </div>
+                                <p class="comment-text">${comment.content || 'Sin contenido'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                commentsContainer.innerHTML = commentsHtml;
+            }
+
+            // Funciones auxiliares
+            getPriorityText(priority) {
+                const priorities = {
+                    'high': 'Alta',
+                    'medium': 'Media',
+                    'low': 'Baja'
+                };
+                return priorities[priority] || 'Media';
+            }
+
+            getStatusText(status) {
+                const statuses = {
+                    'pending': 'Pendiente',
+                    'in_progress': 'En Progreso',
+                    'completed': 'Completada',
+                    'cancelled': 'Cancelada'
+                };
+                return statuses[status] || 'Pendiente';
+            }
+
+            formatDate(dateString) {
+                if (!dateString) return 'Sin fecha';
+                
+                const date = new Date(dateString);
+                return date.toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            getInitials(name) {
+                return name.split(' ')
+                    .map(word => word.charAt(0))
+                    .join('')
+                    .toUpperCase()
+                    .substring(0, 2);
+            }
+
+            getTimeAgo(dateString) {
+                if (!dateString) return 'Hace tiempo';
+                
+                const now = new Date();
+                const date = new Date(dateString);
+                const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+                
+                if (diffInHours < 1) return 'Hace menos de 1 hora';
+                if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
+                
+                const diffInDays = Math.floor(diffInHours / 24);
+                if (diffInDays < 7) return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
+                
+                return date.toLocaleDateString('es-ES');
+            }
+
+            // Acciones del modal de detalles
+            editTaskFromDetails() {
+                // Cerrar modal de detalles y abrir modal de edición
+                this.closeTaskDetailsModal();
+                // Aquí se podría implementar la lógica para editar la tarea
+                this.showNotification('Función de edición en desarrollo', 'info');
+            }
+
+            completeTaskFromDetails() {
+                if (this.currentTaskId) {
+                    // Aquí se podría implementar la lógica para marcar como completada
+                    this.showNotification('Función de completar tarea en desarrollo', 'info');
+                    this.closeTaskDetailsModal();
+                }
+            }
+
+            // Agregar event listeners a las tareas del calendario
+            addTaskClickListeners() {
+                // Event listeners para tareas en el calendario
+                document.addEventListener('click', (e) => {
+                    const taskElement = e.target.closest('.event-item[data-task-id]');
+                    if (taskElement) {
+                        e.stopPropagation(); // Evitar que se propague al día padre
+                        const taskId = taskElement.getAttribute('data-task-id');
+                        if (taskId) {
+                            this.openTaskDetailsModal(taskId);
+                        }
+                    }
+                });
+
+                // Event listeners para tareas en la agenda
+                document.addEventListener('click', (e) => {
+                    const agendaEvent = e.target.closest('.agenda-event[data-task-id]');
+                    if (agendaEvent) {
+                        e.stopPropagation(); // Evitar propagación
+                        const taskId = agendaEvent.getAttribute('data-task-id');
+                        if (taskId) {
+                            this.openTaskDetailsModal(taskId);
+                        }
+                    }
+                });
             }
         }
 

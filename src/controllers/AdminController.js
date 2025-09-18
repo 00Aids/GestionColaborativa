@@ -2197,8 +2197,8 @@ class AdminController {
       
       res.json({ 
         success: true, 
-        data: {
-          task,
+        task: {
+          ...task,
           comments,
           history
         }
