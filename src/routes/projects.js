@@ -79,6 +79,12 @@ router.post('/:id/invitations/quick',
   projectController.generateQuickInvitation.bind(projectController)
 );
 
+// Enviar invitación por email
+router.post('/:id/invitations/email', 
+  AuthMiddleware.requireAuth,
+  projectController.sendEmailInvitation.bind(projectController)
+);
+
 // Eliminar/desactivar invitación
 router.delete('/:projectId/invitations/:invitationId', 
   AuthMiddleware.requireAuth,

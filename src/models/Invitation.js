@@ -47,11 +47,14 @@ class Invitation extends BaseModel {
   async findByCode(codigo_invitacion) {
     try {
       const query = `
-        SELECT i.*, p.nombre as proyecto_nombre, u.nombre as invitado_por
+        SELECT i.*, p.titulo as proyecto_nombre, 
+               CONCAT(u.nombres, ' ', u.apellidos) as invitado_por_nombre
         FROM ${this.tableName} i
         LEFT JOIN proyectos p ON i.proyecto_id = p.id
         LEFT JOIN usuarios u ON i.invitado_por = u.id
         WHERE i.codigo_invitacion = ? AND i.estado = 'pendiente'
+        AND i.fecha_expiracion > NOW()
+        AND i.usos_actuales < i.max_usos
       `;
       const [rows] = await this.db.execute(query, [codigo_invitacion]);
       return rows[0] || null;
@@ -64,8 +67,10 @@ class Invitation extends BaseModel {
   async findByProject(proyecto_id) {
     try {
       const query = `
-        SELECT i.*, u.nombre as invitado_nombre, u.email as invitado_email,
-               ub.nombre as invitado_por_nombre
+        SELECT i.*, 
+               CONCAT(u.nombres, ' ', u.apellidos) as invitado_nombre, 
+               u.email as invitado_email,
+               CONCAT(ub.nombres, ' ', ub.apellidos) as invitado_por_nombre
         FROM ${this.tableName} i
         LEFT JOIN usuarios u ON i.usuario_id = u.id
         LEFT JOIN usuarios ub ON i.invitado_por = ub.id
@@ -82,28 +87,29 @@ class Invitation extends BaseModel {
   // Aceptar invitación
   async accept(invitationId, userId) {
     try {
-      const invitation = await this.findById(invitationId);
-      if (!invitation) {
-        throw new Error('Invitación no encontrada');
+      // Verificar si la invitación puede ser usada
+      const canUse = await this.canBeUsed(invitationId);
+      if (!canUse) {
+        const invitation = await this.findById(invitationId);
+        if (!invitation) {
+          throw new Error('Invitación no encontrada');
+        }
+        if (invitation.fecha_expiracion < new Date()) {
+          throw new Error('La invitación ha expirado');
+        }
+        if (invitation.estado !== 'pendiente') {
+          throw new Error('La invitación ya ha sido procesada');
+        }
+        if (invitation.usos_actuales >= invitation.max_usos) {
+          throw new Error('La invitación ha alcanzado su límite de usos');
+        }
       }
 
-      if (invitation.fecha_expiracion < new Date()) {
-        throw new Error('La invitación ha expirado');
-      }
-
-      if (invitation.estado !== 'pendiente') {
-        throw new Error('La invitación ya ha sido procesada');
-      }
-
-      // Actualizar estado de la invitación
-      await this.update(invitationId, {
-        estado: 'aceptada',
-        fecha_aceptacion: new Date(),
-        updated_at: new Date()
-      });
-
+      // Incrementar el uso de la invitación
+      const updatedInvitation = await this.incrementUsage(invitationId);
+      
       // Agregar usuario al proyecto (esto se manejará en el controlador)
-      return invitation;
+      return updatedInvitation;
     } catch (error) {
       throw new Error(`Error accepting invitation: ${error.message}`);
     }
@@ -152,6 +158,22 @@ class Invitation extends BaseModel {
     }
   }
 
+  // Buscar invitación por email y proyecto
+  async findByEmailAndProject(email, proyecto_id) {
+    try {
+      const query = `
+        SELECT * FROM ${this.tableName}
+        WHERE email = ? AND proyecto_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+      const [rows] = await this.db.execute(query, [email, proyecto_id]);
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      throw new Error(`Error finding invitation by email and project: ${error.message}`);
+    }
+  }
+
   // Obtener estadísticas de invitaciones
   async getStats(proyecto_id) {
     try {
@@ -169,6 +191,62 @@ class Invitation extends BaseModel {
       return rows[0];
     } catch (error) {
       throw new Error(`Error getting invitation stats: ${error.message}`);
+    }
+  }
+
+  // Verificar si una invitación aún puede ser usada
+  async canBeUsed(invitationId) {
+    try {
+      const invitation = await this.findById(invitationId);
+      if (!invitation) {
+        return false;
+      }
+
+      // Verificar estado
+      if (invitation.estado !== 'pendiente') {
+        return false;
+      }
+
+      // Verificar expiración
+      if (invitation.fecha_expiracion < new Date()) {
+        return false;
+      }
+
+      // Verificar usos disponibles
+      if (invitation.usos_actuales >= invitation.max_usos) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      throw new Error(`Error checking if invitation can be used: ${error.message}`);
+    }
+  }
+
+  // Incrementar el uso de una invitación
+  async incrementUsage(invitationId) {
+    try {
+      const invitation = await this.findById(invitationId);
+      if (!invitation) {
+        throw new Error('Invitación no encontrada');
+      }
+
+      const newUsage = invitation.usos_actuales + 1;
+      const updateData = {
+        usos_actuales: newUsage,
+        updated_at: new Date()
+      };
+
+      // Si alcanza el máximo de usos, marcar como aceptada
+      if (newUsage >= invitation.max_usos) {
+        updateData.estado = 'aceptada';
+        updateData.fecha_aceptacion = new Date();
+      }
+
+      await this.update(invitationId, updateData);
+      return await this.findById(invitationId);
+    } catch (error) {
+      throw new Error(`Error incrementing invitation usage: ${error.message}`);
     }
   }
 }
