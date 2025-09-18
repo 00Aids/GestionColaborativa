@@ -100,6 +100,9 @@ router.put('/calendar/tasks/:taskId', adminController.updateCalendarTask.bind(ad
 // API para eliminar tarea
 router.delete('/calendar/tasks/:taskId', adminController.deleteCalendarTask.bind(adminController));
 
+// API para obtener detalles de una tarea específica
+router.get('/calendar/tasks/:taskId/details', adminController.getTaskDetails.bind(adminController));
+
 // =============================================
 // RUTAS DE GESTIÓN DE INVITACIONES
 // =============================================

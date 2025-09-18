@@ -435,7 +435,7 @@ class ProjectController {
   // Obtener invitaciones de un proyecto
   async getProjectInvitations(req, res) {
       try {
-          const { projectId } = req.params;
+          const { id: projectId } = req.params;
           const invitation = new Invitation();
           
           const invitations = await invitation.findByProject(projectId);
@@ -645,6 +645,92 @@ class ProjectController {
           });
       } catch (error) {
           console.error('Error generating quick invitation:', error);
+          res.status(500).json({ 
+              success: false,
+              error: 'Error interno del servidor: ' + error.message 
+          });
+      }
+  }
+
+  // Enviar invitación por email
+  async sendEmailInvitation(req, res) {
+      try {
+          const { id: projectId } = req.params;
+          const { email, message, expires_in_days } = req.body;
+          const invitadoPor = req.session.user.id;
+
+          // Validar email
+          if (!email || !email.includes('@')) {
+              return res.status(400).json({ 
+                  success: false,
+                  error: 'Email válido es requerido' 
+              });
+          }
+
+          // Verificar que el usuario tenga permisos en el proyecto
+          const project = await this.projectModel.findById(projectId);
+          if (!project) {
+              return res.status(404).json({ 
+                  success: false,
+                  error: 'Proyecto no encontrado' 
+              });
+          }
+
+          // Verificar si ya existe una invitación pendiente para este email
+          const invitation = new Invitation();
+          const existingInvitation = await invitation.findByEmailAndProject(email, projectId);
+          
+          if (existingInvitation && existingInvitation.estado === 'pendiente') {
+              return res.status(400).json({ 
+                  success: false,
+                  error: 'Ya existe una invitación pendiente para este email' 
+              });
+          }
+
+          // Crear nueva invitación
+          const invitationData = {
+              proyecto_id: parseInt(projectId),
+              email: email,
+              invitado_por: invitadoPor,
+              mensaje: message || null,
+              max_usos: 1 // Las invitaciones por email son de un solo uso
+          };
+
+          // Configurar fecha de expiración
+          if (expires_in_days) {
+              const expirationDate = new Date();
+              expirationDate.setDate(expirationDate.getDate() + parseInt(expires_in_days));
+              invitationData.fecha_expiracion = expirationDate;
+          }
+
+          const newInvitation = await invitation.create(invitationData);
+
+          // Obtener información del usuario que invita
+          const userModel = new User();
+          const inviter = await userModel.findById(invitadoPor);
+          const inviterName = `${inviter.nombres} ${inviter.apellidos}`;
+
+          // Enviar email usando el servicio de email
+          const EmailService = require('../services/EmailService');
+          const emailService = new EmailService();
+          
+          await emailService.sendInvitation({
+              email: email,
+              projectName: project.titulo,
+              inviterName: inviterName,
+              invitationCode: newInvitation.codigo_invitacion,
+              message: message
+          });
+
+          res.json({
+              success: true,
+              message: 'Invitación enviada exitosamente por email',
+              invitation_id: newInvitation.id,
+              codigo: newInvitation.codigo_invitacion
+          });
+
+      } catch (error) {
+          console.error('Error sending email invitation:', error);
           res.status(500).json({ 
               success: false,
               error: 'Error interno del servidor: ' + error.message 
