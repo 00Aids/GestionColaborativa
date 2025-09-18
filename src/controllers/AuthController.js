@@ -133,6 +133,23 @@ class AuthController {
         req.flash('error', 'Ya existe un usuario registrado con este email');
         return res.redirect('/auth/register');
       }
+
+      // Verificar si es un Administrador General (rol_id = 1)
+      const Role = require('../models/Role');
+      const rol = await Role.findById(parseInt(rol_id));
+      
+      let areaTrabajoId = null;
+      
+      // Si es Administrador General, crear área de trabajo automáticamente
+      if (rol && rol.nombre === 'Administrador General') {
+        const AreaTrabajo = require('../models/AreaTrabajo');
+        
+        // Crear área de trabajo con código único (sin nombre ni descripción)
+        const nuevaArea = await AreaTrabajo.createForAdmin();
+        areaTrabajoId = nuevaArea.id;
+        
+        console.log(`Área de trabajo creada automáticamente: ${nuevaArea.codigo} para ${nombre} ${apellido}`);
+      }
   
       // Generar código de usuario único
       const codigoUsuario = await this.generateUserCode();
@@ -147,8 +164,15 @@ class AuthController {
         rol_id: parseInt(rol_id),
         activo: true
       };
-  
-      await this.userModel.create(userData);
+
+      const nuevoUsuario = await this.userModel.create(userData);
+      
+      // Si es administrador y se creó un área, asignarlo como administrador del área
+      if (areaTrabajoId && nuevoUsuario.id) {
+        const AreaTrabajo = require('../models/AreaTrabajo');
+        await AreaTrabajo.addUser(areaTrabajoId, nuevoUsuario.id, true); // true = es_admin
+        console.log(`Usuario ${email} asignado como administrador del área ${areaTrabajoId}`);
+      }
   
       req.flash('success', 'Registro exitoso. Por favor inicia sesión.');
       res.redirect('/auth/login');

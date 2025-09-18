@@ -8,9 +8,9 @@ class Task extends BaseModel {
     }
 
     // Obtener tareas con información del proyecto y usuario asignado
-    async findWithDetails() {
+    async findWithDetails(conditions = {}) {
         try {
-            const query = `
+            let query = `
                 SELECT 
                     e.*,
                     CONCAT('TASK-', LPAD(e.id, 4, '0')) as codigo,
@@ -28,10 +28,27 @@ class Task extends BaseModel {
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
                 LEFT JOIN usuarios u ON p.estudiante_id = u.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
-                ORDER BY e.fecha_limite ASC
+                WHERE 1=1
             `;
             
-            const [rows] = await this.db.execute(query);
+            const values = [];
+            
+            if (Object.keys(conditions).length > 0) {
+                const whereConditions = Object.keys(conditions)
+                    .map(key => {
+                        if (key === 'area_trabajo_id') {
+                            return `p.area_trabajo_id = ?`;
+                        }
+                        return `e.${key} = ?`;
+                    })
+                    .join(' AND ');
+                query += ` AND ${whereConditions}`;
+                values.push(...Object.values(conditions));
+            }
+            
+            query += ` ORDER BY e.fecha_limite ASC`;
+            
+            const [rows] = await this.db.execute(query, values);
             return rows;
         } catch (error) {
             throw new Error(`Error finding tasks with details: ${error.message}`);

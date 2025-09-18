@@ -463,8 +463,9 @@ class AdminController {
         progreso = ''
       } = req.query;
 
-      // Obtener todos los proyectos con detalles
-      let allProjects = await this.projectModel.findWithDetails();
+      // Obtener todos los proyectos con detalles filtrados por área de trabajo
+      const areaFilter = req.areaTrabajoId ? { area_trabajo_id: req.areaTrabajoId } : {};
+      let allProjects = await this.projectModel.findWithDetails(areaFilter);
       
       // Aplicar filtro de búsqueda por título
       if (search) {
@@ -654,6 +655,7 @@ class AdminController {
         director_id: parseInt(director_id),
         linea_investigacion_id: linea_investigacion_id ? parseInt(linea_investigacion_id) : null,
         ciclo_academico_id: parseInt(ciclo_academico_id),
+        area_trabajo_id: req.areaTrabajoId, // Asignar área de trabajo del usuario
         estado: estado || 'borrador',
         fecha_inicio,
         fecha_fin
@@ -909,8 +911,9 @@ class AdminController {
         userStats.byRole[roleName] = (userStats.byRole[roleName] || 0) + 1;
       });
 
-      // Obtener estadísticas de proyectos
-      const allProjects = await this.projectModel.findWithDetails();
+      // Obtener estadísticas de proyectos filtradas por área de trabajo
+      const areaFilter = req.areaTrabajoId ? { area_trabajo_id: req.areaTrabajoId } : {};
+      const allProjects = await this.projectModel.findWithDetails(areaFilter);
       const projectStats = {
         total: allProjects.length,
         active: allProjects.filter(p => p.estado === 'Activo').length,
@@ -1627,14 +1630,28 @@ class AdminController {
       const filter = req.query.filter; // 'overdue', 'pending', 'completed', etc.
       
       let deliverables = [];
+      const conditions = {};
+      
+      // Filtrar por área de trabajo si el usuario no es Administrador General
+      if (user.rol_nombre !== 'Administrador General' && req.areaTrabajoId) {
+        conditions.area_trabajo_id = req.areaTrabajoId;
+      }
       
       if (filter === 'overdue') {
         deliverables = await this.deliverableModel.findOverdue();
+        // Filtrar por área si es necesario
+        if (conditions.area_trabajo_id) {
+          deliverables = deliverables.filter(d => d.area_trabajo_id === conditions.area_trabajo_id);
+        }
       } else if (filter === 'pending') {
         deliverables = await this.deliverableModel.findPending();
+        // Filtrar por área si es necesario
+        if (conditions.area_trabajo_id) {
+          deliverables = deliverables.filter(d => d.area_trabajo_id === conditions.area_trabajo_id);
+        }
       } else {
         // Obtener todos los entregables con información del proyecto
-        deliverables = await this.deliverableModel.findWithProject();
+        deliverables = await this.deliverableModel.findWithProject(conditions);
       }
       
       // Calcular días vencidos para entregables vencidos

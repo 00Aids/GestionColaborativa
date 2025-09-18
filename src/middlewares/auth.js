@@ -53,6 +53,8 @@ class AuthMiddleware {
   static addUserToViews(req, res, next) {
     res.locals.user = req.session ? req.session.user : null;
     res.locals.isAuthenticated = !!(req.session && req.session.user);
+    // Asignar req.user para compatibilidad con otros middlewares
+    req.user = req.session ? req.session.user : null;
     next();
   }
 }

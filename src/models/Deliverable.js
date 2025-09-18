@@ -11,6 +11,16 @@ class Deliverable extends BaseModel {
       deliverableData.created_at = new Date();
       deliverableData.updated_at = new Date();
       
+      // Si no se especifica area_trabajo_id, obtenerlo del proyecto
+      if (!deliverableData.area_trabajo_id && deliverableData.proyecto_id) {
+        const Project = require('./Project');
+        const projectModel = new Project();
+        const project = await projectModel.findById(deliverableData.proyecto_id);
+        if (project && project.area_trabajo_id) {
+          deliverableData.area_trabajo_id = project.area_trabajo_id;
+        }
+      }
+      
       return await super.create(deliverableData);
     } catch (error) {
       throw new Error(`Error creating deliverable: ${error.message}`);
@@ -28,11 +38,13 @@ class Deliverable extends BaseModel {
           u.nombres as estudiante_nombres,
           u.apellidos as estudiante_apellidos,
           fp.nombre as fase_nombre,
-          fp.descripcion as fase_descripcion
+          fp.descripcion as fase_descripcion,
+          at.codigo as area_trabajo_codigo
         FROM entregables e
         LEFT JOIN proyectos p ON e.proyecto_id = p.id
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
+        LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
         WHERE 1=1
       `;
       
@@ -40,7 +52,12 @@ class Deliverable extends BaseModel {
       
       if (Object.keys(conditions).length > 0) {
         const whereConditions = Object.keys(conditions)
-          .map(key => `e.${key} = ?`)
+          .map(key => {
+            if (key === 'area_trabajo_id') {
+              return `e.area_trabajo_id = ?`;
+            }
+            return `e.${key} = ?`;
+          })
           .join(' AND ');
         query += ` AND ${whereConditions}`;
         values.push(...Object.values(conditions));

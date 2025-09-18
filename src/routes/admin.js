@@ -3,6 +3,7 @@ const router = express.Router();
 const AdminController = require('../controllers/AdminController');
 const DashboardController = require('../controllers/DashboardController'); // Agregar esta línea
 const AuthMiddleware = require('../middlewares/auth');
+const { loadUserAreas } = require('../middlewares/areaAuth');
 const uploadMiddleware = require('../middlewares/upload');
 
 // Instanciar los controladores
@@ -12,6 +13,8 @@ const dashboardController = new DashboardController(); // Agregar esta línea
 // Todas las rutas admin requieren autenticación y rol de Administrador General
 router.use(AuthMiddleware.requireAuth);
 router.use(AuthMiddleware.requireRole('Administrador General'));
+// Cargar las áreas de trabajo del usuario administrador para filtrar datos
+router.use(loadUserAreas);
 
 // Ruta del dashboard de administrador
 router.get('/dashboard', dashboardController.adminDashboard.bind(dashboardController));

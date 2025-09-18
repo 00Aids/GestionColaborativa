@@ -158,6 +158,171 @@ class User extends BaseModel {
       throw new Error(`Error finding users by role: ${error.message}`);
     }
   }
+
+  // ===== FUNCIONES DE ÁREAS DE TRABAJO =====
+
+  // Obtener áreas de trabajo de un usuario
+  async getUserAreas(userId) {
+    try {
+      const query = `
+        SELECT a.*, uat.created_at as fecha_asignacion, uat.es_admin, a.id as area_trabajo_id
+        FROM areas_trabajo a
+        INNER JOIN usuario_areas_trabajo uat ON a.id = uat.area_trabajo_id
+        WHERE uat.usuario_id = ? AND uat.activo = 1 AND a.activo = 1
+        ORDER BY a.codigo
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting user areas: ${error.message}`);
+    }
+  }
+
+  // Verificar si un usuario pertenece a un área específica
+  async belongsToArea(userId, areaId) {
+    try {
+      const query = `
+        SELECT 1 FROM usuario_areas_trabajo 
+        WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId, areaId]);
+      return rows.length > 0;
+    } catch (error) {
+      throw new Error(`Error checking user area membership: ${error.message}`);
+    }
+  }
+
+  // Asignar usuario a área de trabajo
+  async assignToArea(userId, areaId, isAdmin = false) {
+    try {
+      // Verificar que no exista la relación
+      const exists = await this.belongsToArea(userId, areaId);
+      if (exists) {
+        throw new Error('El usuario ya pertenece a esta área de trabajo');
+      }
+
+      const query = `
+        INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, activo, created_at)
+        VALUES (?, ?, ?, 1, ?)
+      `;
+      
+      const [result] = await this.db.execute(query, [userId, areaId, isAdmin ? 1 : 0, new Date()]);
+      return result;
+    } catch (error) {
+      throw new Error(`Error assigning user to area: ${error.message}`);
+    }
+  }
+
+  // Remover usuario de área de trabajo
+  async removeFromArea(userId, areaId) {
+    try {
+      const query = `UPDATE usuario_areas_trabajo SET activo = 0 WHERE usuario_id = ? AND area_trabajo_id = ?`;
+      const [result] = await this.db.execute(query, [userId, areaId]);
+      return result;
+    } catch (error) {
+      throw new Error(`Error removing user from area: ${error.message}`);
+    }
+  }
+
+  // Obtener usuarios de un área específica
+  async findByArea(areaId) {
+    try {
+      const query = `
+        SELECT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
+        FROM usuarios u
+        INNER JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE uat.area_trabajo_id = ? AND u.activo = 1 AND uat.activo = 1
+        ORDER BY u.nombres, u.apellidos
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding users by area: ${error.message}`);
+    }
+  }
+
+  // Obtener el área principal de un usuario (la primera asignada)
+  async getPrimaryArea(userId) {
+    try {
+      const areas = await this.getUserAreas(userId);
+      return areas.length > 0 ? areas[0] : null;
+    } catch (error) {
+      throw new Error(`Error getting primary area: ${error.message}`);
+    }
+  }
+
+  // Verificar si un usuario es admin de algún área
+  async isAreaAdmin(userId, areaTrabajoId = null) {
+    try {
+      const user = await this.findById(userId);
+      if (!user) return false;
+      
+      // Verificar si el rol es Administrador General
+      const roleQuery = `
+        SELECT r.nombre FROM roles r 
+        WHERE r.id = ? AND r.nombre LIKE '%Administrador%'
+      `;
+      
+      const [roleRows] = await this.db.execute(roleQuery, [user.rol_id]);
+      const isGeneralAdmin = roleRows.length > 0;
+      
+      // Si es administrador general, verificar que tenga área asignada
+      if (isGeneralAdmin) {
+        if (areaTrabajoId) {
+          // Verificar si tiene acceso a esta área específica
+          const areaQuery = `
+            SELECT 1 FROM usuario_areas_trabajo 
+            WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
+          `;
+          const [areaRows] = await this.db.execute(areaQuery, [userId, areaTrabajoId]);
+          return areaRows.length > 0;
+        } else {
+          // Verificar si tiene algún área asignada
+          const anyAreaQuery = `
+            SELECT 1 FROM usuario_areas_trabajo 
+            WHERE usuario_id = ? AND activo = 1
+          `;
+          const [anyAreaRows] = await this.db.execute(anyAreaQuery, [userId]);
+          return anyAreaRows.length > 0;
+        }
+      }
+      
+      // Verificar si es admin específico del área
+      if (areaTrabajoId) {
+        const adminQuery = `
+          SELECT 1 FROM usuario_areas_trabajo 
+          WHERE usuario_id = ? AND area_trabajo_id = ? AND es_admin = 1 AND activo = 1
+        `;
+        const [adminRows] = await this.db.execute(adminQuery, [userId, areaTrabajoId]);
+        return adminRows.length > 0;
+      }
+      
+      return false;
+    } catch (error) {
+      throw new Error(`Error checking if user is area admin: ${error.message}`);
+    }
+  }
+
+  // Verificar si un usuario tiene acceso a un área específica
+  async hasAreaAccess(userId, areaTrabajoId) {
+    try {
+      const query = `
+        SELECT 1 FROM usuario_areas_trabajo 
+        WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId, areaTrabajoId]);
+      return rows.length > 0;
+    } catch (error) {
+      throw new Error(`Error checking area access: ${error.message}`);
+    }
+  }
+
+
 }
 
 module.exports = User;

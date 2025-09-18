@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const DashboardController = require('../controllers/DashboardController');
 const AuthMiddleware = require('../middlewares/auth');
+const { loadUserAreas } = require('../middlewares/areaAuth');
 
 // Instanciar el controlador
 const dashboardController = new DashboardController();
@@ -17,6 +18,7 @@ router.get('/', dashboardController.index.bind(dashboardController));
 router.get('/admin',
   AuthMiddleware.requireAuth,
   AuthMiddleware.requireRole('Administrador General'),
+  loadUserAreas,
   dashboardController.adminDashboard.bind(dashboardController)
 );
 

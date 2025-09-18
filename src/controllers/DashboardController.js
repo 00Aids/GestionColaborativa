@@ -75,11 +75,6 @@ class DashboardController {
   // Dashboard para Administrador
   async adminDashboard(req, res) {
     try {
-      console.log('🔍 Session:', req.session);
-      console.log('🔍 User from req:', req.user);
-      console.log('🔍 User from session:', req.session?.user);
-      console.log('🔍 res.locals.user:', res.locals.user);
-      
       const { user } = req.session;
       
       // Verificar que el usuario existe
@@ -88,12 +83,58 @@ class DashboardController {
         return res.redirect('/auth/login');
       }
       
-      // Obtener estadísticas
-      const [projectStatsRaw, deliverableStatsRaw, evaluationStatsRaw] = await Promise.all([
-        this.projectModel.getStatistics(),
-        this.deliverableModel.getStatistics(),
-        this.evaluationModel.getStatistics()
-      ]);
+      // Obtener estadísticas filtradas por área del usuario
+      let projectStatsRaw, deliverableStatsRaw, evaluationStatsRaw;
+      let overdueDeliverables, recentProjects;
+      
+      if (req.areaTrabajoId) {
+        // Usuario tiene área asignada - filtrar por área
+        
+        // Usar método específico para estadísticas por área si existe
+        projectStatsRaw = await this.projectModel.getStatisticsByArea(req.areaTrabajoId);
+        
+        // Para entregables, obtener todos los de proyectos del área
+        const areaProjects = await this.projectModel.findByArea(req.areaTrabajoId);
+        const areaProjectIds = areaProjects.map(p => p.id);
+        
+        if (areaProjectIds.length > 0) {
+          // Obtener entregables de proyectos del área
+          const areaDeliverables = await this.deliverableModel.findWithProject({ 
+            area_trabajo_id: req.areaTrabajoId 
+          });
+          
+          // Calcular estadísticas manualmente
+          deliverableStatsRaw = [
+            { estado: 'pendiente', cantidad: areaDeliverables.filter(d => d.estado === 'pendiente').length },
+            { estado: 'en_progreso', cantidad: areaDeliverables.filter(d => d.estado === 'en_progreso').length },
+            { estado: 'completado', cantidad: areaDeliverables.filter(d => d.estado === 'completado').length }
+          ].filter(stat => stat.cantidad > 0);
+          
+          // Entregables vencidos del área
+          overdueDeliverables = areaDeliverables.filter(d => {
+            const today = new Date();
+            const dueDate = new Date(d.fecha_limite);
+            return dueDate < today && d.estado !== 'completado';
+          });
+        } else {
+          deliverableStatsRaw = [];
+          overdueDeliverables = [];
+        }
+        
+        // Evaluaciones del área (simplificado por ahora)
+        evaluationStatsRaw = [];
+        
+        // Proyectos recientes del área
+        recentProjects = areaProjects.slice(0, 5);
+        
+      } else {
+        // Usuario sin área - mostrar estadísticas vacías o globales según política
+        projectStatsRaw = [];
+        deliverableStatsRaw = [];
+        evaluationStatsRaw = [];
+        overdueDeliverables = [];
+        recentProjects = [];
+      }
   
       // Procesar estadísticas para obtener totales
       const projectStats = {
@@ -113,16 +154,8 @@ class DashboardController {
           evaluationStatsRaw.reduce((sum, stat) => sum + (stat.promedio_nota || 0), 0) / evaluationStatsRaw.length : 0
       };
   
-      // Entregables vencidos
-      const overdueDeliverables = await this.deliverableModel.findOverdue();
-  
-      // Obtener usuarios recientes
+      // Obtener usuarios recientes (sin filtrar por área por ahora)
       const recentUsers = await this.userModel.findWithRole({ activo: true });
-  
-      // Obtener proyectos recientes (usando findWithDetails para obtener información completa)
-      const recentProjects = await this.projectModel.findWithDetails();
-      // Limitar a los 5 más recientes (ordenar por ID descendente como aproximación)
-      const limitedRecentProjects = recentProjects.slice(0, 5);
   
       res.render('admin/dashboard', {
         user: user,
@@ -131,7 +164,7 @@ class DashboardController {
         evaluationStats,
         overdueDeliverables: overdueDeliverables || [],
         recentUsers: recentUsers || [],
-        recentProjects: limitedRecentProjects || [], // Add this line
+        recentProjects: recentProjects || [],
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -302,9 +335,10 @@ class DashboardController {
   async kanbanDashboard(req, res) {
     try {
       const user = req.session.user;
+      const areaTrabajoId = req.areaTrabajoId;
       
-      // Obtener TAREAS agrupadas por estado (no proyectos)
-      const allTasks = await this.taskModel.findWithDetails();
+      // Obtener TAREAS agrupadas por estado filtradas por área de trabajo
+      const allTasks = await this.taskModel.findWithDetails({ area_trabajo_id: areaTrabajoId });
       
       const kanbanData = {
         por_hacer: allTasks.filter(t => t.estado === 'pendiente'),
@@ -312,29 +346,31 @@ class DashboardController {
         completado: allTasks.filter(t => ['aprobado', 'revisado'].includes(t.estado))
       };
 
-      // Obtener proyectos según el rol del usuario
+      // Obtener proyectos según el rol del usuario, filtrados por área de trabajo
       let userProjects = [];
+      const areaFilter = { area_trabajo_id: areaTrabajoId };
+      
       switch (user.rol_nombre) {
         case 'Estudiante':
-          userProjects = await this.projectModel.findByStudent(user.id);
+          userProjects = await this.projectModel.findByStudent(user.id, areaFilter);
           break;
         case 'Director':
-          userProjects = await this.projectModel.findByDirector(user.id);
+          userProjects = await this.projectModel.findByDirector(user.id, areaFilter);
           break;
         case 'Administrador':
         case 'Coordinador':
-          userProjects = await this.projectModel.findWithDetails();
+          userProjects = await this.projectModel.findWithDetails(areaFilter);
           break;
         case 'Evaluador':
           // Los evaluadores pueden ver proyectos que están evaluando
-          userProjects = await this.projectModel.findWithDetails();
+          userProjects = await this.projectModel.findWithDetails(areaFilter);
           break;
         default:
           userProjects = [];
       }
 
-      // Obtener todos los proyectos para estadísticas generales
-      const allProjects = await this.projectModel.findWithDetails();
+      // Obtener todos los proyectos para estadísticas generales (filtrados por área)
+      const allProjects = await this.projectModel.findWithDetails(areaFilter);
       
       // Estadísticas generales
       const stats = {

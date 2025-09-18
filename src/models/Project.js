@@ -63,18 +63,20 @@ class Project extends BaseModel {
   }
 
   // Obtener proyectos por estudiante
-  async findByStudent(studentId) {
+  async findByStudent(studentId, additionalConditions = {}) {
     try {
-      return await this.findWithDetails({ estudiante_id: studentId });
+      const conditions = { estudiante_id: studentId, ...additionalConditions };
+      return await this.findWithDetails(conditions);
     } catch (error) {
       throw new Error(`Error finding projects by student: ${error.message}`);
     }
   }
 
   // Obtener proyectos por director
-  async findByDirector(directorId) {
+  async findByDirector(directorId, additionalConditions = {}) {
     try {
-      return await this.findWithDetails({ director_id: directorId });
+      const conditions = { director_id: directorId, ...additionalConditions };
+      return await this.findWithDetails(conditions);
     } catch (error) {
       throw new Error(`Error finding projects by director: ${error.message}`);
     }
@@ -126,24 +128,38 @@ class Project extends BaseModel {
   }
 
   // Buscar proyectos por término
-  async search(searchTerm) {
+  async search(searchTerm, conditions = {}) {
     try {
-      const query = `
+      let query = `
         SELECT 
           p.*,
           u.nombres as estudiante_nombres,
           u.apellidos as estudiante_apellidos
         FROM proyectos p
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
-        WHERE 
+        WHERE (
           p.titulo LIKE ? OR 
           p.descripcion LIKE ? OR
           CONCAT(u.nombres, ' ', u.apellidos) LIKE ?
-        ORDER BY p.created_at DESC
+        )
       `;
       
+      const values = [];
       const searchPattern = `%${searchTerm}%`;
-      const [rows] = await this.db.execute(query, [searchPattern, searchPattern, searchPattern]);
+      values.push(searchPattern, searchPattern, searchPattern);
+      
+      // Agregar condiciones adicionales (como filtrado por área de trabajo)
+      if (Object.keys(conditions).length > 0) {
+        const whereConditions = Object.keys(conditions)
+          .map(key => `p.${key} = ?`)
+          .join(' AND ');
+        query += ` AND ${whereConditions}`;
+        values.push(...Object.values(conditions));
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const [rows] = await this.db.execute(query, values);
       return rows;
     } catch (error) {
       throw new Error(`Error searching projects: ${error.message}`);
@@ -501,6 +517,118 @@ class Project extends BaseModel {
     const query = 'SELECT COUNT(*) as total FROM project_members';
     const result = await this.db.query(query);
     return result[0].total;
+  }
+
+  // ===== FUNCIONES DE ÁREA DE TRABAJO =====
+
+  // Obtener proyectos por área de trabajo
+  async findByArea(areaId) {
+    try {
+      return await this.findWithDetails({ area_trabajo_id: areaId });
+    } catch (error) {
+      throw new Error(`Error finding projects by area: ${error.message}`);
+    }
+  }
+
+  // Asignar proyecto a área de trabajo
+  async assignToArea(projectId, areaId) {
+    try {
+      const updateData = {
+        area_trabajo_id: areaId,
+        updated_at: new Date()
+      };
+      
+      return await this.update(projectId, updateData);
+    } catch (error) {
+      throw new Error(`Error assigning project to area: ${error.message}`);
+    }
+  }
+
+  // Verificar si un proyecto pertenece a un área específica
+  async belongsToArea(projectId, areaId) {
+    try {
+      const query = `
+        SELECT COUNT(*) as count 
+        FROM proyectos 
+        WHERE id = ? AND area_trabajo_id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [projectId, areaId]);
+      return rows[0].count > 0;
+    } catch (error) {
+      throw new Error(`Error checking project area membership: ${error.message}`);
+    }
+  }
+
+  // Obtener estadísticas de proyectos por área
+  async getStatisticsByArea(areaId) {
+    try {
+      const query = `
+        SELECT 
+          estado,
+          COUNT(*) as cantidad
+        FROM proyectos 
+        WHERE area_trabajo_id = ?
+        GROUP BY estado
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting project statistics by area: ${error.message}`);
+    }
+  }
+
+  // Buscar proyectos dentro de un área específica
+  async searchInArea(searchTerm, areaId) {
+    try {
+      const query = `
+        SELECT 
+          p.*,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        WHERE 
+          p.area_trabajo_id = ? AND (
+            p.titulo LIKE ? OR 
+            p.descripcion LIKE ? OR
+            CONCAT(u.nombres, ' ', u.apellidos) LIKE ?
+          )
+        ORDER BY p.created_at DESC
+      `;
+      
+      const searchPattern = `%${searchTerm}%`;
+      const [rows] = await this.db.execute(query, [areaId, searchPattern, searchPattern, searchPattern]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error searching projects in area: ${error.message}`);
+    }
+  }
+
+  // Contar proyectos por área
+  async countByArea(areaId) {
+    try {
+      const query = `
+        SELECT COUNT(*) as total 
+        FROM proyectos 
+        WHERE area_trabajo_id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId]);
+      return rows[0].total;
+    } catch (error) {
+      throw new Error(`Error counting projects by area: ${error.message}`);
+    }
+  }
+
+  // Obtener proyectos sin área asignada
+  async findWithoutArea() {
+    try {
+      return await this.findWithDetails({ area_trabajo_id: null });
+    } catch (error) {
+      throw new Error(`Error finding projects without area: ${error.message}`);
+    }
   }
 }
 

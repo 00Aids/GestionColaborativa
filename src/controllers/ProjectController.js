@@ -23,10 +23,16 @@ class ProjectController {
       
       let projects;
       
+      // Agregar filtro por área de trabajo
+      const areaTrabajoId = req.areaTrabajoId;
+      const conditions = {};
+      
+      if (estado) conditions.estado = estado;
+      if (areaTrabajoId) conditions.area_trabajo_id = areaTrabajoId;
+      
       if (search) {
-        projects = await this.projectModel.search(search);
+        projects = await this.projectModel.search(search, conditions);
       } else {
-        const conditions = estado ? { estado } : {};
         projects = await this.projectModel.findWithDetails(conditions);
       }
       
@@ -144,6 +150,7 @@ class ProjectController {
         director_id: parseInt(director_id),
         linea_investigacion_id: linea_investigacion_id ? parseInt(linea_investigacion_id) : null,
         ciclo_academico_id: ciclo_academico_id ? parseInt(ciclo_academico_id) : null,
+        area_trabajo_id: req.areaTrabajoId, // Asignar área de trabajo del usuario
         estado: 'borrador'
       };
       
@@ -182,6 +189,12 @@ class ProjectController {
       
       if (!project) {
         req.flash('error', 'Proyecto no encontrado');
+        return res.redirect('/projects');
+      }
+      
+      // Verificar que el proyecto pertenezca al área de trabajo del usuario
+      if (project.area_trabajo_id !== req.areaTrabajoId) {
+        req.flash('error', 'No tienes permisos para ver este proyecto');
         return res.redirect('/projects');
       }
       
