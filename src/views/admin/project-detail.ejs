@@ -2403,6 +2403,26 @@
     <!-- Include shared modal -->
     <%- include('../shared/modals/confirm-modal') %>
 
+    <!-- Modal de Detalles de Tarea -->
+    <div class="modal fade" id="taskDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-tasks"></i> Detalles de la Tarea
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="taskDetailsBody">
+                    <!-- El contenido se cargará dinámicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Gestión de pestañas
         function showTab(tabName) {
@@ -2830,24 +2850,40 @@
             }
 
             async loadInvitations() {
+                console.log('🔄 loadInvitations() ejecutándose...');
                 try {
-                    const response = await fetch(`/projects/${this.projectId}/invitations`);
+                    const url = `/projects/${this.projectId}/invitations`;
+                    console.log('🔄 URL de carga:', url);
+                    
+                    const response = await fetch(url);
                     const result = await response.json();
+                    
+                    console.log('🔄 Respuesta de carga:', result);
 
                     if (result.success) {
+                        console.log('🔄 Invitaciones recibidas:', result.invitations.length);
                         this.updateInvitationsTable(result.invitations);
                         this.updateInvitationStats(result.stats);
+                    } else {
+                        console.log('🔄 Error en la respuesta:', result.error);
                     }
                 } catch (error) {
-                    console.error('Error loading invitations:', error);
+                    console.error('🔄 Error loading invitations:', error);
                 }
             }
 
             updateInvitationsTable(invitations) {
+                console.log('🔄 updateInvitationsTable() ejecutándose con', invitations.length, 'invitaciones');
+                console.log('🔄 Invitaciones:', invitations);
+                
                 const tableBody = document.querySelector('#invitationsTable tbody');
-                if (!tableBody) return;
+                if (!tableBody) {
+                    console.log('🔄 ERROR: No se encontró el tbody de la tabla');
+                    return;
+                }
 
                 if (invitations.length === 0) {
+                    console.log('🔄 No hay invitaciones, mostrando mensaje vacío');
                     tableBody.innerHTML = `
                         <tr>
                             <td colspan="5" class="text-center text-muted">
@@ -2859,6 +2895,7 @@
                     return;
                 }
 
+                console.log('🔄 Actualizando tabla con', invitations.length, 'invitaciones');
                 tableBody.innerHTML = invitations.map(invitation => `
                     <tr>
                         <td>
@@ -2942,8 +2979,14 @@
                 }
 
                 try {
-                    const response = await fetch(`/projects/${this.projectId}/invitations/${invitationId}`, {
-                        method: 'DELETE'
+                    const url = `/projects/${this.projectId}/invitations/${invitationId}`;
+                    
+                    const response = await fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
                     });
 
                     const result = await response.json();
@@ -3361,30 +3404,7 @@
             });
         }
 
-        function cancelInvitation(invitationId) {
-            if (invitationManager) {
-                invitationManager.cancelInvitation(invitationId);
-            } else {
-                fetch(`/admin/invitations/${invitationId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error al cancelar invitación: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al cancelar invitación');
-                });
-            }
-        }
+
 
         // Función de generación de reportes
         function generateReport() {
@@ -3788,7 +3808,16 @@
 
             // Agregar eventos de drag and drop
             taskDiv.addEventListener('dragstart', handleDragStart);
-            taskDiv.addEventListener('click', () => showTaskDetails(task));
+            taskDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const taskId = e.currentTarget.dataset.taskId;
+                if (taskId) {
+                    showTaskDetailsById(taskId);
+                } else {
+                    console.error('No se encontró taskId en el elemento');
+                }
+            });
 
             return taskDiv;
         }
@@ -3873,10 +3902,238 @@
             });
         }
 
-        // Mostrar detalles de tarea
-        function showTaskDetails(task) {
-            // Implementar modal de detalles de tarea
-            console.log('Mostrar detalles de tarea:', task);
+        // Mostrar detalles de tarea por ID
+        async function showTaskDetailsById(taskId) {
+            console.log('=== SHOW TASK DETAILS BY ID ===');
+            console.log('TaskId received:', taskId);
+            
+            try {
+                // Mostrar loading
+                showLoading();
+                
+                // Obtener detalles completos de la tarea
+                console.log('Fetching task details from API...');
+                const response = await fetch(`/admin/api/tasks/${taskId}/details`);
+                console.log('API Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('API Response data:', data);
+                
+                hideLoading();
+                
+                if (data.success) {
+                    console.log('Success! Opening modal with data:', data.data);
+                    // Mostrar modal con detalles
+                    openTaskDetailsModal(data);
+                } else {
+                    console.error('API returned error:', data.message);
+                    showNotification('Error al cargar los detalles de la tarea: ' + (data.message || 'Error desconocido'), 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error al cargar detalles de tarea:', error);
+                showNotification('Error de conexión al cargar los detalles', 'error');
+            }
+        }
+
+        // Mostrar detalles de tarea (función legacy para compatibilidad)
+        async function showTaskDetails(task) {
+            if (!task || !task.id) {
+                console.error('Invalid task object:', task);
+                showNotification('Error: Datos de tarea inválidos', 'error');
+                return;
+            }
+            await showTaskDetailsById(task.id);
+        }
+
+        // Abrir modal con detalles de tarea - Versión mejorada
+        function openTaskDetailsModal(data) {
+            console.log('=== MODAL DEBUG START ===');
+            console.log('Data received:', data);
+            console.log('Data type:', typeof data);
+            console.log('Data keys:', data ? Object.keys(data) : 'No data');
+            
+            // Verificar que tenemos datos
+            if (!data) {
+                console.error('No data provided to modal');
+                alert('Error: No se recibieron datos para mostrar en el modal');
+                return;
+            }
+
+            // Extraer datos de manera flexible
+            let task, comments, history;
+            
+            if (data.data) {
+                // Si los datos vienen en data.data
+                task = data.data.task || data.data;
+                comments = data.data.comments || [];
+                history = data.data.history || [];
+            } else {
+                // Si los datos vienen directamente
+                task = data.task || data;
+                comments = data.comments || [];
+                history = data.history || [];
+            }
+            
+            console.log('Extracted task:', task);
+            console.log('Extracted comments:', comments);
+            console.log('Extracted history:', history);
+
+            // Verificar elementos del DOM
+            const modalElement = document.getElementById('taskDetailsModal');
+            const modalBody = document.getElementById('taskDetailsBody');
+            
+            console.log('Modal element found:', !!modalElement);
+            console.log('Modal body found:', !!modalBody);
+            
+            if (!modalElement) {
+                console.error('Modal element not found');
+                alert('Error: No se encontró el modal en la página');
+                return;
+            }
+            
+            if (!modalBody) {
+                console.error('Modal body element not found');
+                alert('Error: No se encontró el contenido del modal');
+                return;
+            }
+
+            // Verificar que tenemos una tarea válida
+            if (!task || (!task.titulo && !task.title)) {
+                console.error('Invalid task data:', task);
+                alert('Error: Los datos de la tarea no son válidos');
+                return;
+            }
+
+            // Normalizar nombres de campos para compatibilidad
+            const taskTitle = task.titulo || task.title || 'Sin título';
+            const taskDescription = task.descripcion || task.description || 'Sin descripción';
+            const taskPriority = task.prioridad || task.priority || 'No definida';
+            const taskStatus = task.estado || task.estado_workflow || task.status || 'No definido';
+            const taskAssignee = task.asignado_a || task.assignee || task.assigned_to || 'Sin asignar';
+            const taskDueDate = task.fecha_vencimiento || task.due_date || task.fecha_limite;
+            const taskCreatedDate = task.fecha_creacion || task.created_at || task.fecha_inicio;
+
+            // Funciones auxiliares simples y seguras
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'No definida';
+                try {
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    console.error('Error formatting date:', e);
+                    return 'Fecha inválida';
+                }
+            };
+
+            const safeString = (str) => {
+                return str ? String(str).replace(/[<>]/g, '') : '';
+            };
+
+            // Crear contenido HTML de manera segura
+            try {
+                const htmlContent = `
+                    <div style="padding: 20px;">
+                        <h4 style="color: #007bff; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">
+                            ${safeString(taskTitle)}
+                        </h4>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <span style="background: #007bff; color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold;">
+                                    Prioridad: ${safeString(taskPriority)}
+                                </span>
+                                <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold;">
+                                    Estado: ${safeString(taskStatus)}
+                                </span>
+                                ${task.fase_nombre ? `
+                                    <span style="background: #17a2b8; color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold;">
+                                        Fase: ${safeString(task.fase_nombre)}
+                                    </span>
+                                ` : ''}
+                            </div>
+                            
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; margin: 20px 0;">
+                                <h6 style="color: #333; margin-bottom: 10px; font-weight: bold;">Descripción:</h6>
+                                <p style="color: #666; line-height: 1.6; margin: 0;">
+                                    ${safeString(taskDescription)}
+                                </p>
+                            </div>
+                            
+                            <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div>
+                                        <strong style="color: #495057;">Asignado a:</strong><br>
+                                        <span style="color: #6c757d;">
+                                            ${task.asignado_nombres ? 
+                                                `${safeString(task.asignado_nombres)} ${safeString(task.asignado_apellidos || '')}` : 
+                                                safeString(taskAssignee)
+                                            }
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <strong style="color: #495057;">Fecha límite:</strong><br>
+                                        <span style="color: #6c757d;">${formatDate(taskDueDate)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
+                            <h5 style="color: #333; margin-bottom: 15px; display: flex; align-items: center;">
+                                <i class="fas fa-comments" style="margin-right: 8px; color: #007bff;"></i>
+                                Comentarios (${comments.length})
+                            </h5>
+                            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">
+                                ${comments.length > 0 ? 
+                                    comments.map(comment => `
+                                        <div style="background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 3px solid #007bff;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                                <strong style="color: #007bff; font-size: 14px;">
+                                                    ${safeString(comment.nombres || comment.usuario_nombre || 'Usuario')} ${safeString(comment.apellidos || '')}
+                                                </strong>
+                                                <small style="color: #6c757d; font-size: 12px;">
+                                                    ${formatDate(comment.created_at || comment.fecha_creacion)}
+                                                </small>
+                                            </div>
+                                            <p style="margin: 0; color: #333; line-height: 1.5;">
+                                                ${safeString(comment.comentario || 'Sin comentario')}
+                                            </p>
+                                        </div>
+                                    `).join('') : 
+                                    '<div style="text-align: center; padding: 40px; color: #6c757d; font-style: italic;"><i class="fas fa-comment-slash" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>No hay comentarios disponibles</div>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                console.log('Setting modal content...');
+                modalBody.innerHTML = htmlContent;
+                console.log('Content set successfully');
+                
+                // Mostrar modal con configuración explícita
+                console.log('Creating Bootstrap modal...');
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                
+                console.log('Showing modal...');
+                modal.show();
+                console.log('Modal shown successfully');
+                console.log('=== MODAL DEBUG END ===');
+                
+            } catch (error) {
+                console.error('Error in modal creation:', error);
+                console.error('Error stack:', error.stack);
+                alert('Error al crear el contenido del modal: ' + error.message);
+            }
         }
 
         // Obtener datos reales del proyecto

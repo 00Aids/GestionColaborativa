@@ -481,12 +481,12 @@ class Project extends BaseModel {
   async deactivateInvitation(invitationId) {
     try {
       const query = `
-        UPDATE project_invitations 
-        SET activo = false, updated_at = ?
+        UPDATE invitaciones 
+        SET estado = 'expirada', updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `;
       
-      await this.db.execute(query, [new Date(), invitationId]);
+      await this.db.execute(query, [invitationId]);
       return true;
     } catch (error) {
       throw new Error(`Error deactivating invitation: ${error.message}`);
