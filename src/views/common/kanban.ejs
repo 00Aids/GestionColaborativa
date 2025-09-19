@@ -278,14 +278,13 @@
                     },
                     body: JSON.stringify({
                         taskId: taskId,
-                        newStatus: newStatus  // Cambiar 'status' por 'newStatus'
+                        newStatus: newStatus
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         console.log('Estado de tarea actualizado');
-                        // Agregar notificación visual
                         showNotification('Tarea actualizada correctamente', 'success');
                     } else {
                         console.error('Error:', data.message);

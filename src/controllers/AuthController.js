@@ -14,6 +14,12 @@ class AuthController {
       if (req.session.user) {
         return res.redirect('/dashboard');
       }
+      
+      // Guardar redirect en sesión si viene como parámetro
+      if (req.query.redirect) {
+        req.session.redirectTo = req.query.redirect;
+      }
+      
       res.render('auth/login', { 
         title: 'Iniciar Sesión',
         error: req.flash('error'),
@@ -61,6 +67,13 @@ class AuthController {
 
       req.flash('success', `Bienvenido, ${user.nombres}`);
       
+      // Verificar si hay un redirect pendiente (para invitaciones)
+      const redirectTo = req.session.redirectTo;
+      if (redirectTo) {
+        delete req.session.redirectTo;
+        return res.redirect(redirectTo);
+      }
+      
       // Redirigir según el rol
       const redirectUrl = this.getRedirectByRole(role?.nombre);
       res.redirect(redirectUrl);
@@ -78,6 +91,11 @@ class AuthController {
     try {
       if (req.session.user) {
         return res.redirect('/dashboard');
+      }
+      
+      // Guardar redirect en sesión si viene como parámetro
+      if (req.query.redirect) {
+        req.session.redirectTo = req.query.redirect;
       }
       
       // Roles hardcodeados temporalmente para evitar error de BD
@@ -135,8 +153,7 @@ class AuthController {
       }
 
       // Verificar si es un Administrador General (rol_id = 1)
-      const Role = require('../models/Role');
-      const rol = await Role.findById(parseInt(rol_id));
+      const rol = await this.roleModel.findById(parseInt(rol_id));
       
       let areaTrabajoId = null;
       
@@ -175,6 +192,13 @@ class AuthController {
       }
   
       req.flash('success', 'Registro exitoso. Por favor inicia sesión.');
+      
+      // Preservar el redirect para después del login
+      const redirectTo = req.session.redirectTo;
+      if (redirectTo) {
+        return res.redirect(`/auth/login?redirect=${encodeURIComponent(redirectTo)}`);
+      }
+      
       res.redirect('/auth/login');
       
     } catch (error) {

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Deliverable = require('../models/Deliverable');
 const Evaluation = require('../models/Evaluation');
 const Invitation = require('../models/Invitation');
+const { pool } = require('../config/database');
 const nodemailer = require('nodemailer'); // Necesitarás instalarlo: npm install nodemailer
 
 class ProjectController {
@@ -11,6 +12,7 @@ class ProjectController {
     this.userModel = new User();
     this.deliverableModel = new Deliverable();
     this.evaluationModel = new Evaluation();
+    this.db = pool; // Inicializar la conexión a la base de datos
   }
 
   // Listar proyectos
@@ -355,25 +357,37 @@ class ProjectController {
   // Desactivar código de invitación
   async deactivateInvitation(req, res) {
     try {
-      const { id, invitationId } = req.params;
+      const { projectId, invitationId } = req.params;
       const user = req.session.user;
       
       // Verificar permisos
       if (user.rol_nombre !== 'Administrador General' && user.rol_nombre !== 'Coordinador Académico') {
-        const project = await this.projectModel.findById(id);
+        const project = await this.projectModel.findById(projectId);
         if (project.estudiante_id !== user.id) {
           req.flash('error', 'No tienes permisos para gestionar invitaciones de este proyecto');
-          return res.redirect(`/projects/${id}`);
+          return res.redirect(`/projects/${projectId}`);
         }
       }
       
       await this.projectModel.deactivateInvitation(invitationId);
+      
+      // Responder con JSON para peticiones AJAX
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.json({ success: true, message: 'Invitación cancelada correctamente' });
+      }
+      
       req.flash('success', 'Invitación desactivada correctamente');
-      res.redirect(`/projects/${id}/invitations`);
+      res.redirect(`/projects/${projectId}/invitations`);
     } catch (error) {
       console.error('Error deactivating invitation:', error);
+      
+      // Responder con JSON para peticiones AJAX
+      if (req.headers.accept && req.headers.accept.includes('application/json')) {
+        return res.status(500).json({ success: false, error: 'Error al cancelar la invitación' });
+      }
+      
       req.flash('error', 'Error al desactivar la invitación');
-      res.redirect(`/projects/${req.params.id}/invitations`);
+      res.redirect(`/projects/${req.params.projectId}/invitations`);
     }
   }
 
@@ -483,7 +497,8 @@ class ProjectController {
         title: 'Aceptar Invitación',
         invitation: invitationData,
         project: project,
-        codigo: codigo
+        codigo: codigo,
+        user: req.session.user || null
       });
       
     } catch (error) {
@@ -512,14 +527,11 @@ class ProjectController {
           // Agregar usuario al proyecto
           await this.addUserToProject(invitationData.proyecto_id, userId);
   
-          res.json({
-              success: true,
-              message: 'Invitación aceptada exitosamente',
-              project: {
-                  id: invitationData.proyecto_id,
-                  nombre: invitationData.proyecto_nombre
-              }
-          });
+          // Establecer mensaje flash de éxito
+          req.flash('success', `Te has unido exitosamente al proyecto "${invitationData.proyecto_nombre}"`);
+          
+          // Redirigir al dashboard
+          res.redirect('/dashboard');
       } catch (error) {
           console.error('Error accepting invitation:', error);
           res.status(500).json({ error: error.message });
@@ -540,10 +552,11 @@ class ProjectController {
   
           await invitation.reject(invitationData.id);
   
-          res.json({
-              success: true,
-              message: 'Invitación rechazada'
-          });
+          // Establecer mensaje flash de información
+          req.flash('info', 'Has rechazado la invitación al proyecto');
+          
+          // Redirigir al dashboard
+          res.redirect('/dashboard');
       } catch (error) {
           console.error('Error rejecting invitation:', error);
           res.status(500).json({ error: 'Error interno del servidor' });
@@ -565,7 +578,7 @@ class ProjectController {
               }
           });
   
-          const invitationUrl = `${process.env.APP_URL}/invitations/accept/${codigo}`;
+          const invitationUrl = `${process.env.APP_URL}/projects/invitations/accept/${codigo}`;
           
           const mailOptions = {
               from: process.env.SMTP_FROM,
@@ -599,7 +612,7 @@ class ProjectController {
           if (existing.length === 0) {
               // Agregar usuario al proyecto con rol por defecto
               const insertQuery = 'INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion) VALUES (?, ?, ?, NOW())';
-              await this.db.execute(insertQuery, [projectId, userId, 'miembro']);
+              await this.db.execute(insertQuery, [projectId, userId, 'estudiante']);
           }
       } catch (error) {
           throw new Error(`Error adding user to project: ${error.message}`);
@@ -639,7 +652,7 @@ class ProjectController {
           res.json({
               success: true,
               codigo: newInvitation.codigo_invitacion,
-              url: `${process.env.APP_URL || 'http://localhost:3000'}/invitations/accept/${newInvitation.codigo_invitacion}`,
+              url: `${process.env.APP_URL || 'http://localhost:3000'}/projects/invitations/accept/${newInvitation.codigo_invitacion}`,
               message: 'Código de invitación generado exitosamente',
               expires_in_days: expires_in_days || 7
           });

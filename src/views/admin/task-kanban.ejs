@@ -631,8 +631,12 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        currentTask = data.data.task;
-                        renderTaskModal(data.data);
+                        currentTask = data.task;
+                        renderTaskModal({
+                            task: data.task,
+                            comments: data.task.comments || [],
+                            history: data.task.history || []
+                        });
                         document.getElementById('taskModal').style.display = 'block';
                     } else {
                         alert('Error al cargar los detalles de la tarea');
@@ -932,6 +936,32 @@
             if (event.target === modal) {
                 closeTaskModal();
             }
+        }
+
+        // Función para obtener el icono del archivo según su tipo
+        function getFileIcon(mimeType) {
+            if (!mimeType) return 'fa-file';
+            
+            if (mimeType.includes('image/')) return 'fa-file-image';
+            if (mimeType.includes('pdf')) return 'fa-file-pdf';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
+            if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
+            if (mimeType.includes('text/')) return 'fa-file-alt';
+            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('compressed')) return 'fa-file-archive';
+            
+            return 'fa-file';
+        }
+
+        // Función para formatear el tamaño del archivo
+        function formatFileSize(bytes) {
+            if (!bytes) return '0 B';
+            
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
         // Drag and drop functionality (opcional para futuras mejoras)

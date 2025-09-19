@@ -338,7 +338,12 @@ class DashboardController {
       const areaTrabajoId = req.areaTrabajoId;
       
       // Obtener TAREAS agrupadas por estado filtradas por área de trabajo
-      const allTasks = await this.taskModel.findWithDetails({ area_trabajo_id: areaTrabajoId });
+      // Solo agregar filtro de área si areaTrabajoId está definido
+      const conditions = {};
+      if (areaTrabajoId !== undefined && areaTrabajoId !== null) {
+        conditions.area_trabajo_id = areaTrabajoId;
+      }
+      const allTasks = await this.taskModel.findWithDetails(conditions);
       
       const kanbanData = {
         por_hacer: allTasks.filter(t => t.estado === 'pendiente'),
@@ -348,7 +353,10 @@ class DashboardController {
 
       // Obtener proyectos según el rol del usuario, filtrados por área de trabajo
       let userProjects = [];
-      const areaFilter = { area_trabajo_id: areaTrabajoId };
+      const areaFilter = {};
+      if (areaTrabajoId !== undefined && areaTrabajoId !== null) {
+        areaFilter.area_trabajo_id = areaTrabajoId;
+      }
       
       switch (user.rol_nombre) {
         case 'Estudiante':

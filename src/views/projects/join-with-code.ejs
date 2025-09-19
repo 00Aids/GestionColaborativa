@@ -40,7 +40,7 @@
             const code = document.getElementById('invitationCode').value;
             
             try {
-                const response = await fetch(`/invitations/accept/${code}`, {
+                const response = await fetch(`/projects/invitations/accept/${code}`, {
                     method: 'POST'
                 });
                 

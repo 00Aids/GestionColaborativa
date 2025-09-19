@@ -53,7 +53,7 @@ class EmailService {
         throw new Error('Datos de invitación incompletos');
       }
       
-      const invitationUrl = `${process.env.APP_URL || 'http://localhost:3000'}/invitation/${invitationCode}`;
+      const invitationUrl = `${process.env.APP_URL || 'http://localhost:3000'}/projects/invitations/accept/${invitationCode}`;
       
       const htmlContent = this.generateInvitationTemplate({
         projectName,

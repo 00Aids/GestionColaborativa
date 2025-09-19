@@ -6,9 +6,12 @@ class AuthMiddleware {
     }
     
     // Si es una petición AJAX, devolver JSON
-    if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
       return res.status(401).json({ error: 'No autorizado' });
     }
+    
+    // Guardar la URL original para redirigir después del login
+    req.session.redirectTo = req.originalUrl;
     
     // Redirigir al login
     req.flash('error', 'Debes iniciar sesión para acceder a esta página');
