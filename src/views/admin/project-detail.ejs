@@ -2850,40 +2850,24 @@
             }
 
             async loadInvitations() {
-                console.log('🔄 loadInvitations() ejecutándose...');
                 try {
-                    const url = `/projects/${this.projectId}/invitations`;
-                    console.log('🔄 URL de carga:', url);
-                    
-                    const response = await fetch(url);
+                    const response = await fetch(`/projects/${this.projectId}/invitations`);
                     const result = await response.json();
-                    
-                    console.log('🔄 Respuesta de carga:', result);
 
                     if (result.success) {
-                        console.log('🔄 Invitaciones recibidas:', result.invitations.length);
                         this.updateInvitationsTable(result.invitations);
                         this.updateInvitationStats(result.stats);
-                    } else {
-                        console.log('🔄 Error en la respuesta:', result.error);
                     }
                 } catch (error) {
-                    console.error('🔄 Error loading invitations:', error);
+                    console.error('Error loading invitations:', error);
                 }
             }
 
             updateInvitationsTable(invitations) {
-                console.log('🔄 updateInvitationsTable() ejecutándose con', invitations.length, 'invitaciones');
-                console.log('🔄 Invitaciones:', invitations);
-                
                 const tableBody = document.querySelector('#invitationsTable tbody');
-                if (!tableBody) {
-                    console.log('🔄 ERROR: No se encontró el tbody de la tabla');
-                    return;
-                }
+                if (!tableBody) return;
 
                 if (invitations.length === 0) {
-                    console.log('🔄 No hay invitaciones, mostrando mensaje vacío');
                     tableBody.innerHTML = `
                         <tr>
                             <td colspan="5" class="text-center text-muted">
@@ -2894,8 +2878,6 @@
                     `;
                     return;
                 }
-
-                console.log('🔄 Actualizando tabla con', invitations.length, 'invitaciones');
                 tableBody.innerHTML = invitations.map(invitation => `
                     <tr>
                         <td>
