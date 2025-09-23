@@ -42,6 +42,15 @@ router.post('/invitations/reject/:codigo',
   projectController.rejectInvitation.bind(projectController)
 );
 
+// Rutas para registro y login desde invitaciones (sin autenticación previa)
+router.post('/invitations/register/:codigo', 
+  projectController.registerFromInvitation.bind(projectController)
+);
+
+router.post('/invitations/login/:codigo', 
+  projectController.loginFromInvitation.bind(projectController)
+);
+
 // Rutas de proyectos
 router.get('/', 
   AuthMiddleware.requireAuth,

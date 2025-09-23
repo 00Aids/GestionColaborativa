@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -59,8 +59,6 @@
                 
                                <!-- BOTÓN CREAR PROYECTO - Visible para roles apropiados -->
                 <% if (user.rol_nombre === 'Director de Proyecto' || user.rol_nombre === 'Administrador General' || user.rol_nombre === 'Coordinador Académico') { %>
-                    <a href="/projects/create" class="nav-item nav-item-create">➕ Crear Proyecto</a>
-                <% } %>
                 <!-- DEBUG: Rol actual: '<%= user.rol_nombre %>' -->
             </div>
 
@@ -566,5 +564,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
 </body>
 </html>

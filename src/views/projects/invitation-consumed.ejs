@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitación Ya Utilizada</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .error-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        .error-icon {
+            font-size: 80px;
+            color: #f5576c;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .error-title {
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            color: #4a5568;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info-box h6 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        .info-box ul {
+            color: #4a5568;
+            margin-bottom: 0;
+        }
+        .btn-custom {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .btn-custom:hover {
+            background: linear-gradient(45deg, #5a67d8, #6b46c1);
+            transform: translateY(-2px);
+            color: white;
+            text-decoration: none;
+        }
+        .btn-secondary {
+            background: linear-gradient(45deg, #718096, #4a5568);
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #4a5568, #2d3748);
+        }
+        .project-info {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .contact-info {
+            background: #e6fffa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #38b2ac;
+        }
+        @media (max-width: 768px) {
+            .error-container {
+                padding: 20px;
+            }
+            .error-title {
+                font-size: 1.5rem;
+            }
+            .error-message {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h1 class="error-title">Invitación Ya Utilizada</h1>
+        
+        <p class="error-message">
+            Lo sentimos, esta invitación ya ha sido utilizada anteriormente y no puede ser usada nuevamente.
+        </p>
+
+        <% if (typeof project !== 'undefined' && project) { %>
+        <div class="project-info">
+            <h6><i class="fas fa-graduation-cap"></i> Información del Proyecto</h6>
+            <p class="mb-2"><strong>Proyecto:</strong> <%= project.titulo %></p>
+            <% if (project.descripcion) { %>
+            <p class="mb-0"><strong>Descripción:</strong> <%= project.descripcion %></p>
+            <% } %>
+        </div>
+        <% } %>
+
+        <div class="info-box">
+            <h6><i class="fas fa-info-circle"></i> ¿Qué significa esto?</h6>
+            <ul>
+                <li>Esta invitación fue aceptada previamente por ti o por otra persona</li>
+                <li>Cada invitación solo puede ser utilizada una vez por motivos de seguridad</li>
+                <li>Si ya tienes acceso al proyecto, puedes iniciar sesión normalmente</li>
+            </ul>
+        </div>
+
+        <div class="contact-info">
+            <h6><i class="fas fa-question-circle"></i> ¿Necesitas ayuda?</h6>
+            <p class="mb-2">Si crees que esto es un error o necesitas una nueva invitación:</p>
+            <ul class="mb-0">
+                <li>Contacta al administrador del proyecto</li>
+                <li>Solicita una nueva invitación</li>
+                <li>Verifica si ya tienes acceso al sistema</li>
+            </ul>
+        </div>
+
+        <div class="mt-4">
+            <a href="/login" class="btn-custom">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            </a>
+            <a href="/register" class="btn-custom btn-secondary">
+                <i class="fas fa-user-plus"></i> Crear Cuenta
+            </a>
+        </div>
+
+        <div class="mt-4">
+            <small class="text-muted">
+                <i class="fas fa-shield-alt"></i> 
+                Sistema de Gestión Colaborativa Académica - Invitaciones Seguras
+            </small>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -481,8 +481,10 @@ class ProjectController {
 
       // Verificar si la invitación ya fue usada o expiró
       if (invitationData.estado !== 'pendiente') {
-        req.flash('error', 'Esta invitación ya fue procesada');
-        return res.redirect('/auth/login');
+        return res.render('errors/invitation-consumed', {
+          title: 'Invitación ya utilizada',
+          message: 'Esta invitación ya fue procesada anteriormente'
+        });
       }
 
       // Obtener información del proyecto
@@ -493,12 +495,23 @@ class ProjectController {
         return res.redirect('/auth/login');
       }
 
+      // Si el usuario no está autenticado, mostrar opciones de registro/login
+      if (!req.session.user) {
+        return res.render('projects/invitation-options', {
+          title: 'Únete al Proyecto',
+          invitation: invitationData,
+          project: project,
+          codigo: codigo
+        });
+      }
+
+      // Si el usuario está autenticado, mostrar la página de aceptación normal
       res.render('projects/accept-invitation', {
         title: 'Aceptar Invitación',
         invitation: invitationData,
         project: project,
         codigo: codigo,
-        user: req.session.user || null
+        user: req.session.user
       });
       
     } catch (error) {
@@ -749,6 +762,133 @@ class ProjectController {
               error: 'Error interno del servidor: ' + error.message 
           });
       }
+  }
+
+  // Procesar registro desde invitación
+  async registerFromInvitation(req, res) {
+    try {
+      const { codigo } = req.params;
+      const { nombres, apellidos, email, password, confirm_password } = req.body;
+
+      // Validar que las contraseñas coincidan
+      if (password !== confirm_password) {
+        req.flash('error', 'Las contraseñas no coinciden');
+        return res.redirect(`/projects/invitations/accept/${codigo}`);
+      }
+
+      // Verificar que la invitación existe y está pendiente
+      const invitation = new Invitation();
+      const invitationData = await invitation.findByCode(codigo);
+      
+      if (!invitationData || invitationData.estado !== 'pendiente') {
+        req.flash('error', 'Invitación no válida o ya procesada');
+        return res.redirect('/auth/login');
+      }
+
+      // Verificar si el email ya existe
+      const userModel = new User();
+      const existingUser = await userModel.findByEmail(email);
+      
+      if (existingUser) {
+        req.flash('error', 'Ya existe una cuenta con este email. Por favor inicia sesión.');
+        return res.redirect(`/projects/invitations/accept/${codigo}`);
+      }
+
+      // Crear nuevo usuario con rol de estudiante
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Generar código de usuario único
+      const generateUserCode = () => {
+        const timestamp = Date.now().toString().slice(-6);
+        const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+        return `EST${timestamp}${random}`;
+      };
+      
+      const newUserResult = await userModel.create({
+        codigo_usuario: generateUserCode(),
+        nombres,
+        apellidos,
+        email,
+        password: hashedPassword,
+        rol_id: 4, // Rol de estudiante
+        area_trabajo_id: invitationData.area_trabajo_id || 1
+      });
+
+      // Extraer el ID del resultado
+      const newUserId = newUserResult.id;
+
+      // Iniciar sesión automáticamente
+      const newUser = await userModel.findById(newUserId);
+      req.session.user = newUser;
+
+      // Agregar usuario al proyecto y marcar invitación como aceptada
+      await this.addUserToProject(invitationData.proyecto_id, newUserId);
+      await invitation.accept(invitationData.id, newUserId);
+
+      req.flash('success', `¡Bienvenido! Te has registrado y unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
+      res.redirect('/dashboard');
+
+    } catch (error) {
+      console.error('Error registering from invitation:', error);
+      req.flash('error', 'Error al procesar el registro');
+      res.redirect(`/projects/invitations/accept/${req.params.codigo}`);
+    }
+  }
+
+  // Procesar login desde invitación
+  async loginFromInvitation(req, res) {
+    try {
+      const { codigo } = req.params;
+      const { email, password } = req.body;
+
+      // Verificar que la invitación existe y está pendiente
+      const invitation = new Invitation();
+      const invitationData = await invitation.findByCode(codigo);
+      
+      if (!invitationData || invitationData.estado !== 'pendiente') {
+        req.flash('error', 'Invitación no válida o ya procesada');
+        return res.redirect('/auth/login');
+      }
+
+      // Verificar credenciales
+      const userModel = new User();
+      const user = await userModel.findByEmail(email);
+      
+      if (!user) {
+        req.flash('error', 'Email no encontrado. ¿Necesitas crear una cuenta?');
+        return res.redirect(`/projects/invitations/accept/${codigo}`);
+      }
+
+      // Validar que tenemos los datos necesarios para la comparación
+      if (!password || !user.password_hash) {
+        req.flash('error', 'Error en la validación de credenciales');
+        return res.redirect(`/projects/invitations/accept/${codigo}`);
+      }
+
+      const bcrypt = require('bcrypt');
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
+      
+      if (!isValidPassword) {
+        req.flash('error', 'Contraseña incorrecta');
+        return res.redirect(`/projects/invitations/accept/${codigo}`);
+      }
+
+      // Iniciar sesión
+      req.session.user = user;
+
+      // Agregar usuario al proyecto y marcar invitación como aceptada
+      await this.addUserToProject(invitationData.proyecto_id, user.id);
+      await invitation.accept(invitationData.id, user.id);
+
+      req.flash('success', `¡Bienvenido de vuelta! Te has unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
+      res.redirect('/dashboard');
+
+    } catch (error) {
+      console.error('Error logging in from invitation:', error);
+      req.flash('error', 'Error al procesar el inicio de sesión');
+      res.redirect(`/projects/invitations/accept/${req.params.codigo}`);
+    }
   }
 }
 
