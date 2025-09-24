@@ -92,6 +92,7 @@ class AreaTrabajo extends BaseModel {
      * Obtener usuarios de un área de trabajo
      */
     static async getUsers(areaId) {
+        const { pool } = require('../config/database');
         const query = `
             SELECT u.*, r.nombre as rol_nombre
             FROM usuarios u
@@ -100,13 +101,15 @@ class AreaTrabajo extends BaseModel {
             WHERE ua.area_trabajo_id = ? AND u.activo = 1
             ORDER BY u.nombres, u.apellidos
         `;
-        return await this.executeQuery(query, [areaId]);
+        const [result] = await pool.execute(query, [areaId]);
+        return result;
     }
 
     /**
      * Obtener proyectos de un área de trabajo
      */
     static async getProjects(areaId) {
+        const { pool } = require('../config/database');
         const query = `
             SELECT p.*, CONCAT(u.nombres, ' ', u.apellidos) as director_nombre
             FROM proyectos p
@@ -114,7 +117,8 @@ class AreaTrabajo extends BaseModel {
             WHERE p.area_trabajo_id = ?
             ORDER BY p.created_at DESC
         `;
-        return await this.executeQuery(query, [areaId]);
+        const [result] = await pool.execute(query, [areaId]);
+        return result;
     }
 
     /**
@@ -145,9 +149,10 @@ class AreaTrabajo extends BaseModel {
             `
         };
 
+        const { pool } = require('../config/database');
         const results = {};
         for (const [key, query] of Object.entries(queries)) {
-            const result = await this.executeQuery(query, [areaId]);
+            const [result] = await pool.execute(query, [areaId]);
             results[key] = result[0]?.count || 0;
         }
 
@@ -158,11 +163,12 @@ class AreaTrabajo extends BaseModel {
      * Verificar si un usuario pertenece a un área
      */
     static async userBelongsToArea(userId, areaId) {
+        const { pool } = require('../config/database');
         const query = `
             SELECT 1 FROM usuario_areas_trabajo 
             WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
         `;
-        const result = await this.executeQuery(query, [userId, areaId]);
+        const [result] = await pool.execute(query, [userId, areaId]);
         return result.length > 0;
     }
 
@@ -176,29 +182,34 @@ class AreaTrabajo extends BaseModel {
             throw new Error('El usuario ya pertenece a esta área de trabajo');
         }
 
+        const { pool } = require('../config/database');
         const query = `
             INSERT INTO usuario_areas_trabajo (area_trabajo_id, usuario_id, activo, created_at)
             VALUES (?, ?, 1, ?)
         `;
-        return await this.executeQuery(query, [areaId, userId, new Date()]);
+        const [result] = await pool.execute(query, [areaId, userId, new Date()]);
+        return result;
     }
 
     /**
      * Remover usuario de área de trabajo
      */
     static async removeUser(areaId, userId) {
+        const { pool } = require('../config/database');
         const query = `
             UPDATE usuario_areas_trabajo 
             SET activo = 0, updated_at = ? 
             WHERE area_trabajo_id = ? AND usuario_id = ?
         `;
-        return await this.executeQuery(query, [new Date(), areaId, userId]);
+        const [result] = await pool.execute(query, [new Date(), areaId, userId]);
+        return result;
     }
 
     /**
      * Obtener áreas de trabajo de un usuario
      */
     static async getUserAreas(userId) {
+        const { pool } = require('../config/database');
         const query = `
             SELECT a.*, ua.created_at as fecha_asignacion
             FROM areas_trabajo a
@@ -206,19 +217,21 @@ class AreaTrabajo extends BaseModel {
             WHERE ua.usuario_id = ? AND a.activo = 1 AND ua.activo = 1
             ORDER BY a.codigo
         `;
-        return await this.executeQuery(query, [userId]);
+        const [result] = await pool.execute(query, [userId]);
+        return result;
     }
 
     /**
      * Obtener el área de trabajo por defecto (A001)
      */
     static async getDefaultArea() {
+        const { pool } = require('../config/database');
         const query = `
             SELECT * FROM areas_trabajo 
             WHERE codigo = 'A001' AND activo = 1
             LIMIT 1
         `;
-        const result = await this.executeQuery(query);
+        const [result] = await pool.execute(query);
         return result.length > 0 ? result[0] : null;
     }
 

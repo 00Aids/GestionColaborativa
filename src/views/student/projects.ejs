@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Proyectos - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb .current {
+            color: white;
+            font-weight: 600;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .project-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .project-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-borrador { background: #ffeaa7; color: #d63031; }
+        .status-en-desarrollo { background: #74b9ff; color: #0984e3; }
+        .status-en-revision { background: #fd79a8; color: #e84393; }
+        .status-completado { background: #00b894; color: #00a085; }
+        .status-suspendido { background: #636e72; color: #2d3436; }
+
+        .project-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meta-item i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .project-progress {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .flash-error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .project-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .project-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo">SG</div>
+            <div>
+                <h1 style="font-size: 1.2rem; font-weight: 700; color: #333;">Sistema de Gestión</h1>
+                <p style="font-size: 0.9rem; color: #666; margin: 0;">Proyectos de Grado</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <span class="user-name">
+                <i class="fas fa-user-graduate"></i>
+                <%= user.nombres %> <%= user.apellidos %>
+            </span>
+            <a href="/auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-project-diagram"></i>
+                Mis Proyectos
+            </h1>
+            <p class="page-subtitle">Gestiona y da seguimiento a tus proyectos de grado</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i>
+            <a href="/dashboard/student">Dashboard</a> / 
+            <span class="current">Mis Proyectos</span>
+        </div>
+
+        <!-- Flash Messages -->
+        <% if (success && success.length > 0) { %>
+            <div class="flash-messages">
+                <% success.forEach(message => { %>
+                    <div class="flash-message flash-success">
+                        <i class="fas fa-check-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <% if (error && error.length > 0) { %>
+            <div class="flash-messages">
+                <% error.forEach(message => { %>
+                    <div class="flash-message flash-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <!-- Projects Grid -->
+        <% if (myProjects && myProjects.length > 0) { %>
+            <div class="projects-grid">
+                <% myProjects.forEach(project => { %>
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div>
+                                <h3 class="project-title"><%= project.titulo %></h3>
+                                <span class="status-badge status-<%= project.estado.replace('_', '-') %>">
+                                    <%= project.estado.replace('_', ' ').toUpperCase() %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <p class="project-description">
+                            <%= project.descripcion || 'Sin descripción disponible' %>
+                        </p>
+
+                        <div class="project-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>
+                                    Inicio: <%= project.fecha_inicio ? 
+                                        new Date(project.fecha_inicio).toLocaleDateString('es-ES') : 
+                                        'No definida' %>
+                                </span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>
+                                    Fin: <%= project.fecha_fin ? 
+                                        new Date(project.fecha_fin).toLocaleDateString('es-ES') : 
+                                        'No definida' %>
+                                </span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span>
+                                    Director: <%= project.director_nombres ? 
+                                        project.director_nombres + ' ' + project.director_apellidos : 
+                                        'No asignado' %>
+                                </span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-tag"></i>
+                                <span>
+                                    Área: <%= project.area_trabajo_codigo || 'No asignada' %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="project-progress">
+                            <div class="progress-label">
+                                <span>Progreso del Proyecto</span>
+                                <span><%= project.progreso || 0 %>%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: <%= project.progreso || 0 %>%"></div>
+                            </div>
+                        </div>
+
+                        <div class="project-actions">
+                            <a href="/projects/<%= project.id %>" class="btn btn-primary">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalles
+                            </a>
+                            <a href="/student/deliverables?project=<%= project.id %>" class="btn btn-outline">
+                                <i class="fas fa-tasks"></i>
+                                Entregables
+                            </a>
+                            <a href="/student/evaluations?project=<%= project.id %>" class="btn btn-secondary">
+                                <i class="fas fa-chart-line"></i>
+                                Evaluaciones
+                            </a>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <h2 class="empty-title">No tienes proyectos asignados</h2>
+                <p class="empty-description">
+                    Aún no tienes proyectos de grado asignados. Contacta con tu coordinador académico 
+                    para obtener más información sobre el proceso de asignación de proyectos.
+                </p>
+                <a href="/projects/join" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Unirse a un Proyecto
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        // Animaciones y efectos interactivos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animación de entrada para las tarjetas
+            const cards = document.querySelectorAll('.project-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Auto-hide flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+
+            // Efecto hover para botones
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

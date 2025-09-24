@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Entregables - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb .current {
+            color: white;
+            font-weight: 600;
+        }
+
+        .filters-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .deliverables-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .deliverable-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .deliverable-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .deliverable-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .deliverable-card.pendiente::before {
+            background: linear-gradient(90deg, #ffeaa7, #fdcb6e);
+        }
+
+        .deliverable-card.en-revision::before {
+            background: linear-gradient(90deg, #74b9ff, #0984e3);
+        }
+
+        .deliverable-card.completado::before {
+            background: linear-gradient(90deg, #00b894, #00a085);
+        }
+
+        .deliverable-card.vencido::before {
+            background: linear-gradient(90deg, #e17055, #d63031);
+        }
+
+        .deliverable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .deliverable-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pendiente { background: #ffeaa7; color: #d68910; }
+        .status-en-revision { background: #74b9ff; color: #0984e3; }
+        .status-completado { background: #00b894; color: #00a085; }
+        .status-vencido { background: #e17055; color: #d63031; }
+
+        .deliverable-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meta-item i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .deliverable-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .upload-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .upload-header h4 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .upload-header p {
+            color: #6c757d;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .text-content-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .form-label i {
+            margin-right: 0.5rem;
+            color: #007bff;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .textarea-info {
+            margin-top: 0.5rem;
+        }
+
+        .file-upload-section {
+            margin-bottom: 2rem;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-list {
+            margin-top: 1rem;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-icon {
+            color: #667eea;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .deliverable-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .flash-error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .due-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #856404;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .deliverable-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .deliverable-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo">SG</div>
+            <div>
+                <h1 style="font-size: 1.2rem; font-weight: 700; color: #333;">Sistema de Gestión</h1>
+                <p style="font-size: 0.9rem; color: #666; margin: 0;">Proyectos de Grado</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <span class="user-name">
+                <i class="fas fa-user-graduate"></i>
+                <%= user.nombres %> <%= user.apellidos %>
+            </span>
+            <a href="/auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-tasks"></i>
+                Mis Entregables
+            </h1>
+            <p class="page-subtitle">Gestiona tus entregas y sube archivos de tus proyectos</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i>
+            <a href="/dashboard/student">Dashboard</a> / 
+            <span class="current">Mis Entregables</span>
+        </div>
+
+        <!-- Flash Messages -->
+        <% if (success && success.length > 0) { %>
+            <div class="flash-messages">
+                <% success.forEach(message => { %>
+                    <div class="flash-message flash-success">
+                        <i class="fas fa-check-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <% if (error && error.length > 0) { %>
+            <div class="flash-messages">
+                <% error.forEach(message => { %>
+                    <div class="flash-message flash-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Estado</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en-revision">En Revisión</option>
+                        <option value="completado">Completado</option>
+                        <option value="vencido">Vencido</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Proyecto</label>
+                    <select class="filter-select" id="projectFilter">
+                        <option value="">Todos los proyectos</option>
+                        <!-- Se llenarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Fase</label>
+                    <select class="filter-select" id="phaseFilter">
+                        <option value="">Todas las fases</option>
+                        <!-- Se llenarán dinámicamente -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deliverables Grid -->
+        <% if (myDeliverables && myDeliverables.length > 0) { %>
+            <div class="deliverables-grid">
+                <% myDeliverables.forEach(deliverable => { 
+                    const dueDate = new Date(deliverable.fecha_entrega);
+                    const today = new Date();
+                    const isOverdue = dueDate < today && deliverable.estado === 'pendiente';
+                    const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                %>
+                    <div class="deliverable-card <%= isOverdue ? 'vencido' : deliverable.estado %>" 
+                         data-status="<%= deliverable.estado %>" 
+                         data-project="<%= deliverable.proyecto_titulo %>"
+                         data-phase="<%= deliverable.fase_nombre || '' %>">
+                        
+                        <div class="deliverable-header">
+                            <div>
+                                <h3 class="deliverable-title"><%= deliverable.titulo %></h3>
+                                <span class="status-badge status-<%= isOverdue ? 'vencido' : deliverable.estado %>">
+                                    <%= isOverdue ? 'VENCIDO' : deliverable.estado.toUpperCase() %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="deliverable-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-project-diagram"></i>
+                                <span><%= deliverable.proyecto_titulo || 'Sin proyecto' %></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>
+                                    Entrega: <%= dueDate.toLocaleDateString('es-ES') %>
+                                </span>
+                            </div>
+                            <% if (deliverable.fase_nombre) { %>
+                                <div class="meta-item">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span><%= deliverable.fase_nombre %></span>
+                                </div>
+                            <% } %>
+                            <% if (deliverable.area_trabajo_codigo) { %>
+                                <div class="meta-item">
+                                    <i class="fas fa-tag"></i>
+                                    <span><%= deliverable.area_trabajo_codigo %></span>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <% if (deliverable.descripcion) { %>
+                            <div class="deliverable-description">
+                                <%= deliverable.descripcion %>
+                            </div>
+                        <% } %>
+
+                        <% if (isOverdue) { %>
+                            <div class="due-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Este entregable está vencido desde hace <%= Math.abs(daysUntilDue) %> día<%= Math.abs(daysUntilDue) !== 1 ? 's' : '' %>
+                            </div>
+                        <% } else if (daysUntilDue <= 7 && daysUntilDue > 0 && deliverable.estado === 'pendiente') { %>
+                            <div class="due-warning">
+                                <i class="fas fa-clock"></i>
+                                Vence en <%= daysUntilDue %> día<%= daysUntilDue !== 1 ? 's' : '' %>
+                            </div>
+                        <% } %>
+
+                        <!-- Upload Section (solo para entregables pendientes) -->
+                        <% if (deliverable.estado === 'pendiente' || isOverdue) { %>
+                            <div class="upload-section" id="upload-<%= deliverable.id %>">
+                                <div class="upload-header">
+                                    <h4>
+                                        <i class="fas fa-edit"></i>
+                                        Entregar Trabajo
+                                    </h4>
+                                    <p>Completa tu entregable con texto y/o archivos adjuntos</p>
+                                </div>
+
+                                <form class="upload-form" action="/student/deliverable/upload" method="POST" enctype="multipart/form-data">
+                                    <input type="hidden" name="deliverable_id" value="<%= deliverable.id %>">
+                                    
+                                    <!-- Text Content Section -->
+                                    <div class="text-content-section">
+                                        <label class="form-label">
+                                            <i class="fas fa-align-left"></i>
+                                            Contenido del Entregable *
+                                        </label>
+                                        <textarea name="content" class="form-textarea" 
+                                                  placeholder="Escribe aquí el contenido de tu entregable. Puedes incluir explicaciones, análisis, conclusiones, etc."
+                                                  rows="8" required></textarea>
+                                        <div class="textarea-info">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                Mínimo 50 caracteres. Puedes usar formato de texto plano.
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- File Upload Section (Optional) -->
+                                    <div class="file-upload-section">
+                                        <label class="form-label">
+                                            <i class="fas fa-paperclip"></i>
+                                            Archivos Adjuntos (Opcional)
+                                        </label>
+                                        
+                                        <div class="upload-area" onclick="document.getElementById('file-<%= deliverable.id %>').click()">
+                                            <div class="upload-icon">
+                                                <i class="fas fa-cloud-upload-alt"></i>
+                                            </div>
+                                            <div class="upload-text">Subir Archivo</div>
+                                            <div class="upload-subtext">Arrastra y suelta o haz clic para seleccionar</div>
+                                            <button type="button" class="upload-btn">
+                                                <i class="fas fa-file-upload"></i>
+                                                Seleccionar Archivo
+                                            </button>
+                                        </div>
+                                        <input type="file" id="file-<%= deliverable.id %>" class="file-input" 
+                                               accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar,.jpg,.jpeg,.png" 
+                                               onchange="handleFileSelect(this, <%= deliverable.id %>)">
+                                        <div class="file-list" id="files-<%= deliverable.id %>"></div>
+                                    </div>
+
+                                    <div class="upload-actions">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane"></i>
+                                            Entregar Trabajo
+                                        </button>
+                                        <button type="button" class="btn btn-outline" onclick="saveDraft(<%= deliverable.id %>)">
+                                            <i class="fas fa-save"></i>
+                                            Guardar Borrador
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        <% } %>
+
+                        <div class="deliverable-actions">
+                            <% if (deliverable.estado === 'pendiente' || isOverdue) { %>
+                                <button class="btn btn-success" onclick="submitDeliverable(<%= deliverable.id %>)">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Entregar
+                                </button>
+                            <% } %>
+                            <a href="/deliverables/<%= deliverable.id %>" class="btn btn-outline">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalles
+                            </a>
+                            <% if (deliverable.archivo_url) { %>
+                                <a href="<%= deliverable.archivo_url %>" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-download"></i>
+                                    Descargar
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2 class="empty-title">No tienes entregables asignados</h2>
+                <p class="empty-description">
+                    Aún no tienes entregables pendientes. Los entregables aparecerán aquí cuando 
+                    sean asignados a tus proyectos.
+                </p>
+                <a href="/student/projects" class="btn btn-primary">
+                    <i class="fas fa-project-diagram"></i>
+                    Ver Mis Proyectos
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        // Variables globales para archivos seleccionados
+        const selectedFiles = {};
+
+        // Manejar selección de archivos
+        function handleFileSelect(input, deliverableId) {
+            const files = Array.from(input.files);
+            selectedFiles[deliverableId] = files;
+            displayFiles(deliverableId, files);
+        }
+
+        // Mostrar archivos seleccionados
+        function displayFiles(deliverableId, files) {
+            const fileList = document.getElementById(`files-${deliverableId}`);
+            fileList.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <i class="fas fa-file file-icon"></i>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(${deliverableId}, ${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        // Remover archivo
+        function removeFile(deliverableId, index) {
+            selectedFiles[deliverableId].splice(index, 1);
+            displayFiles(deliverableId, selectedFiles[deliverableId]);
+            
+            // Actualizar input file
+            const input = document.getElementById(`file-${deliverableId}`);
+            const dt = new DataTransfer();
+            selectedFiles[deliverableId].forEach(file => dt.items.add(file));
+            input.files = dt.files;
+        }
+
+        // Formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Draft saving functionality
+        function saveDraft(deliverableId) {
+            const form = document.querySelector(`#upload-${deliverableId} form`);
+            const content = form.querySelector('textarea[name="content"]').value;
+            
+            if (content.length < 10) {
+                showMessage('El contenido debe tener al menos 10 caracteres para guardar como borrador', 'warning');
+                return;
+            }
+
+            // Save to localStorage as backup
+            localStorage.setItem(`draft_${deliverableId}`, content);
+            
+            // Show success message
+            showMessage('Borrador guardado exitosamente', 'success');
+        }
+
+        // Show message function
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flash-message flash-${type === 'warning' ? 'error' : type}`;
+            messageDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                messageDiv.style.transition = 'all 0.5s ease';
+                messageDiv.style.opacity = '0';
+                messageDiv.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 500);
+            }, 3000);
+        }
+
+        // Enviar entregable
+        function submitDeliverable(deliverableId) {
+            const files = selectedFiles[deliverableId];
+            
+            if (!files || files.length === 0) {
+                alert('Por favor selecciona al menos un archivo para entregar.');
+                return;
+            }
+
+            const formData = new FormData();
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            // Mostrar loading
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+            button.disabled = true;
+
+            fetch(`/student/deliverables/${deliverableId}/upload`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Entregable enviado exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error al enviar el entregable: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar el entregable');
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        // Filtros
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusFilter = document.getElementById('statusFilter');
+            const projectFilter = document.getElementById('projectFilter');
+            const phaseFilter = document.getElementById('phaseFilter');
+            const cards = document.querySelectorAll('.deliverable-card');
+
+            // Llenar filtros dinámicamente
+            const projects = new Set();
+            const phases = new Set();
+
+            cards.forEach(card => {
+                const project = card.dataset.project;
+                const phase = card.dataset.phase;
+                
+                if (project) projects.add(project);
+                if (phase) phases.add(phase);
+            });
+
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                projectFilter.appendChild(option);
+            });
+
+            phases.forEach(phase => {
+                const option = document.createElement('option');
+                option.value = phase;
+                option.textContent = phase;
+                phaseFilter.appendChild(option);
+            });
+
+            // Aplicar filtros
+            function applyFilters() {
+                const statusValue = statusFilter.value;
+                const projectValue = projectFilter.value;
+                const phaseValue = phaseFilter.value;
+
+                cards.forEach(card => {
+                    const cardStatus = card.dataset.status;
+                    const cardProject = card.dataset.project;
+                    const cardPhase = card.dataset.phase;
+
+                    const statusMatch = !statusValue || cardStatus === statusValue;
+                    const projectMatch = !projectValue || cardProject === projectValue;
+                    const phaseMatch = !phaseValue || cardPhase === phaseValue;
+
+                    if (statusMatch && projectMatch && phaseMatch) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            statusFilter.addEventListener('change', applyFilters);
+            projectFilter.addEventListener('change', applyFilters);
+            phaseFilter.addEventListener('change', applyFilters);
+
+            // Drag and drop
+            cards.forEach(card => {
+                const uploadSection = card.querySelector('.upload-section');
+                if (uploadSection) {
+                    uploadSection.addEventListener('dragover', function(e) {
+                        e.preventDefault();
+                        this.classList.add('dragover');
+                    });
+
+                    uploadSection.addEventListener('dragleave', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('dragover');
+                    });
+
+                    uploadSection.addEventListener('drop', function(e) {
+                        e.preventDefault();
+                        this.classList.remove('dragover');
+                        
+                        const deliverableId = this.id.split('-')[1];
+                        const files = Array.from(e.dataTransfer.files);
+                        const input = document.getElementById(`file-${deliverableId}`);
+                        
+                        const dt = new DataTransfer();
+                        files.forEach(file => dt.items.add(file));
+                        input.files = dt.files;
+                        
+                        handleFileSelect(input, deliverableId);
+                    });
+                }
+            });
+
+            // Animaciones de entrada
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Auto-hide flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+
+            // Load drafts from localStorage
+            const textareas = document.querySelectorAll('textarea[name="content"]');
+            textareas.forEach(textarea => {
+                const form = textarea.closest('form');
+                const deliverableId = form.querySelector('input[name="deliverable_id"]').value;
+                const draft = localStorage.getItem(`draft_${deliverableId}`);
+                
+                if (draft && !textarea.value) {
+                    textarea.value = draft;
+                    // Show draft indicator
+                    const draftIndicator = document.createElement('div');
+                    draftIndicator.className = 'draft-indicator';
+                    draftIndicator.style.cssText = 'background: rgba(255, 193, 7, 0.1); color: #856404; padding: 0.5rem; border-radius: 8px; font-size: 0.9rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;';
+                    draftIndicator.innerHTML = '<i class="fas fa-save"></i> Borrador cargado';
+                    textarea.parentNode.insertBefore(draftIndicator, textarea.nextSibling);
+                }
+            });
+
+            // Character counter for textareas
+            const textareas2 = document.querySelectorAll('.form-textarea');
+            textareas2.forEach(textarea => {
+                const counter = document.createElement('div');
+                counter.className = 'char-counter';
+                counter.style.cssText = 'text-align: right; font-size: 0.8rem; color: #6c757d; margin-top: 0.25rem;';
+                textarea.parentNode.appendChild(counter);
+                
+                function updateCounter() {
+                    const length = textarea.value.length;
+                    counter.textContent = `${length} caracteres`;
+                    
+                    if (length < 50) {
+                        counter.style.color = '#dc3545';
+                        counter.innerHTML = `${length} caracteres <small>(mínimo 50)</small>`;
+                    } else {
+                        counter.style.color = '#28a745';
+                        counter.textContent = `${length} caracteres`;
+                    }
+                }
+                
+                textarea.addEventListener('input', updateCounter);
+                updateCounter();
+            });
+
+            // Form validation
+            const forms = document.querySelectorAll('.upload-form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const textarea = form.querySelector('textarea[name="content"]');
+                    const content = textarea.value.trim();
+                    
+                    if (content.length < 50) {
+                        e.preventDefault();
+                        showMessage('El contenido debe tener al menos 50 caracteres', 'warning');
+                        textarea.focus();
+                        return false;
+                    }
+                    
+                    // Clear draft after successful submission
+                    const deliverableId = form.querySelector('input[name="deliverable_id"]').value;
+                    localStorage.removeItem(`draft_${deliverableId}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

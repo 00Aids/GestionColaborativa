@@ -87,6 +87,44 @@ class Evaluation extends BaseModel {
     }
   }
 
+  // Obtener evaluaciones por estudiante
+  async findByStudent(studentId) {
+    try {
+      const query = `
+        SELECT 
+          ev.*,
+          p.titulo as proyecto_titulo,
+          eval.nombres as evaluador_nombres,
+          eval.apellidos as evaluador_apellidos,
+          ent.titulo as entregable_titulo,
+          rub.nombre as rubrica_nombre
+        FROM evaluaciones ev
+        LEFT JOIN proyectos p ON ev.proyecto_id = p.id
+        LEFT JOIN usuarios eval ON ev.evaluador_id = eval.id
+        LEFT JOIN entregables ent ON ev.entregable_id = ent.id
+        LEFT JOIN rubricas_evaluacion rub ON ev.rubrica_id = rub.id
+        WHERE p.estudiante_id = ?
+        ORDER BY ev.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [studentId]);
+      
+      // Parsear calificaciones si existen
+      return rows.map(row => {
+        if (row.calificaciones) {
+          try {
+            row.calificaciones = JSON.parse(row.calificaciones);
+          } catch (e) {
+            row.calificaciones = null;
+          }
+        }
+        return row;
+      });
+    } catch (error) {
+      throw new Error(`Error finding evaluations by student: ${error.message}`);
+    }
+  }
+
   // Obtener evaluaciones pendientes
   async findPending() {
     try {

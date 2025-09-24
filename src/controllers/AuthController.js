@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Role = require('../models/Role');
 const jwt = require('jsonwebtoken');
+const DashboardHelper = require('../helpers/dashboardHelper');
 
 class AuthController {
   constructor() {
@@ -12,7 +13,7 @@ class AuthController {
   async showLogin(req, res) {
     try {
       if (req.session.user) {
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
       }
       
       // Guardar redirect en sesión si viene como parámetro
@@ -90,7 +91,7 @@ class AuthController {
   async showRegister(req, res) {
     try {
       if (req.session.user) {
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
       }
       
       // Guardar redirect en sesión si viene como parámetro
@@ -242,7 +243,7 @@ class AuthController {
       });
     } catch (error) {
       console.error('Error in logout:', error);
-      res.redirect('/dashboard');
+      res.redirect('/auth/login');
     }
   }
 

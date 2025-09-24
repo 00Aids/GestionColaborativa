@@ -1,111 +1,287 @@
-<%- include('../layouts/header', { title: title }) %>
-
-<div class="container mt-4">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">
-            <i class="fas fa-users"></i>
-            Unirse a un Proyecto
-          </h4>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Unirse a Proyecto' %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f8fafc;
+            color: #2d3748;
+        }
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #5a67d8;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .role-badge {
+            background: #38a169;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .logout-btn {
+            background: #e53e3e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover {
+            background: #c53030;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card-header {
+            background: #5a67d8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .card-header h4 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .alert-danger {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+        .alert-success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #9ae6b4;
+        }
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #5a67d8;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #5a67d8;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4c51bf;
+        }
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .mt-3 {
+            margin-top: 15px;
+        }
+        .fas {
+            margin-right: 8px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Sistema Académico
+            </div>
+            <% if (user) { %>
+                <div class="user-info">
+                    <span>Hola, <%= user.nombre %></span>
+                    <span class="role-badge"><%= user.rol_nombre %></span>
+                    <a href="/auth/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </a>
+                </div>
+            <% } %>
         </div>
-        <div class="card-body">
-          <!-- Mensajes de error y éxito -->
-          <% if (typeof error !== 'undefined' && error.length > 0) { %>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              <%= error %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          <% } %>
-          
-          <% if (typeof success !== 'undefined' && success.length > 0) { %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <%= success %>
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          <% } %>
-
-          <!-- Información sobre el sistema -->
-          <div class="alert alert-info mb-4">
-            <h6><i class="fas fa-info-circle"></i> ¿Cómo funciona?</h6>
-            <p class="mb-0">
-              Si tienes un código de invitación de un proyecto, ingrésalo abajo para unirte automáticamente.
-              El código te lo debe proporcionar el creador del proyecto.
-            </p>
-          </div>
-
-          <!-- Formulario para ingresar código -->
-          <form action="/projects/join" method="POST" id="joinForm">
-            <div class="mb-3">
-              <label for="invitation_code" class="form-label">
-                <i class="fas fa-key"></i>
-                Código de Invitación *
-              </label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="invitation_code" 
-                name="invitation_code" 
-                placeholder="Ingresa el código de invitación"
-                required
-                maxlength="20"
-                style="text-transform: uppercase;"
-              >
-              <div class="form-text">
-                El código debe tener entre 6 y 20 caracteres
-              </div>
-            </div>
-
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-              <a href="/dashboard" class="btn btn-secondary me-md-2">
-                <i class="fas fa-arrow-left"></i>
-                Cancelar
-              </a>
-              <button type="submit" class="btn btn-primary" id="submitBtn">
-                <i class="fas fa-sign-in-alt"></i>
-                Unirse al Proyecto
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Información adicional -->
-      <div class="card mt-4">
-        <div class="card-body">
-          <h6><i class="fas fa-question-circle"></i> ¿No tienes un código?</h6>
-          <p class="mb-0">
-            Contacta al creador del proyecto para que te proporcione un código de invitación válido.
-            Los códigos pueden tener fecha de expiración y límites de uso.
-          </p>
-        </div>
-      </div>
     </div>
-  </div>
-</div>
 
-<script>
-// Validación del formulario
-document.getElementById('joinForm').addEventListener('submit', function(e) {
-  const code = document.getElementById('invitation_code').value.trim();
-  const submitBtn = document.getElementById('submitBtn');
-  
-  if (code.length < 6) {
-    e.preventDefault();
-    alert('El código debe tener al menos 6 caracteres');
-    return;
-  }
-  
-  // Deshabilitar botón para evitar envíos múltiples
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-});
+    <!-- Main Content -->
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h4>
+                    <i class="fas fa-users"></i>
+                    Unirse a un Proyecto
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Mensajes de error y éxito -->
+                <% if (typeof error !== 'undefined' && error.length > 0) { %>
+                    <div class="alert alert-danger">
+                        <%= error %>
+                    </div>
+                <% } %>
+                
+                <% if (typeof success !== 'undefined' && success.length > 0) { %>
+                    <div class="alert alert-success">
+                        <%= success %>
+                    </div>
+                <% } %>
 
-// Convertir a mayúsculas automáticamente
-document.getElementById('invitation_code').addEventListener('input', function(e) {
-  e.target.value = e.target.value.toUpperCase();
-});
-</script>
+                <!-- Información sobre el sistema -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> ¿Cómo funciona?</h6>
+                    <p style="margin: 10px 0 0 0;">
+                        Si tienes un código de invitación de un proyecto, ingrésalo abajo para unirte automáticamente.
+                        El código te lo debe proporcionar el creador del proyecto.
+                    </p>
+                </div>
 
-<%- include('../layouts/footer') %>
+                <!-- Formulario para ingresar código -->
+                <form action="/projects/join" method="POST" id="joinForm">
+                    <div class="form-group">
+                        <label for="invitation_code" class="form-label">
+                            <i class="fas fa-key"></i>
+                            Código de Invitación *
+                        </label>
+                        <input 
+                             type="text" 
+                             class="form-control" 
+                             id="invitation_code" 
+                             name="invitation_code" 
+                             placeholder="Ingresa el código de invitación (ej: 600A0470DB6DD7CEB3D1BF6F16650D73)"
+                             required
+                             maxlength="32"
+                             style="text-transform: uppercase; font-family: monospace; font-size: 14px;"
+                         >
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-plus-circle"></i>
+                            Unirse al Proyecto
+                        </button>
+                        
+                        <a href="<%= userDashboardRoute %>" class="btn btn-secondary mt-3">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver al Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Validación del formulario
+         document.getElementById('joinForm').addEventListener('submit', function(e) {
+             const code = document.getElementById('invitation_code').value.trim();
+             const submitBtn = document.getElementById('submitBtn');
+             
+             if (!code) {
+                 e.preventDefault();
+                 alert('Por favor ingresa un código de invitación');
+                 return;
+             }
+             
+             if (code.length < 6 || code.length > 32) {
+                 e.preventDefault();
+                 alert('El código de invitación debe tener entre 6 y 32 caracteres');
+                 return;
+             }
+             
+             // Deshabilitar botón para evitar envíos múltiples
+             submitBtn.disabled = true;
+             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+         });
+
+        // Convertir a mayúsculas automáticamente
+        document.getElementById('invitation_code').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

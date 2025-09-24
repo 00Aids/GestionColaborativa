@@ -209,8 +209,8 @@ class DashboardController {
     try {
       const user = req.session.user;
       
-      // Obtener proyectos del estudiante
-      const myProjects = await this.projectModel.findByStudent(user.id);
+      // Obtener proyectos donde el estudiante es miembro
+      const myProjects = await this.projectModel.findStudentProjects(user.id);
       
       // Entregables pendientes del estudiante
       const myDeliverables = [];
@@ -782,6 +782,171 @@ class DashboardController {
       case 'aprobado': return 'Baja';
       case 'revisado': return 'Informativa';
       default: return 'Media';
+    }
+  }
+
+  // ========== MÉTODOS ESPECÍFICOS PARA ESTUDIANTES ==========
+
+  // Vista de proyectos del estudiante
+  async studentProjects(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener proyectos donde el estudiante es miembro y que estén en su área de trabajo
+      let myProjects = [];
+      
+      if (req.areaTrabajoId) {
+        // Obtener proyectos del área de trabajo donde el usuario es miembro
+        myProjects = await this.projectModel.findStudentProjectsByArea(user.id, req.areaTrabajoId);
+      } else {
+        // Si no tiene área asignada, obtener proyectos donde es miembro (sin filtro de área)
+        myProjects = await this.projectModel.findStudentProjects(user.id);
+      }
+      
+      res.render('student/projects', {
+        user,
+        myProjects: myProjects || [],
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in studentProjects:', error);
+      req.flash('error', 'Error al cargar los proyectos');
+      res.redirect('/dashboard/student');
+    }
+  }
+
+  // Vista de entregables del estudiante
+  async studentDeliverables(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener entregables del estudiante
+      const myDeliverables = await this.deliverableModel.findByStudent(user.id);
+      
+      res.render('student/deliverables', {
+        user,
+        myDeliverables: myDeliverables || [],
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in studentDeliverables:', error);
+      req.flash('error', 'Error al cargar los entregables');
+      res.redirect('/dashboard/student');
+    }
+  }
+
+  // Vista de evaluaciones del estudiante
+  async studentEvaluations(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener evaluaciones del estudiante
+      const myEvaluations = await this.evaluationModel.findByStudent(user.id);
+      
+      res.render('student/evaluations', {
+        user,
+        myEvaluations: myEvaluations || [],
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in studentEvaluations:', error);
+      req.flash('error', 'Error al cargar las evaluaciones');
+      res.redirect('/dashboard/student');
+    }
+  }
+
+  // Vista de perfil del estudiante
+  async studentProfile(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Obtener información completa del usuario
+      const userDetails = await this.userModel.findById(user.id);
+      
+      res.render('student/profile', {
+        user,
+        userDetails: userDetails || user,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in studentProfile:', error);
+      req.flash('error', 'Error al cargar el perfil');
+      res.redirect('/dashboard/student');
+    }
+  }
+
+  // Subir entregable
+  async uploadDeliverable(req, res) {
+    try {
+      const user = req.session.user;
+      const { deliverable_id, content } = req.body;
+      
+      // Validar que el contenido tenga al menos 50 caracteres
+      if (!content || content.trim().length < 50) {
+        req.flash('error', 'El contenido del entregable debe tener al menos 50 caracteres');
+        return res.redirect('/student/deliverables');
+      }
+
+      // Verificar que el entregable pertenece al estudiante
+      const deliverable = await this.deliverableModel.findById(deliverable_id);
+      if (!deliverable) {
+        req.flash('error', 'Entregable no encontrado');
+        return res.redirect('/student/deliverables');
+      }
+
+      // Actualizar el entregable con el contenido
+      const updateData = {
+        contenido: content.trim(),
+        estado: 'entregado',
+        fecha_entrega: new Date(),
+        usuario_entrega_id: user.id
+      };
+
+      // Si hay archivo adjunto, manejarlo
+      if (req.file) {
+        updateData.archivo_url = `/uploads/deliverables/${req.file.filename}`;
+        updateData.archivo_nombre = req.file.originalname;
+      }
+
+      // Actualizar en la base de datos
+      await this.deliverableModel.update(deliverable_id, updateData);
+      
+      req.flash('success', 'Entregable enviado exitosamente');
+      res.redirect('/student/deliverables');
+    } catch (error) {
+      console.error('Error in uploadDeliverable:', error);
+      req.flash('error', 'Error al enviar el entregable');
+      res.redirect('/student/deliverables');
+    }
+  }
+
+  // Actualizar perfil del estudiante
+  async updateStudentProfile(req, res) {
+    try {
+      const user = req.session.user;
+      const { nombres, apellidos, email, telefono } = req.body;
+      
+      // Actualizar información del usuario
+      await this.userModel.update(user.id, {
+        nombres,
+        apellidos,
+        email,
+        telefono
+      });
+      
+      // Actualizar sesión
+      req.session.user = { ...user, nombres, apellidos, email, telefono };
+      
+      req.flash('success', 'Perfil actualizado exitosamente');
+      res.redirect('/student/profile');
+    } catch (error) {
+      console.error('Error in updateStudentProfile:', error);
+      req.flash('error', 'Error al actualizar el perfil');
+      res.redirect('/student/profile');
     }
   }
 }

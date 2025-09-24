@@ -5,6 +5,7 @@ const Evaluation = require('../models/Evaluation');
 const Invitation = require('../models/Invitation');
 const { pool } = require('../config/database');
 const nodemailer = require('nodemailer'); // Necesitarás instalarlo: npm install nodemailer
+const DashboardHelper = require('../helpers/dashboardHelper');
 
 class ProjectController {
   constructor() {
@@ -72,8 +73,8 @@ class ProjectController {
     try {
       const user = req.session.user;
       
-      // Permitir a Estudiantes, Coordinadores y Administradores crear proyectos
-      if (!['Estudiante', 'Coordinador Académico', 'Administrador General'].includes(user.rol_nombre)) {
+      // Solo Coordinadores y Administradores pueden crear proyectos
+      if (!['Coordinador Académico', 'Administrador General'].includes(user.rol_nombre)) {
         req.flash('error', 'No tienes permisos para crear proyectos');
         return res.redirect('/projects');
       }
@@ -269,7 +270,7 @@ class ProjectController {
       // Solo estudiantes pueden unirse a proyectos
       if (user.rol_nombre !== 'Estudiante') {
         req.flash('error', 'Solo los estudiantes pueden unirse a proyectos usando códigos de invitación');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
       
       res.render('projects/join', {
@@ -292,7 +293,7 @@ class ProjectController {
       // Solo estudiantes pueden unirse a proyectos
       if (user.rol_nombre !== 'Estudiante') {
         req.flash('error', 'Solo los estudiantes pueden unirse a proyectos');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
       
       if (!invitation_code || invitation_code.trim().length === 0) {
@@ -544,7 +545,7 @@ class ProjectController {
           req.flash('success', `Te has unido exitosamente al proyecto "${invitationData.proyecto_nombre}"`);
           
           // Redirigir al dashboard
-          res.redirect('/dashboard');
+          res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
       } catch (error) {
           console.error('Error accepting invitation:', error);
           res.status(500).json({ error: error.message });
@@ -568,8 +569,8 @@ class ProjectController {
           // Establecer mensaje flash de información
           req.flash('info', 'Has rechazado la invitación al proyecto');
           
-          // Redirigir al dashboard
-          res.redirect('/dashboard');
+          // Redirigir al dashboard  
+          res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
       } catch (error) {
           console.error('Error rejecting invitation:', error);
           res.status(500).json({ error: 'Error interno del servidor' });
@@ -827,7 +828,7 @@ class ProjectController {
       await invitation.accept(invitationData.id, newUserId);
 
       req.flash('success', `¡Bienvenido! Te has registrado y unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
-      res.redirect('/dashboard');
+      res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
 
     } catch (error) {
       console.error('Error registering from invitation:', error);
@@ -882,7 +883,7 @@ class ProjectController {
       await invitation.accept(invitationData.id, user.id);
 
       req.flash('success', `¡Bienvenido de vuelta! Te has unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
-      res.redirect('/dashboard');
+      res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
 
     } catch (error) {
       console.error('Error logging in from invitation:', error);

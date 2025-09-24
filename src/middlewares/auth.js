@@ -1,3 +1,5 @@
+const DashboardHelper = require('../helpers/dashboardHelper');
+
 class AuthMiddleware {
   // Verificar si el usuario está autenticado
   static requireAuth(req, res, next) {
@@ -21,7 +23,7 @@ class AuthMiddleware {
   // Verificar si el usuario NO está autenticado (para login/register)
   static requireGuest(req, res, next) {
     if (req.session && req.session.user) {
-      return res.redirect('/dashboard');
+      return res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
     }
     next();
   }
@@ -48,7 +50,7 @@ class AuthMiddleware {
       }
       
       req.flash('error', 'No tienes permisos para acceder a esta página');
-      res.redirect('/dashboard');
+      res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
     };
   }
 

@@ -90,6 +90,33 @@ class Deliverable extends BaseModel {
     }
   }
 
+  // Obtener entregables por estudiante
+  async findByStudent(studentId) {
+    try {
+      const query = `
+        SELECT 
+          e.*,
+          p.titulo as proyecto_titulo,
+          p.estado as proyecto_estado,
+          fp.nombre as fase_nombre,
+          fp.descripcion as fase_descripcion,
+          at.codigo as area_trabajo_codigo
+        FROM entregables e
+        LEFT JOIN proyectos p ON e.proyecto_id = p.id
+        LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
+        LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
+        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        WHERE pm.usuario_id = ? AND pm.activo = 1
+        ORDER BY e.fecha_entrega ASC
+      `;
+      
+      const [rows] = await this.db.execute(query, [studentId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding deliverables by student: ${error.message}`);
+    }
+  }
+
   // Obtener entregables pendientes
   async findPending() {
     try {

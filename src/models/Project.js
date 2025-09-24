@@ -1,4 +1,5 @@
 const BaseModel = require('./BaseModel');
+const Invitation = require('./Invitation');
 
 class Project extends BaseModel {
   constructor() {
@@ -62,13 +63,85 @@ class Project extends BaseModel {
     }
   }
 
-  // Obtener proyectos por estudiante
+  // Obtener proyectos por estudiante (método original - mantener para compatibilidad)
   async findByStudent(studentId, additionalConditions = {}) {
     try {
       const conditions = { estudiante_id: studentId, ...additionalConditions };
       return await this.findWithDetails(conditions);
     } catch (error) {
       throw new Error(`Error finding projects by student: ${error.message}`);
+    }
+  }
+
+  // Obtener proyectos donde el estudiante es miembro (nueva implementación)
+  async findStudentProjects(studentId) {
+    try {
+      const query = `
+        SELECT 
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          li.nombre as linea_investigacion,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin,
+          pm.created_at as fecha_union
+        FROM proyectos p
+        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        WHERE pm.usuario_id = ? AND pm.activo = true
+        ORDER BY p.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [studentId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding student projects: ${error.message}`);
+    }
+  }
+
+  // Obtener proyectos donde el estudiante es miembro y que estén en un área específica
+  async findStudentProjectsByArea(studentId, areaId) {
+    try {
+      const query = `
+        SELECT 
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          li.nombre as linea_investigacion,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin,
+          pm.created_at as fecha_union
+        FROM proyectos p
+        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        WHERE pm.usuario_id = ? AND pm.activo = true AND p.area_trabajo_id = ?
+        ORDER BY p.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [studentId, areaId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding student projects by area: ${error.message}`);
     }
   }
 
@@ -284,13 +357,12 @@ class Project extends BaseModel {
   // Unir estudiante a proyecto usando código
   async joinProjectWithCode(codigo, userId) {
     try {
-      const validation = await this.validateInvitationCode(codigo);
+      const invitationModel = new Invitation();
+      const invitation = await invitationModel.findByCode(codigo);
       
-      if (!validation.valid) {
-        return { success: false, message: validation.message };
+      if (!invitation) {
+        return { success: false, message: 'Código de invitación no encontrado' };
       }
-
-      const invitation = validation.invitation;
 
       // Verificar si el usuario ya es miembro del proyecto
       const existingMember = await this.findProjectMember(invitation.proyecto_id, userId);
@@ -299,45 +371,39 @@ class Project extends BaseModel {
       }
 
       // Agregar usuario como miembro del proyecto
+      // Nota: No incluimos invitacion_id porque la tabla project_members 
+      // tiene una FK a project_invitations, no a invitaciones
       const memberData = {
         proyecto_id: invitation.proyecto_id,
         usuario_id: userId,
         rol_en_proyecto: 'estudiante',
-        invitacion_id: invitation.id,
         activo: true,
         created_at: new Date()
       };
 
       const insertQuery = `
         INSERT INTO project_members 
-        (proyecto_id, usuario_id, rol_en_proyecto, invitacion_id, activo, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (proyecto_id, usuario_id, rol_en_proyecto, activo, created_at)
+        VALUES (?, ?, ?, ?, ?)
       `;
 
       await this.db.execute(insertQuery, [
         memberData.proyecto_id,
         memberData.usuario_id,
         memberData.rol_en_proyecto,
-        memberData.invitacion_id,
         memberData.activo,
         memberData.created_at
       ]);
 
-      // Incrementar contador de usos de la invitación
-      const updateQuery = `
-        UPDATE project_invitations 
-        SET usos_actuales = usos_actuales + 1, updated_at = ?
-        WHERE id = ?
-      `;
-
-      await this.db.execute(updateQuery, [new Date(), invitation.id]);
+      // Incrementar contador de usos de la invitación usando el modelo Invitation
+      await invitationModel.incrementUsage(invitation.id);
 
       return { 
         success: true, 
         message: 'Te has unido al proyecto exitosamente',
         project: {
           id: invitation.proyecto_id,
-          titulo: invitation.proyecto_titulo
+          titulo: invitation.proyecto_nombre
         }
       };
     } catch (error) {

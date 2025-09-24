@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb .current {
+            color: white;
+            font-weight: 600;
+        }
+
+        .profile-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .profile-avatar {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            font-weight: bold;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .avatar-upload:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-role {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .profile-stats {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #333;
+        }
+
+        .profile-main {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .flash-error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .password-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .password-toggle-btn:hover {
+            color: #667eea;
+        }
+
+        .security-info {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #667eea;
+        }
+
+        .edit-mode {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #856404;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .profile-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .profile-sidebar {
+                position: static;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo">SG</div>
+            <div>
+                <h1 style="font-size: 1.2rem; font-weight: 700; color: #333;">Sistema de Gestión</h1>
+                <p style="font-size: 0.9rem; color: #666; margin: 0;">Proyectos de Grado</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <span class="user-name">
+                <i class="fas fa-user-graduate"></i>
+                <%= user.nombres %> <%= user.apellidos %>
+            </span>
+            <a href="/auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-user-circle"></i>
+                Mi Perfil
+            </h1>
+            <p class="page-subtitle">Gestiona tu información personal y configuración de cuenta</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i>
+            <a href="/dashboard/student">Dashboard</a> / 
+            <span class="current">Mi Perfil</span>
+        </div>
+
+        <!-- Flash Messages -->
+        <% if (success && success.length > 0) { %>
+            <div class="flash-messages">
+                <% success.forEach(message => { %>
+                    <div class="flash-message flash-success">
+                        <i class="fas fa-check-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <% if (error && error.length > 0) { %>
+            <div class="flash-messages">
+                <% error.forEach(message => { %>
+                    <div class="flash-message flash-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <!-- Profile Container -->
+        <div class="profile-container">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <div class="profile-avatar">
+                    <div class="avatar-container">
+                        <div class="avatar">
+                            <%= user.nombres ? user.nombres.charAt(0).toUpperCase() : 'U' %><%= user.apellidos ? user.apellidos.charAt(0).toUpperCase() : '' %>
+                        </div>
+                        <button class="avatar-upload" onclick="document.getElementById('avatar-input').click()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="avatar-input" style="display: none;" accept="image/*">
+                    </div>
+                    <div class="profile-name"><%= user.nombres %> <%= user.apellidos %></div>
+                    <div class="profile-role">
+                        <i class="fas fa-user-graduate"></i>
+                        Estudiante
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Código</span>
+                        <span class="stat-value"><%= user.codigo || 'N/A' %></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Email</span>
+                        <span class="stat-value"><%= user.email %></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Estado</span>
+                        <span class="stat-value">
+                            <i class="fas fa-circle" style="color: #28a745; font-size: 0.7rem;"></i>
+                            Activo
+                        </span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Registro</span>
+                        <span class="stat-value">
+                            <%= user.fecha_creacion ? new Date(user.fecha_creacion).toLocaleDateString('es-ES') : 'N/A' %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="profile-main">
+                <form id="profileForm" action="/student/profile" method="POST">
+                    <!-- Edit Mode Indicator -->
+                    <div class="edit-mode" id="editModeIndicator" style="display: none;">
+                        <i class="fas fa-edit"></i>
+                        Modo de edición activado - Realiza los cambios necesarios y guarda
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div class="section-title">
+                        <i class="fas fa-user"></i>
+                        Información Personal
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Nombres *</label>
+                            <input type="text" name="nombres" class="form-input" 
+                                   value="<%= user.nombres || '' %>" 
+                                   disabled id="nombres">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Apellidos *</label>
+                            <input type="text" name="apellidos" class="form-input" 
+                                   value="<%= user.apellidos || '' %>" 
+                                   disabled id="apellidos">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Código de Estudiante</label>
+                            <input type="text" name="codigo" class="form-input" 
+                                   value="<%= user.codigo || '' %>" 
+                                   disabled id="codigo">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-input" 
+                                   value="<%= user.email || '' %>" 
+                                   disabled id="email">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" name="telefono" class="form-input" 
+                                   value="<%= user.telefono || '' %>" 
+                                   disabled id="telefono">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" name="fecha_nacimiento" class="form-input" 
+                                   value="<%= user.fecha_nacimiento ? user.fecha_nacimiento.toISOString().split('T')[0] : '' %>" 
+                                   disabled id="fecha_nacimiento">
+                        </div>
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="section-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        Información Académica
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Programa Académico</label>
+                            <input type="text" name="programa" class="form-input" 
+                                   value="<%= user.programa || 'Ingeniería de Sistemas' %>" 
+                                   disabled id="programa">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Semestre Actual</label>
+                            <input type="number" name="semestre" class="form-input" 
+                                   value="<%= user.semestre || '' %>" 
+                                   min="1" max="12" disabled id="semestre">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Año de Ingreso</label>
+                            <input type="number" name="ano_ingreso" class="form-input" 
+                                   value="<%= user.ano_ingreso || '' %>" 
+                                   min="2000" max="2030" disabled id="ano_ingreso">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Estado Académico</label>
+                            <select name="estado_academico" class="form-input" disabled id="estado_academico">
+                                <option value="activo" <%= user.estado_academico === 'activo' ? 'selected' : '' %>>Activo</option>
+                                <option value="inactivo" <%= user.estado_academico === 'inactivo' ? 'selected' : '' %>>Inactivo</option>
+                                <option value="graduado" <%= user.estado_academico === 'graduado' ? 'selected' : '' %>>Graduado</option>
+                                <option value="retirado" <%= user.estado_academico === 'retirado' ? 'selected' : '' %>>Retirado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        Información Adicional
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label class="form-label">Biografía / Intereses</label>
+                            <textarea name="biografia" class="form-input form-textarea" 
+                                      disabled id="biografia" 
+                                      placeholder="Cuéntanos sobre tus intereses académicos, proyectos personales, etc."><%= user.biografia || '' %></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" id="editBtn">
+                            <i class="fas fa-edit"></i>
+                            Editar Perfil
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveBtn" style="display: none;">
+                            <i class="fas fa-save"></i>
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Password Change Section -->
+                <div class="password-section">
+                    <div class="section-title">
+                        <i class="fas fa-lock"></i>
+                        Cambiar Contraseña
+                    </div>
+
+                    <div class="security-info">
+                        <i class="fas fa-shield-alt"></i>
+                        Por tu seguridad, te recomendamos cambiar tu contraseña regularmente y usar una contraseña fuerte.
+                    </div>
+
+                    <form id="passwordForm" action="/student/profile/password" method="POST">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Contraseña Actual *</label>
+                                <div class="password-toggle">
+                                    <input type="password" name="current_password" class="form-input" 
+                                           id="current_password" required>
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('current_password')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Nueva Contraseña *</label>
+                                <div class="password-toggle">
+                                    <input type="password" name="new_password" class="form-input" 
+                                           id="new_password" required minlength="6">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('new_password')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Confirmar Nueva Contraseña *</label>
+                                <div class="password-toggle">
+                                    <input type="password" name="confirm_password" class="form-input" 
+                                           id="confirm_password" required minlength="6">
+                                    <button type="button" class="password-toggle-btn" onclick="togglePassword('confirm_password')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i>
+                                Cambiar Contraseña
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isEditing = false;
+        const originalValues = {};
+
+        // Toggle edit mode
+        document.getElementById('editBtn').addEventListener('click', function() {
+            toggleEditMode(true);
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', function() {
+            restoreOriginalValues();
+            toggleEditMode(false);
+        });
+
+        function toggleEditMode(editing) {
+            isEditing = editing;
+            const inputs = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea');
+            const editBtn = document.getElementById('editBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const editModeIndicator = document.getElementById('editModeIndicator');
+
+            if (editing) {
+                // Store original values
+                inputs.forEach(input => {
+                    originalValues[input.name] = input.value;
+                    input.disabled = false;
+                });
+
+                editBtn.style.display = 'none';
+                cancelBtn.style.display = 'inline-flex';
+                saveBtn.style.display = 'inline-flex';
+                editModeIndicator.style.display = 'flex';
+            } else {
+                inputs.forEach(input => {
+                    input.disabled = true;
+                });
+
+                editBtn.style.display = 'inline-flex';
+                cancelBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                editModeIndicator.style.display = 'none';
+            }
+        }
+
+        function restoreOriginalValues() {
+            Object.keys(originalValues).forEach(name => {
+                const input = document.querySelector(`[name="${name}"]`);
+                if (input) {
+                    input.value = originalValues[name];
+                }
+            });
+        }
+
+        // Form submission
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.innerHTML;
+            
+            saveBtn.innerHTML = '<span class="spinner"></span> Guardando...';
+            saveBtn.disabled = true;
+
+            const formData = new FormData(this);
+            
+            fetch('/student/profile', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashMessage('Perfil actualizado exitosamente', 'success');
+                    toggleEditMode(false);
+                    
+                    // Update sidebar info
+                    const profileName = document.querySelector('.profile-name');
+                    const nombres = document.querySelector('[name="nombres"]').value;
+                    const apellidos = document.querySelector('[name="apellidos"]').value;
+                    profileName.textContent = `${nombres} ${apellidos}`;
+                    
+                    // Update avatar
+                    const avatar = document.querySelector('.avatar');
+                    avatar.textContent = nombres.charAt(0).toUpperCase() + apellidos.charAt(0).toUpperCase();
+                } else {
+                    showFlashMessage('Error al actualizar el perfil: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFlashMessage('Error al actualizar el perfil', 'error');
+            })
+            .finally(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            });
+        });
+
+        // Password form submission
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (newPassword !== confirmPassword) {
+                showFlashMessage('Las contraseñas no coinciden', 'error');
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = '<span class="spinner"></span> Cambiando...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(this);
+            
+            fetch('/student/profile/password', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashMessage('Contraseña cambiada exitosamente', 'success');
+                    this.reset();
+                } else {
+                    showFlashMessage('Error al cambiar la contraseña: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showFlashMessage('Error al cambiar la contraseña', 'error');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Password visibility toggle
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        // Avatar upload
+        document.getElementById('avatar-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('avatar', file);
+                
+                fetch('/student/profile/avatar', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showFlashMessage('Avatar actualizado exitosamente', 'success');
+                        // Here you would update the avatar display with the new image
+                    } else {
+                        showFlashMessage('Error al subir el avatar: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showFlashMessage('Error al subir el avatar', 'error');
+                });
+            }
+        });
+
+        // Flash message function
+        function showFlashMessage(message, type) {
+            const flashContainer = document.querySelector('.flash-messages') || createFlashContainer();
+            
+            const flashMessage = document.createElement('div');
+            flashMessage.className = `flash-message flash-${type}`;
+            flashMessage.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            flashContainer.appendChild(flashMessage);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                flashMessage.style.transition = 'all 0.5s ease';
+                flashMessage.style.opacity = '0';
+                flashMessage.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    flashMessage.remove();
+                }, 500);
+            }, 5000);
+        }
+
+        function createFlashContainer() {
+            const container = document.createElement('div');
+            container.className = 'flash-messages';
+            document.querySelector('.container').insertBefore(container, document.querySelector('.profile-container'));
+            return container;
+        }
+
+        // Auto-hide existing flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+
+        // Form validation
+        document.querySelectorAll('input[required]').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.style.borderColor = '#dc3545';
+                } else {
+                    this.style.borderColor = '#e9ecef';
+                }
+            });
+        });
+
+        // Email validation
+        document.getElementById('email').addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (this.value && !emailRegex.test(this.value)) {
+                this.style.borderColor = '#dc3545';
+                showFlashMessage('Por favor ingresa un email válido', 'error');
+            } else {
+                this.style.borderColor = '#e9ecef';
+            }
+        });
+    </script>
+</body>
+</html>

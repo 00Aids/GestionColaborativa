@@ -8,6 +8,7 @@ require('dotenv').config();
 
 // Importar middlewares
 const AuthMiddleware = require('./src/middlewares/auth');
+const DashboardHelper = require('./src/helpers/dashboardHelper');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,6 +49,9 @@ app.use(flash());
 // Middleware global para agregar usuario a las vistas
 app.use(AuthMiddleware.addUserToViews);
 
+// Middleware para agregar helper de dashboard a las vistas
+app.use(DashboardHelper.addToLocals);
+
 // Agregar antes de las rutas
 app.use((req, res, next) => {
   res.setHeader(
@@ -62,7 +66,8 @@ app.use('/', require('./src/routes/index'));
 app.use('/auth', require('./src/routes/auth'));
 app.use('/dashboard', require('./src/routes/dashboard'));
 app.use('/projects', require('./src/routes/projects'));
-app.use('/admin', require('./src/routes/admin')); // ← Nueva línea
+app.use('/admin', require('./src/routes/admin'));
+app.use('/student', require('./src/routes/student')); // ← Nueva línea para estudiantes
 
 // Manejo de errores 404
 app.use((req, res) => {

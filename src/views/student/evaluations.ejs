@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Evaluaciones - Sistema de Gestión</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb .current {
+            color: white;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon.excellent { color: #28a745; }
+        .stat-icon.good { color: #17a2b8; }
+        .stat-icon.average { color: #ffc107; }
+        .stat-icon.pending { color: #6c757d; }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .filters-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .evaluations-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .evaluation-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .evaluation-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .evaluation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .evaluation-card.excellent::before {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .evaluation-card.good::before {
+            background: linear-gradient(90deg, #17a2b8, #20c997);
+        }
+
+        .evaluation-card.average::before {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
+        }
+
+        .evaluation-card.poor::before {
+            background: linear-gradient(90deg, #dc3545, #e74c3c);
+        }
+
+        .evaluation-card.pending::before {
+            background: linear-gradient(90deg, #6c757d, #adb5bd);
+        }
+
+        .evaluation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .evaluation-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .grade-display {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .grade-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .grade-number.excellent { color: #28a745; }
+        .grade-number.good { color: #17a2b8; }
+        .grade-number.average { color: #ffc107; }
+        .grade-number.poor { color: #dc3545; }
+        .grade-number.pending { color: #6c757d; }
+
+        .grade-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .grade-label.excellent { color: #28a745; }
+        .grade-label.good { color: #17a2b8; }
+        .grade-label.average { color: #ffc107; }
+        .grade-label.poor { color: #dc3545; }
+        .grade-label.pending { color: #6c757d; }
+
+        .evaluation-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meta-item i {
+            color: #667eea;
+            width: 16px;
+        }
+
+        .criteria-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .criteria-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .criteria-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .criteria-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .criteria-name {
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .criteria-score {
+            font-weight: 700;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .criteria-score.excellent { background: #d4edda; color: #155724; }
+        .criteria-score.good { background: #d1ecf1; color: #0c5460; }
+        .criteria-score.average { background: #fff3cd; color: #856404; }
+        .criteria-score.poor { background: #f8d7da; color: #721c24; }
+
+        .feedback-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feedback-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feedback-content {
+            color: #666;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .no-feedback {
+            color: #999;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .evaluation-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-description {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .flash-messages {
+            margin-bottom: 2rem;
+        }
+
+        .flash-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+
+        .flash-error {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        .pending-badge {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .evaluation-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .criteria-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .evaluation-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+
+            .evaluation-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .grade-display {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo">SG</div>
+            <div>
+                <h1 style="font-size: 1.2rem; font-weight: 700; color: #333;">Sistema de Gestión</h1>
+                <p style="font-size: 0.9rem; color: #666; margin: 0;">Proyectos de Grado</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <span class="user-name">
+                <i class="fas fa-user-graduate"></i>
+                <%= user.nombres %> <%= user.apellidos %>
+            </span>
+            <a href="/auth/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line"></i>
+                Mis Evaluaciones
+            </h1>
+            <p class="page-subtitle">Revisa tus calificaciones y feedback recibido</p>
+        </div>
+
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <i class="fas fa-home"></i>
+            <a href="/dashboard/student">Dashboard</a> / 
+            <span class="current">Mis Evaluaciones</span>
+        </div>
+
+        <!-- Flash Messages -->
+        <% if (success && success.length > 0) { %>
+            <div class="flash-messages">
+                <% success.forEach(message => { %>
+                    <div class="flash-message flash-success">
+                        <i class="fas fa-check-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <% if (error && error.length > 0) { %>
+            <div class="flash-messages">
+                <% error.forEach(message => { %>
+                    <div class="flash-message flash-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <%= message %>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <!-- Statistics -->
+        <% if (myEvaluations && myEvaluations.length > 0) { %>
+            <div class="stats-grid">
+                <% 
+                    const completedEvaluations = myEvaluations.filter(e => e.calificacion_total !== null);
+                    const pendingEvaluations = myEvaluations.filter(e => e.calificacion_total === null);
+                    const averageGrade = completedEvaluations.length > 0 ? 
+                        (completedEvaluations.reduce((sum, e) => sum + parseFloat(e.calificacion_total), 0) / completedEvaluations.length).toFixed(1) : 0;
+                    const excellentCount = completedEvaluations.filter(e => parseFloat(e.calificacion_total) >= 4.5).length;
+                    const goodCount = completedEvaluations.filter(e => parseFloat(e.calificacion_total) >= 3.5 && parseFloat(e.calificacion_total) < 4.5).length;
+                %>
+                
+                <div class="stat-card">
+                    <div class="stat-icon excellent">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-number"><%= averageGrade %></div>
+                    <div class="stat-label">Promedio General</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon good">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-number"><%= excellentCount %></div>
+                    <div class="stat-label">Excelentes (≥4.5)</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon average">
+                        <i class="fas fa-thumbs-up"></i>
+                    </div>
+                    <div class="stat-number"><%= goodCount %></div>
+                    <div class="stat-label">Buenas (3.5-4.4)</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number"><%= pendingEvaluations.length %></div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Estado</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Todos los estados</option>
+                        <option value="completada">Completada</option>
+                        <option value="pendiente">Pendiente</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Proyecto</label>
+                    <select class="filter-select" id="projectFilter">
+                        <option value="">Todos los proyectos</option>
+                        <!-- Se llenarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Evaluador</label>
+                    <select class="filter-select" id="evaluatorFilter">
+                        <option value="">Todos los evaluadores</option>
+                        <!-- Se llenarán dinámicamente -->
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Calificación</label>
+                    <select class="filter-select" id="gradeFilter">
+                        <option value="">Todas las calificaciones</option>
+                        <option value="excellent">Excelente (≥4.5)</option>
+                        <option value="good">Buena (3.5-4.4)</option>
+                        <option value="average">Regular (2.5-3.4)</option>
+                        <option value="poor">Deficiente (<2.5)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evaluations Grid -->
+        <% if (myEvaluations && myEvaluations.length > 0) { %>
+            <div class="evaluations-grid">
+                <% myEvaluations.forEach(evaluation => { 
+                    const grade = evaluation.calificacion_total ? parseFloat(evaluation.calificacion_total) : null;
+                    let gradeClass = 'pending';
+                    let gradeLabel = 'PENDIENTE';
+                    
+                    if (grade !== null) {
+                        if (grade >= 4.5) {
+                            gradeClass = 'excellent';
+                            gradeLabel = 'EXCELENTE';
+                        } else if (grade >= 3.5) {
+                            gradeClass = 'good';
+                            gradeLabel = 'BUENA';
+                        } else if (grade >= 2.5) {
+                            gradeClass = 'average';
+                            gradeLabel = 'REGULAR';
+                        } else {
+                            gradeClass = 'poor';
+                            gradeLabel = 'DEFICIENTE';
+                        }
+                    }
+
+                    const criteria = evaluation.calificaciones ? JSON.parse(evaluation.calificaciones) : {};
+                %>
+                    <div class="evaluation-card <%= gradeClass %>" 
+                         data-status="<%= grade !== null ? 'completada' : 'pendiente' %>" 
+                         data-project="<%= evaluation.proyecto_titulo %>"
+                         data-evaluator="<%= evaluation.evaluador_nombre %>"
+                         data-grade="<%= gradeClass %>">
+                        
+                        <div class="evaluation-header">
+                            <div>
+                                <h3 class="evaluation-title"><%= evaluation.entregable_titulo %></h3>
+                            </div>
+                            <div class="grade-display">
+                                <div class="grade-number <%= gradeClass %>">
+                                    <%= grade !== null ? grade.toFixed(1) : '?' %>
+                                </div>
+                                <div class="grade-label <%= gradeClass %>">
+                                    <%= gradeLabel %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="evaluation-meta">
+                            <div class="meta-item">
+                                <i class="fas fa-project-diagram"></i>
+                                <span><%= evaluation.proyecto_titulo || 'Sin proyecto' %></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-user-tie"></i>
+                                <span><%= evaluation.evaluador_nombre || 'Sin evaluador' %></span>
+                            </div>
+                            <div class="meta-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>
+                                    <%= evaluation.fecha_evaluacion ? 
+                                        new Date(evaluation.fecha_evaluacion).toLocaleDateString('es-ES') : 
+                                        'Sin fecha' %>
+                                </span>
+                            </div>
+                            <% if (evaluation.entregable_fecha_entrega) { %>
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>
+                                        Entregado: <%= new Date(evaluation.entregable_fecha_entrega).toLocaleDateString('es-ES') %>
+                                    </span>
+                                </div>
+                            <% } %>
+                        </div>
+
+                        <% if (grade === null) { %>
+                            <div class="pending-badge">
+                                <i class="fas fa-hourglass-half"></i>
+                                Evaluación pendiente
+                            </div>
+                        <% } else { %>
+                            <!-- Criteria Section -->
+                            <% if (Object.keys(criteria).length > 0) { %>
+                                <div class="criteria-section">
+                                    <div class="criteria-title">
+                                        <i class="fas fa-list-check"></i>
+                                        Criterios de Evaluación
+                                    </div>
+                                    <div class="criteria-grid">
+                                        <% Object.entries(criteria).forEach(([criterio, calificacion]) => { 
+                                            const score = parseFloat(calificacion);
+                                            let scoreClass = 'poor';
+                                            if (score >= 4.5) scoreClass = 'excellent';
+                                            else if (score >= 3.5) scoreClass = 'good';
+                                            else if (score >= 2.5) scoreClass = 'average';
+                                        %>
+                                            <div class="criteria-item">
+                                                <span class="criteria-name"><%= criterio %></span>
+                                                <span class="criteria-score <%= scoreClass %>">
+                                                    <%= score.toFixed(1) %>
+                                                </span>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            <% } %>
+
+                            <!-- Feedback Section -->
+                            <div class="feedback-section">
+                                <div class="feedback-title">
+                                    <i class="fas fa-comment-dots"></i>
+                                    Comentarios del Evaluador
+                                </div>
+                                <% if (evaluation.comentarios && evaluation.comentarios.trim()) { %>
+                                    <div class="feedback-content">
+                                        "<%= evaluation.comentarios %>"
+                                    </div>
+                                <% } else { %>
+                                    <div class="no-feedback">
+                                        No se proporcionaron comentarios adicionales.
+                                    </div>
+                                <% } %>
+                            </div>
+                        <% } %>
+
+                        <div class="evaluation-actions">
+                            <a href="/evaluations/<%= evaluation.id %>" class="btn btn-outline">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalles
+                            </a>
+                            <% if (evaluation.entregable_id) { %>
+                                <a href="/student/deliverables/<%= evaluation.entregable_id %>" class="btn btn-primary">
+                                    <i class="fas fa-file-alt"></i>
+                                    Ver Entregable
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="empty-title">No tienes evaluaciones</h2>
+                <p class="empty-description">
+                    Aún no tienes evaluaciones registradas. Las evaluaciones aparecerán aquí cuando 
+                    tus entregables sean evaluados por los profesores.
+                </p>
+                <a href="/student/deliverables" class="btn btn-primary">
+                    <i class="fas fa-tasks"></i>
+                    Ver Mis Entregables
+                </a>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusFilter = document.getElementById('statusFilter');
+            const projectFilter = document.getElementById('projectFilter');
+            const evaluatorFilter = document.getElementById('evaluatorFilter');
+            const gradeFilter = document.getElementById('gradeFilter');
+            const cards = document.querySelectorAll('.evaluation-card');
+
+            // Llenar filtros dinámicamente
+            const projects = new Set();
+            const evaluators = new Set();
+
+            cards.forEach(card => {
+                const project = card.dataset.project;
+                const evaluator = card.dataset.evaluator;
+                
+                if (project && project !== 'Sin proyecto') projects.add(project);
+                if (evaluator && evaluator !== 'Sin evaluador') evaluators.add(evaluator);
+            });
+
+            projects.forEach(project => {
+                const option = document.createElement('option');
+                option.value = project;
+                option.textContent = project;
+                projectFilter.appendChild(option);
+            });
+
+            evaluators.forEach(evaluator => {
+                const option = document.createElement('option');
+                option.value = evaluator;
+                option.textContent = evaluator;
+                evaluatorFilter.appendChild(option);
+            });
+
+            // Aplicar filtros
+            function applyFilters() {
+                const statusValue = statusFilter.value;
+                const projectValue = projectFilter.value;
+                const evaluatorValue = evaluatorFilter.value;
+                const gradeValue = gradeFilter.value;
+
+                cards.forEach(card => {
+                    const cardStatus = card.dataset.status;
+                    const cardProject = card.dataset.project;
+                    const cardEvaluator = card.dataset.evaluator;
+                    const cardGrade = card.dataset.grade;
+
+                    const statusMatch = !statusValue || cardStatus === statusValue;
+                    const projectMatch = !projectValue || cardProject === projectValue;
+                    const evaluatorMatch = !evaluatorValue || cardEvaluator === evaluatorValue;
+                    const gradeMatch = !gradeValue || cardGrade === gradeValue;
+
+                    if (statusMatch && projectMatch && evaluatorMatch && gradeMatch) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            statusFilter.addEventListener('change', applyFilters);
+            projectFilter.addEventListener('change', applyFilters);
+            evaluatorFilter.addEventListener('change', applyFilters);
+            gradeFilter.addEventListener('change', applyFilters);
+
+            // Animaciones de entrada
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Auto-hide flash messages
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                setTimeout(() => {
+                    message.style.transition = 'all 0.5s ease';
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 500);
+                }, 5000);
+            });
+
+            // Tooltip para criterios
+            const criteriaItems = document.querySelectorAll('.criteria-item');
+            criteriaItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    const score = this.querySelector('.criteria-score').textContent;
+                    const name = this.querySelector('.criteria-name').textContent;
+                    
+                    // Crear tooltip simple
+                    const tooltip = document.createElement('div');
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: #333;
+                        color: white;
+                        padding: 0.5rem;
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        z-index: 1000;
+                        pointer-events: none;
+                        white-space: nowrap;
+                    `;
+                    tooltip.textContent = `${name}: ${score}/5.0`;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+                    
+                    this._tooltip = tooltip;
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    if (this._tooltip) {
+                        this._tooltip.remove();
+                        this._tooltip = null;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

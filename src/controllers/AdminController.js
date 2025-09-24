@@ -4,6 +4,7 @@ const Project = require('../models/Project');
 const Deliverable = require('../models/Deliverable');
 const BaseModel = require('../models/BaseModel');
 const Task = require('../models/Task');
+const DashboardHelper = require('../helpers/dashboardHelper');
 
 class AdminController {
   constructor() {
@@ -24,7 +25,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener todos los usuarios con información de rol
@@ -78,7 +79,7 @@ class AdminController {
       if (!user || user.rol_nombre !== 'Administrador General') {
         console.log('ERROR: Usuario no autorizado');
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
   
       console.log('=== Obteniendo todos los roles ===');
@@ -446,7 +447,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener parámetros de filtros de la URL
@@ -557,7 +558,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener datos necesarios para el formulario
@@ -597,7 +598,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener todos los roles disponibles
@@ -893,7 +894,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener estadísticas de usuarios
@@ -1028,7 +1029,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
   
       // Obtener configuraciones actuales del sistema
@@ -1140,7 +1141,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener proyectos activos para el selector
@@ -1336,7 +1337,7 @@ class AdminController {
       // Verificar que el usuario existe y es administrador
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       // Obtener todos los proyectos para el selector
@@ -1528,7 +1529,7 @@ class AdminController {
       // Verificar permisos
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       const { projectId } = req.params;
@@ -1576,7 +1577,7 @@ class AdminController {
       // Verificar permisos
       if (!user || user.rol_nombre !== 'Administrador General') {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
-        return res.redirect('/dashboard');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
       const { projectId } = req.params;
