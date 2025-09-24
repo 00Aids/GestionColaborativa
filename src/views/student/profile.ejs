@@ -474,6 +474,95 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Password Strength Indicator */
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .strength-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-weak {
+            width: 25%;
+            background-color: #dc3545;
+        }
+
+        .strength-fair {
+            width: 50%;
+            background-color: #ffc107;
+        }
+
+        .strength-good {
+            width: 75%;
+            background-color: #fd7e14;
+        }
+
+        .strength-strong {
+            width: 100%;
+            background-color: #28a745;
+        }
+
+        .strength-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .text-weak { color: #dc3545; }
+        .text-fair { color: #ffc107; }
+        .text-good { color: #fd7e14; }
+        .text-strong { color: #28a745; }
+
+        /* Password Requirements */
+        .password-requirements {
+            margin-top: 0.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25rem;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #6c757d;
+            transition: color 0.3s ease;
+        }
+
+        .requirement i {
+            font-size: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .requirement.valid {
+            color: #28a745;
+        }
+
+        .requirement.valid i {
+            color: #28a745;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+
+        .text-success {
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -562,7 +651,7 @@
                 <div class="profile-stats">
                     <div class="stat-item">
                         <span class="stat-label">Código</span>
-                        <span class="stat-value"><%= user.codigo || 'N/A' %></span>
+                        <span class="stat-value"><%= user.codigo_usuario || 'N/A' %></span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Email</span>
@@ -586,7 +675,7 @@
 
             <!-- Main Content -->
             <div class="profile-main">
-                <form id="profileForm" action="/student/profile" method="POST">
+                <form id="profileForm" action="/student/profile/update" method="POST">
                     <!-- Edit Mode Indicator -->
                     <div class="edit-mode" id="editModeIndicator" style="display: none;">
                         <i class="fas fa-edit"></i>
@@ -616,9 +705,9 @@
 
                         <div class="form-group">
                             <label class="form-label">Código de Estudiante</label>
-                            <input type="text" name="codigo" class="form-input" 
-                                   value="<%= user.codigo || '' %>" 
-                                   disabled id="codigo">
+                            <input type="text" name="codigo_usuario" class="form-input" 
+                                   value="<%= user.codigo_usuario || '' %>" 
+                                   disabled id="codigo_usuario">
                         </div>
 
                         <div class="form-group">
@@ -691,9 +780,12 @@
                     <div class="form-grid">
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label class="form-label">Biografía / Intereses</label>
+                            <small class="form-help" style="color: #6c757d; font-size: 0.875rem; margin-bottom: 0.5rem; display: block;">
+                                <i class="fas fa-info-circle"></i> Este campo se guarda automáticamente mientras escribes
+                            </small>
                             <textarea name="biografia" class="form-input form-textarea" 
-                                      disabled id="biografia" 
-                                      placeholder="Cuéntanos sobre tus intereses académicos, proyectos personales, etc."><%= user.biografia || '' %></textarea>
+                                      id="biografia" 
+                                      placeholder="Cuéntanos sobre tus intereses académicos, proyectos personales, etc."><%= userDetails.biografia || '' %></textarea>
                         </div>
                     </div>
 
@@ -748,6 +840,26 @@
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
+                                <div class="password-strength" id="password-strength" style="display: none;">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="strength-fill"></div>
+                                    </div>
+                                    <div class="strength-text" id="strength-text"></div>
+                                </div>
+                                <div class="password-requirements">
+                                    <small class="requirement" id="req-length">
+                                        <i class="fas fa-times text-danger"></i> Al menos 6 caracteres
+                                    </small>
+                                    <small class="requirement" id="req-uppercase">
+                                        <i class="fas fa-times text-danger"></i> Una letra mayúscula
+                                    </small>
+                                    <small class="requirement" id="req-lowercase">
+                                        <i class="fas fa-times text-danger"></i> Una letra minúscula
+                                    </small>
+                                    <small class="requirement" id="req-number">
+                                        <i class="fas fa-times text-danger"></i> Un número
+                                    </small>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -780,6 +892,7 @@
 
         // Toggle edit mode
         document.getElementById('editBtn').addEventListener('click', function() {
+            console.log('✏️ Botón editar clickeado - activando modo edición');
             toggleEditMode(true);
         });
 
@@ -789,18 +902,30 @@
         });
 
         function toggleEditMode(editing) {
+            console.log('🔄 toggleEditMode llamado con editing =', editing);
             isEditing = editing;
             const inputs = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea');
             const editBtn = document.getElementById('editBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const saveBtn = document.getElementById('saveBtn');
             const editModeIndicator = document.getElementById('editModeIndicator');
+            
+            console.log('🔍 Elementos encontrados:', {
+                inputs: inputs.length,
+                editBtn: !!editBtn,
+                cancelBtn: !!cancelBtn,
+                saveBtn: !!saveBtn,
+                editModeIndicator: !!editModeIndicator
+            });
 
             if (editing) {
                 // Store original values
                 inputs.forEach(input => {
                     originalValues[input.name] = input.value;
-                    input.disabled = false;
+                    // Enable all inputs except codigo_usuario (always disabled)
+                    if (input.id !== 'codigo_usuario') {
+                        input.disabled = false;
+                    }
                 });
 
                 editBtn.style.display = 'none';
@@ -809,7 +934,11 @@
                 editModeIndicator.style.display = 'flex';
             } else {
                 inputs.forEach(input => {
-                    input.disabled = true;
+                    // Keep biografia textarea always enabled for auto-save
+                    // Keep codigo_usuario always disabled (non-editable)
+                    if (input.id !== 'biografia') {
+                        input.disabled = true;
+                    }
                 });
 
                 editBtn.style.display = 'inline-flex';
@@ -830,18 +959,21 @@
 
         // Form submission
         document.getElementById('profileForm').addEventListener('submit', function(e) {
+            console.log('🔄 Formulario enviado - evento capturado');
             e.preventDefault();
             
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.innerHTML;
+            
+            console.log('📝 Datos del formulario:', new FormData(this));
             
             saveBtn.innerHTML = '<span class="spinner"></span> Guardando...';
             saveBtn.disabled = true;
 
             const formData = new FormData(this);
             
-            fetch('/student/profile', {
-                method: 'POST',
+            fetch('/student/profile/update', {
+                method: 'PUT',
                 body: formData
             })
             .then(response => response.json())
@@ -874,14 +1006,50 @@
         });
 
         // Password form submission
+        console.log('📋 Registrando evento de envío del formulario de contraseña');
         document.getElementById('passwordForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('🔄 Formulario de contraseña enviado');
             
+            const currentPassword = document.getElementById('current_password').value;
             const newPassword = document.getElementById('new_password').value;
             const confirmPassword = document.getElementById('confirm_password').value;
             
+            console.log('📝 Valores del formulario:', {
+                currentPassword: currentPassword ? '***' : 'vacío',
+                newPassword: newPassword ? '***' : 'vacío',
+                confirmPassword: confirmPassword ? '***' : 'vacío'
+            });
+            
+            // Validaciones del frontend
+            if (!currentPassword.trim()) {
+                showFlashMessage('La contraseña actual es obligatoria', 'error');
+                return;
+            }
+            
+            if (!newPassword.trim()) {
+                showFlashMessage('La nueva contraseña es obligatoria', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                showFlashMessage('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
             if (newPassword !== confirmPassword) {
                 showFlashMessage('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            if (currentPassword === newPassword) {
+                showFlashMessage('La nueva contraseña debe ser diferente a la actual', 'error');
+                return;
+            }
+            
+            // Validar fortaleza de la contraseña
+            if (!isStrongPassword(newPassword)) {
+                showFlashMessage('La contraseña debe contener al menos una letra mayúscula, una minúscula y un número', 'error');
                 return;
             }
 
@@ -891,11 +1059,20 @@
             submitBtn.innerHTML = '<span class="spinner"></span> Cambiando...';
             submitBtn.disabled = true;
 
-            const formData = new FormData(this);
+            console.log('🚀 Enviando petición al servidor...');
+            
+            const requestData = {
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            };
             
             fetch('/student/profile/password', {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
             })
             .then(response => response.json())
             .then(data => {
@@ -915,6 +1092,159 @@
                 submitBtn.disabled = false;
             });
         });
+
+        // Auto-save functionality for additional information (biografia)
+        let biografiaTimeout;
+        const biografiaTextarea = document.getElementById('biografia');
+        
+        console.log('📝 Configurando guardado automático para información adicional');
+        
+        if (biografiaTextarea) {
+            biografiaTextarea.addEventListener('input', function() {
+                const biografia = this.value;
+                
+                // Clear previous timeout
+                if (biografiaTimeout) {
+                    clearTimeout(biografiaTimeout);
+                }
+                
+                // Set new timeout for auto-save (debounce of 2 seconds)
+                biografiaTimeout = setTimeout(() => {
+                    console.log('💾 Guardando información adicional automáticamente...');
+                    saveAdditionalInfo(biografia);
+                }, 2000);
+            });
+        }
+        
+        function saveAdditionalInfo(biografia) {
+            const requestData = {
+                biografia: biografia
+            };
+            
+            console.log('🚀 Enviando información adicional al servidor:', requestData);
+            
+            fetch('/student/profile/additional-info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                // Verificar si la respuesta es JSON válida
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('La respuesta del servidor no es JSON válida. Posible problema de autenticación.');
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Información adicional guardada exitosamente');
+                    showFlashMessage('Información adicional guardada automáticamente', 'success');
+                } else {
+                    console.error('❌ Error al guardar información adicional:', data.message);
+                    showFlashMessage('Error al guardar información adicional: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error de red al guardar información adicional:', error);
+                if (error.message.includes('JSON válida')) {
+                    showFlashMessage('Error de autenticación. Por favor, recarga la página e inicia sesión nuevamente.', 'error');
+                } else {
+                    showFlashMessage('Error de conexión al guardar información adicional', 'error');
+                }
+            });
+        }
+        
+        // Función para validar fortaleza de contraseña
+        function isStrongPassword(password) {
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            return hasUpperCase && hasLowerCase && hasNumbers;
+        }
+
+        // Password strength indicator
+        document.getElementById('new_password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthIndicator = document.getElementById('password-strength');
+            const strengthFill = document.getElementById('strength-fill');
+            const strengthText = document.getElementById('strength-text');
+            
+            if (password.length === 0) {
+                strengthIndicator.style.display = 'none';
+                return;
+            }
+            
+            strengthIndicator.style.display = 'block';
+            
+            // Check requirements
+            const requirements = {
+                length: password.length >= 6,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /\d/.test(password)
+            };
+            
+            // Update requirement indicators
+            updateRequirement('req-length', requirements.length);
+            updateRequirement('req-uppercase', requirements.uppercase);
+            updateRequirement('req-lowercase', requirements.lowercase);
+            updateRequirement('req-number', requirements.number);
+            
+            // Calculate strength
+            const score = Object.values(requirements).filter(Boolean).length;
+            
+            // Remove all strength classes
+            strengthFill.className = 'strength-fill';
+            strengthText.className = 'strength-text';
+            
+            switch(score) {
+                case 1:
+                    strengthFill.classList.add('strength-weak');
+                    strengthText.classList.add('text-weak');
+                    strengthText.textContent = 'Muy débil';
+                    break;
+                case 2:
+                    strengthFill.classList.add('strength-fair');
+                    strengthText.classList.add('text-fair');
+                    strengthText.textContent = 'Débil';
+                    break;
+                case 3:
+                    strengthFill.classList.add('strength-good');
+                    strengthText.classList.add('text-good');
+                    strengthText.textContent = 'Buena';
+                    break;
+                case 4:
+                    strengthFill.classList.add('strength-strong');
+                    strengthText.classList.add('text-strong');
+                    strengthText.textContent = 'Fuerte';
+                    break;
+                default:
+                    strengthText.textContent = '';
+            }
+        });
+        
+        function updateRequirement(elementId, isValid) {
+            const element = document.getElementById(elementId);
+            const icon = element.querySelector('i');
+            
+            if (isValid) {
+                element.classList.add('valid');
+                icon.className = 'fas fa-check text-success';
+            } else {
+                element.classList.remove('valid');
+                icon.className = 'fas fa-times text-danger';
+            }
+        }
 
         // Password visibility toggle
         function togglePassword(inputId) {
@@ -1025,6 +1355,47 @@
                 this.style.borderColor = '#e9ecef';
             }
         });
+
+        // DEBUG: Agregar listener adicional para debuggear
+        console.log('🔧 Agregando listener de debug...');
+        
+        // Verificar que el formulario existe
+        const debugForm = document.getElementById('profileForm');
+        console.log('🔍 Formulario encontrado:', !!debugForm);
+        
+        if (debugForm) {
+            // Agregar listener directo
+            debugForm.addEventListener('submit', function(e) {
+                console.log('🚨 DEBUG: Submit event capturado!');
+                console.log('🚨 DEBUG: Event target:', e.target);
+                console.log('🚨 DEBUG: Form data:', new FormData(this));
+            });
+            
+            // Verificar botón de guardar
+            const debugSaveBtn = document.getElementById('saveBtn');
+            console.log('🔍 Botón guardar encontrado:', !!debugSaveBtn);
+            
+            if (debugSaveBtn) {
+                debugSaveBtn.addEventListener('click', function(e) {
+                    console.log('🚨 DEBUG: Save button clicked!');
+                    console.log('🚨 DEBUG: Button type:', this.type);
+                    console.log('🚨 DEBUG: Form:', this.form);
+                });
+            }
+        }
+        
+        // Verificar después de un delay
+        setTimeout(() => {
+            const delayedForm = document.getElementById('profileForm');
+            const delayedSaveBtn = document.getElementById('saveBtn');
+            console.log('🕐 DELAYED CHECK - Form:', !!delayedForm);
+            console.log('🕐 DELAYED CHECK - Save button:', !!delayedSaveBtn);
+            
+            if (delayedSaveBtn) {
+                console.log('🕐 DELAYED CHECK - Save button display:', delayedSaveBtn.style.display);
+                console.log('🕐 DELAYED CHECK - Save button disabled:', delayedSaveBtn.disabled);
+            }
+        }, 2000);
     </script>
 </body>
 </html>

@@ -927,26 +927,195 @@ class DashboardController {
   // Actualizar perfil del estudiante
   async updateStudentProfile(req, res) {
     try {
-      const user = req.session.user;
-      const { nombres, apellidos, email, telefono } = req.body;
+      console.log('🔄 updateStudentProfile - Petición recibida');
+      console.log('📝 Body recibido:', req.body);
+      console.log('👤 Usuario en sesión:', req.session.user?.email);
       
-      // Actualizar información del usuario
-      await this.userModel.update(user.id, {
+      const user = req.session.user;
+      const { nombres, apellidos, email, telefono, fecha_nacimiento } = req.body;
+      
+      // Validar campos requeridos
+      if (!nombres || !apellidos || !email) {
+        return res.json({
+          success: false,
+          message: 'Nombres, apellidos y email son campos obligatorios'
+        });
+      }
+      
+      // Preparar datos para actualizar
+      const updateData = {
         nombres,
         apellidos,
         email,
         telefono
-      });
+      };
+      
+      // Agregar fecha_nacimiento solo si se proporciona
+      if (fecha_nacimiento) {
+        updateData.fecha_nacimiento = fecha_nacimiento;
+      }
+      
+      // Actualizar información del usuario
+      await this.userModel.update(user.id, updateData);
       
       // Actualizar sesión
-      req.session.user = { ...user, nombres, apellidos, email, telefono };
+      req.session.user = { ...user, nombres, apellidos, email, telefono, fecha_nacimiento };
       
-      req.flash('success', 'Perfil actualizado exitosamente');
-      res.redirect('/student/profile');
+      res.json({
+        success: true,
+        message: 'Perfil actualizado exitosamente'
+      });
     } catch (error) {
       console.error('Error in updateStudentProfile:', error);
-      req.flash('error', 'Error al actualizar el perfil');
-      res.redirect('/student/profile');
+      res.json({
+        success: false,
+        message: 'Error al actualizar el perfil'
+      });
+    }
+  }
+
+  // Cambiar contraseña del estudiante
+  async changeStudentPassword(req, res) {
+    try {
+      console.log('🔄 Iniciando cambio de contraseña...');
+      console.log('📝 Body recibido:', req.body);
+      
+      const user = req.session.user;
+      const { current_password, new_password, confirm_password } = req.body;
+
+      // Validar que se proporcionen todos los campos
+      if (!current_password || !new_password || !confirm_password) {
+        return res.json({
+          success: false,
+          message: 'Todos los campos son obligatorios'
+        });
+      }
+
+      // Validar que las nuevas contraseñas coincidan
+      if (new_password !== confirm_password) {
+        return res.json({
+          success: false,
+          message: 'Las contraseñas nuevas no coinciden'
+        });
+      }
+
+      // Validar longitud mínima de la nueva contraseña
+      if (new_password.length < 6) {
+        return res.json({
+          success: false,
+          message: 'La nueva contraseña debe tener al menos 6 caracteres'
+        });
+      }
+
+      // Obtener información completa del usuario
+      const userDetails = await this.userModel.findById(user.id);
+      console.log('👤 UserDetails obtenido:', userDetails ? 'Sí' : 'No');
+      console.log('🔑 Password_hash field exists:', userDetails && userDetails.password_hash ? 'Sí' : 'No');
+      console.log('🔑 Password_hash length:', userDetails && userDetails.password_hash ? userDetails.password_hash.length : 'N/A');
+      console.log('📝 Current password received:', current_password ? 'Sí' : 'No');
+      
+      if (!userDetails) {
+        return res.json({
+          success: false,
+          message: 'Usuario no encontrado'
+        });
+      }
+
+      if (!userDetails.password_hash) {
+        console.log('❌ Error: userDetails.password_hash es null/undefined');
+        return res.json({
+          success: false,
+          message: 'Error interno: contraseña no encontrada'
+        });
+      }
+
+      // Verificar la contraseña actual
+      const bcrypt = require('bcrypt');
+      console.log('🔍 Comparando contraseñas...');
+      const isCurrentPasswordValid = await bcrypt.compare(current_password, userDetails.password_hash);
+      
+      if (!isCurrentPasswordValid) {
+        return res.json({
+          success: false,
+          message: 'La contraseña actual es incorrecta'
+        });
+      }
+
+      // Verificar que la nueva contraseña sea diferente a la actual
+      const isSamePassword = await bcrypt.compare(new_password, userDetails.password_hash);
+      if (isSamePassword) {
+        return res.json({
+          success: false,
+          message: 'La nueva contraseña debe ser diferente a la actual'
+        });
+      }
+
+      // Encriptar la nueva contraseña
+      const hashedNewPassword = await bcrypt.hash(new_password, 10);
+
+      // Actualizar la contraseña en la base de datos
+      await this.userModel.update(user.id, {
+        password_hash: hashedNewPassword
+      });
+
+      console.log('✅ Contraseña actualizada exitosamente en la base de datos');
+
+      // Respuesta exitosa
+      res.json({
+        success: true,
+        message: 'Contraseña cambiada exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error in changeStudentPassword:', error);
+      res.json({
+        success: false,
+        message: 'Error interno del servidor al cambiar la contraseña'
+      });
+    }
+  }
+
+  // Actualizar información adicional del estudiante
+  async updateAdditionalInfo(req, res) {
+    try {
+      const user = req.session.user;
+      const { biografia } = req.body;
+
+      console.log('📝 Actualizando información adicional para usuario:', user.id);
+      console.log('📄 Nueva biografía:', biografia);
+
+      // Validar que el usuario esté autenticado
+      if (!user || !user.id) {
+        return res.json({
+          success: false,
+          message: 'Usuario no autenticado'
+        });
+      }
+
+      // Validar entrada
+      if (biografia === undefined || biografia === null) {
+        return res.json({
+          success: false,
+          message: 'La biografía es requerida'
+        });
+      }
+
+      // Actualizar información adicional en la base de datos
+      await this.userModel.update(user.id, { biografia: biografia });
+
+      console.log('✅ Información adicional actualizada exitosamente en la base de datos');
+
+      res.json({
+        success: true,
+        message: 'Información adicional actualizada exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error in updateAdditionalInfo:', error);
+      res.json({
+        success: false,
+        message: 'Error interno del servidor al actualizar la información adicional'
+      });
     }
   }
 }
