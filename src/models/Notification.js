@@ -101,6 +101,29 @@ class Notification extends BaseModel {
         }
     }
 
+    // Obtener todas las notificaciones de un usuario
+    async findByUser(userId, limit = null) {
+        try {
+            let query = `
+                SELECT * FROM notificaciones 
+                WHERE usuario_id = ? 
+                ORDER BY created_at DESC
+            `;
+            
+            const params = [userId];
+            
+            if (limit) {
+                query += ' LIMIT ?';
+                params.push(limit);
+            }
+            
+            const [rows] = await this.db.execute(query, params);
+            return rows;
+        } catch (error) {
+            throw new Error(`Error getting notifications for user: ${error.message}`);
+        }
+    }
+
     // Obtener estadísticas de notificaciones
     async getStatsForUser(userId) {
         try {

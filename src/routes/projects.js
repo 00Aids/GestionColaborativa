@@ -106,4 +106,58 @@ router.post('/:id/status',
   projectController.updateStatus.bind(projectController)
 );
 
+// =============================================
+// GESTIÓN DE ENTREGABLES DEL PROYECTO
+// =============================================
+
+// Obtener entregables del proyecto (API)
+router.get('/:id/deliverables', 
+  AuthMiddleware.requireAuth,
+  projectController.getProjectDeliverables.bind(projectController)
+);
+
+// Crear nuevo entregable
+router.post('/:id/deliverables', 
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Director de Proyecto', 'Estudiante']),
+  projectController.createDeliverable.bind(projectController)
+);
+
+// Actualizar entregable
+router.put('/:id/deliverables/:deliverableId', 
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Director de Proyecto', 'Estudiante']),
+  projectController.updateDeliverable.bind(projectController)
+);
+
+// Eliminar entregable
+router.delete('/:id/deliverables/:deliverableId', 
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Director de Proyecto']),
+  projectController.deleteDeliverable.bind(projectController)
+);
+
+// =============================================
+// GESTIÓN DE COMENTARIOS
+// =============================================
+
+// Comentarios de proyectos
+router.get('/:projectId/comments', 
+  AuthMiddleware.requireAuth,
+  projectController.getProjectComments.bind(projectController)
+);
+
+router.post('/:projectId/comments', 
+  AuthMiddleware.requireAuth,
+  projectController.addProjectComment.bind(projectController)
+);
+
+// Comentarios de entregables
+router.get('/deliverables/:deliverableId/comments', 
+  AuthMiddleware.requireAuth,
+  projectController.getDeliverableComments.bind(projectController)
+);
+
+router.post('/deliverables/:deliverableId/comments', 
+  AuthMiddleware.requireAuth,
+  projectController.addDeliverableComment.bind(projectController)
+);
+
 module.exports = router;

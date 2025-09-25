@@ -134,6 +134,55 @@ class Evaluation extends BaseModel {
     }
   }
 
+  // Obtener evaluaciones por área de trabajo
+  async findByArea(areaId) {
+    try {
+      const query = `
+        SELECT 
+          ev.*,
+          p.titulo as proyecto_titulo,
+          est.nombres as estudiante_nombres,
+          est.apellidos as estudiante_apellidos,
+          eval.nombres as evaluador_nombres,
+          eval.apellidos as evaluador_apellidos,
+          ent.titulo as entregable_titulo,
+          rub.nombre as rubrica_nombre,
+          rub.criterios as rubrica_criterios
+        FROM evaluaciones ev
+        LEFT JOIN proyectos p ON ev.proyecto_id = p.id
+        LEFT JOIN usuarios est ON p.estudiante_id = est.id
+        LEFT JOIN usuarios eval ON ev.evaluador_id = eval.id
+        LEFT JOIN entregables ent ON ev.entregable_id = ent.id
+        LEFT JOIN rubricas_evaluacion rub ON ev.rubrica_id = rub.id
+        WHERE p.area_trabajo_id = ?
+        ORDER BY ev.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId]);
+      
+      // Parsear criterios de rúbrica y calificaciones
+      return rows.map(row => {
+        if (row.rubrica_criterios) {
+          try {
+            row.rubrica_criterios = JSON.parse(row.rubrica_criterios);
+          } catch (e) {
+            row.rubrica_criterios = null;
+          }
+        }
+        if (row.calificaciones) {
+          try {
+            row.calificaciones = JSON.parse(row.calificaciones);
+          } catch (e) {
+            row.calificaciones = null;
+          }
+        }
+        return row;
+      });
+    } catch (error) {
+      throw new Error(`Error finding evaluations by area: ${error.message}`);
+    }
+  }
+
   // Actualizar evaluación con calificaciones
   async updateWithGrades(evaluationId, calificaciones, observaciones, notaFinal) {
     try {

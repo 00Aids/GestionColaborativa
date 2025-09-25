@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sistema de Gestión Académica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav-menu {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #4a5568;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .dashboard-header h1 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        .text-muted {
+            color: #6c757d;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .bg-primary { background: #667eea; }
+        .bg-success { background: #28a745; }
+        .bg-warning { background: #ffc107; }
+        .bg-info { background: #17a2b8; }
+        .stat-content h3 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+        .stat-content p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        .project-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .project-header h4 {
+            color: #2d3748;
+            margin: 0;
+            flex: 1;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-activo { background: #d4edda; color: #155724; }
+        .status-completado { background: #cce5ff; color: #004085; }
+        .status-pausado { background: #fff3cd; color: #856404; }
+        .project-info {
+            margin-bottom: 1rem;
+        }
+        .project-description {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+        .project-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .date-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .project-progress {
+            margin-bottom: 1rem;
+        }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+        .deliverables-info {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .project-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            flex: 1;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            margin-bottom: 1rem;
+        }
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+        }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .fa-3x { font-size: 3rem; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Sistema de Gestión Académica
+            </div>
+            <div class="user-info">
+                <span>Bienvenido, <%= user.nombres %> <%= user.apellidos %></span>
+                <a href="/auth/logout" class="btn btn-outline" style="margin-left: 1rem;">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-menu">
+        <div class="nav-content">
+            <a href="/dashboard" class="nav-link">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="/coordinator/projects" class="nav-link active">
+                <i class="fas fa-project-diagram"></i> Mis Proyectos
+            </a>
+            <a href="/coordinator/students" class="nav-link">
+                <i class="fas fa-users"></i> Estudiantes
+            </a>
+            <a href="/coordinator/evaluations" class="nav-link">
+                <i class="fas fa-clipboard-check"></i> Evaluaciones
+            </a>
+            <a href="/coordinator/reports" class="nav-link">
+                <i class="fas fa-chart-bar"></i> Reportes
+            </a>
+            <a href="/coordinator/calendar" class="nav-link">
+                <i class="fas fa-calendar"></i> Calendario
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-project-diagram"></i> <%= title %></h1>
+            <p class="text-muted">Gestiona los proyectos asignados bajo tu coordinación</p>
+        </div>
+
+        <div class="stats-row mb-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= projects.length %></h3>
+                    <p>Total Proyectos</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= projects.filter(p => p.estado === 'completado').length %></h3>
+                    <p>Completados</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= projects.filter(p => p.estado === 'activo').length %></h3>
+                    <p>En Progreso</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="fas fa-pause-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= projects.filter(p => p.estado === 'pausado').length %></h3>
+                    <p>Pausados</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="projects-grid">
+            <% if (projects.length === 0) { %>
+                <div class="empty-state">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <h3>No hay proyectos asignados</h3>
+                    <p class="text-muted">Aún no tienes proyectos bajo tu coordinación.</p>
+                </div>
+            <% } else { %>
+                <% projects.forEach(project => { %>
+                    <div class="project-card" data-project-id="<%= project.id %>">
+                        <div class="project-header">
+                            <h4><%= project.titulo %></h4>
+                            <span class="status-badge status-<%= project.estado || 'activo' %>">
+                                <%= (project.estado || 'activo').charAt(0).toUpperCase() + (project.estado || 'activo').slice(1) %>
+                            </span>
+                        </div>
+                        
+                        <div class="project-info">
+                            <p class="project-description"><%= project.descripcion || 'Sin descripción' %></p>
+                            
+                            <div class="student-info">
+                                <i class="fas fa-user"></i>
+                                <span><%= project.estudiante_nombres || 'Sin asignar' %></span>
+                            </div>
+                            
+                            <div class="project-dates">
+                                <div class="date-item">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    <span>Inicio: <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString() : 'No definido' %></span>
+                                </div>
+                                <% if (project.fecha_fin) { %>
+                                    <div class="date-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span>Fin: <%= new Date(project.fecha_fin).toLocaleDateString() %></span>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <div class="project-progress">
+                            <div class="progress-header">
+                                <span>Progreso</span>
+                                <span class="progress-percentage"><%= project.progreso || 0 %>%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: <%= project.progreso || 0 %>%"></div>
+                            </div>
+                        </div>
+
+                        <div class="deliverables-info">
+                            <strong><%= project.entregables_completados || 0 %></strong> de <strong><%= project.total_entregables || 0 %></strong> entregables completados
+                        </div>
+                        
+                        <div class="project-actions">
+                            <a href="/projects/<%= project.id %>" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                            <a href="/projects/<%= project.id %>/edit" class="btn btn-outline">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+
+    <script>
+        function contactStudent(email) {
+            window.location.href = `mailto:${email}`;
+        }
+
+        // Agregar interactividad a las tarjetas de proyecto
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (!e.target.closest('.project-actions')) {
+                    const projectId = this.dataset.projectId;
+                    window.location.href = `/projects/${projectId}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

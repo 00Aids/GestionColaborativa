@@ -67,6 +67,7 @@ app.use('/auth', require('./src/routes/auth'));
 app.use('/dashboard', require('./src/routes/dashboard'));
 app.use('/projects', require('./src/routes/projects'));
 app.use('/admin', require('./src/routes/admin'));
+app.use('/coordinator', require('./src/routes/coordinator')); // ← Nueva línea para coordinadores
 app.use('/student', require('./src/routes/student')); // ← Nueva línea para estudiantes
 
 // Manejo de errores 404

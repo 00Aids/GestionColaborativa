@@ -206,6 +206,107 @@ class Deliverable extends BaseModel {
       throw new Error(`Error getting deliverable statistics: ${error.message}`);
     }
   }
+
+  // ==================== GESTIÓN DE COMENTARIOS ====================
+
+  // Agregar comentario a un entregable
+  async addComment(deliverableId, userId, comentario, tipo = 'comentario', archivo_adjunto = null) {
+    try {
+      const query = `
+        INSERT INTO entregable_comentarios 
+        (entregable_id, usuario_id, comentario, tipo, archivo_adjunto, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+      `;
+      
+      const [result] = await this.db.execute(query, [
+        deliverableId, 
+        userId, 
+        comentario, 
+        tipo, 
+        archivo_adjunto
+      ]);
+      
+      return result.insertId;
+    } catch (error) {
+      throw new Error(`Error adding deliverable comment: ${error.message}`);
+    }
+  }
+
+  // Obtener comentarios de un entregable
+  async getComments(deliverableId) {
+    try {
+      const query = `
+        SELECT 
+          ec.*,
+          u.nombres,
+          u.apellidos,
+          u.email,
+          r.nombre as rol_nombre
+        FROM entregable_comentarios ec
+        LEFT JOIN usuarios u ON ec.usuario_id = u.id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE ec.entregable_id = ?
+        ORDER BY ec.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [deliverableId]);
+      
+      // Procesar archivos adjuntos
+      return rows.map(comment => ({
+        ...comment,
+        archivo_adjunto: comment.archivo_adjunto ? JSON.parse(comment.archivo_adjunto) : null
+      }));
+    } catch (error) {
+      throw new Error(`Error getting deliverable comments: ${error.message}`);
+    }
+  }
+
+  // Actualizar comentario de entregable
+  async updateComment(commentId, comentario, userId) {
+    try {
+      const query = `
+        UPDATE entregable_comentarios 
+        SET comentario = ?, updated_at = NOW()
+        WHERE id = ? AND usuario_id = ?
+      `;
+      
+      const [result] = await this.db.execute(query, [comentario, commentId, userId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error updating deliverable comment: ${error.message}`);
+    }
+  }
+
+  // Eliminar comentario de entregable
+  async deleteComment(commentId, userId) {
+    try {
+      const query = `
+        DELETE FROM entregable_comentarios 
+        WHERE id = ? AND usuario_id = ?
+      `;
+      
+      const [result] = await this.db.execute(query, [commentId, userId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error deleting deliverable comment: ${error.message}`);
+    }
+  }
+
+  // Contar comentarios de un entregable
+  async countComments(deliverableId) {
+    try {
+      const query = `
+        SELECT COUNT(*) as total 
+        FROM entregable_comentarios 
+        WHERE entregable_id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [deliverableId]);
+      return rows[0].total;
+    } catch (error) {
+      throw new Error(`Error counting deliverable comments: ${error.message}`);
+    }
+  }
 }
 
 module.exports = Deliverable;

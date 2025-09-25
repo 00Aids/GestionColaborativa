@@ -4,6 +4,7 @@ const Deliverable = require('../models/Deliverable');
 const Evaluation = require('../models/Evaluation');
 const Task = require('../models/Task');
 const Notification = require('../models/Notification');
+const { pool } = require('../config/database');
 
 class DashboardController {
   constructor() {
@@ -179,22 +180,156 @@ class DashboardController {
     try {
       const user = req.session.user;
       
-      // Obtener estadísticas del sistema
-      const [projectStats, deliverableStats, evaluationStats] = await Promise.all([
-        this.projectModel.getStatistics(),
-        this.deliverableModel.getStatistics(),
-        this.evaluationModel.getStatistics()
+      // Obtener datos actualizados del usuario desde la base de datos
+      const userDetails = await this.userModel.findById(user.id);
+      
+      // Filtrar por área de trabajo del coordinador si tiene una asignada
+      const areaFilter = userDetails.area_trabajo_id ? { area_trabajo_id: userDetails.area_trabajo_id } : {};
+      
+      // Obtener estadísticas del área o globales
+      const [projectStatsRaw, allProjects] = await Promise.all([
+        userDetails.area_trabajo_id 
+          ? this.projectModel.getStatisticsByArea(userDetails.area_trabajo_id)
+          : this.projectModel.getStatistics(),
+        userDetails.area_trabajo_id 
+          ? this.projectModel.findByArea(userDetails.area_trabajo_id)
+          : this.projectModel.findWithDetails()
       ]);
-  
+
+      // Procesar estadísticas de proyectos
+      const projectStats = {
+        total: projectStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
+        activos: projectStatsRaw.filter(s => ['en_desarrollo', 'en_revision', 'aprobado'].includes(s.estado))
+                                .reduce((sum, stat) => sum + stat.cantidad, 0),
+        completados: projectStatsRaw.filter(s => s.estado === 'finalizado')
+                                   .reduce((sum, stat) => sum + stat.cantidad, 0),
+        pendientes: projectStatsRaw.filter(s => ['borrador', 'enviado'].includes(s.estado))
+                                  .reduce((sum, stat) => sum + stat.cantidad, 0),
+        byStatus: projectStatsRaw
+      };
+
+      // Obtener entregables del área
+      const allDeliverables = userDetails.area_trabajo_id 
+        ? await this.deliverableModel.findWithProject(areaFilter)
+        : await this.deliverableModel.findWithProject();
+
+      // Estadísticas de entregables
+      const deliverableStats = {
+        total: allDeliverables.length,
+        pendientes: allDeliverables.filter(d => d.estado === 'pendiente').length,
+        en_progreso: allDeliverables.filter(d => d.estado === 'en_progreso').length,
+        completados: allDeliverables.filter(d => d.estado === 'completado').length,
+        vencidos: allDeliverables.filter(d => {
+          const today = new Date();
+          const dueDate = new Date(d.fecha_limite);
+          return dueDate < today && d.estado !== 'completado';
+        }).length
+      };
+
+      // Obtener evaluaciones del área
+      const allEvaluations = userDetails.area_trabajo_id 
+        ? await this.evaluationModel.findByArea(userDetails.area_trabajo_id)
+        : await this.evaluationModel.findAll();
+
+      const evaluationStats = {
+        total: allEvaluations.length,
+        pendientes: allEvaluations.filter(e => e.estado === 'pendiente').length,
+        completadas: allEvaluations.filter(e => e.estado === 'completada').length,
+        promedio: allEvaluations.length > 0 
+          ? (allEvaluations.reduce((sum, e) => sum + (e.calificacion || 0), 0) / allEvaluations.length).toFixed(1)
+          : 0
+      };
+
+      // Obtener estudiantes del área
+      const students = userDetails.area_trabajo_id 
+        ? await this.userModel.findByAreaAndRole(userDetails.area_trabajo_id, 'Estudiante')
+        : await this.userModel.findByRole('Estudiante');
+
+      // Proyectos bajo supervisión directa (donde el coordinador es supervisor)
+      const myProjects = allProjects.filter(p => 
+        p.supervisor_id === user.id || 
+        (userDetails.area_trabajo_id && p.area_trabajo_id === userDetails.area_trabajo_id)
+      ).slice(0, 10);
+
+      // Entregables próximos a vencer (próximos 7 días)
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      const upcomingDeliverables = allDeliverables.filter(d => {
+        const dueDate = new Date(d.fecha_limite);
+        const today = new Date();
+        return dueDate >= today && dueDate <= nextWeek && d.estado !== 'completado';
+      }).sort((a, b) => new Date(a.fecha_limite) - new Date(b.fecha_limite)).slice(0, 5);
+
       // Entregables vencidos
-      const overdueDeliverables = await this.deliverableModel.findOverdue();
-  
+      const overdueDeliverables = allDeliverables.filter(d => {
+        const today = new Date();
+        const dueDate = new Date(d.fecha_limite);
+        return dueDate < today && d.estado !== 'completado';
+      }).slice(0, 5);
+
+      // Proyectos recientes (últimos 5)
+      const recentProjects = allProjects
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+
+      // Actividad reciente (simulada por ahora)
+      const recentActivity = [
+        ...recentProjects.map(p => ({
+          tipo: 'proyecto',
+          titulo: `Nuevo proyecto: ${p.titulo}`,
+          fecha: p.created_at,
+          icono: '📁'
+        })),
+        ...upcomingDeliverables.map(d => ({
+          tipo: 'entregable',
+          titulo: `Entregable próximo: ${d.titulo}`,
+          fecha: d.fecha_limite,
+          icono: '⏰'
+        }))
+      ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 8);
+
+      // Códigos de invitación activos (simulado por ahora)
+      const invitationCodes = [
+        {
+          codigo: 'COORD2024A',
+          tipo: 'Estudiante',
+          usos: 5,
+          limite: 10,
+          expira: '2024-12-31',
+          activo: true
+        },
+        {
+          codigo: 'EVAL2024B',
+          tipo: 'Evaluador',
+          usos: 2,
+          limite: 5,
+          expira: '2024-12-31',
+          activo: true
+        }
+      ];
+
+      // Notificaciones recientes
+      const notifications = await this.notificationModel.findByUser(user.id, { limit: 5 });
+
       res.render('coordinator/dashboard', {
-        user,
+        user: userDetails,
         projectStats,
         deliverableStats,
         evaluationStats,
+        students: students || [],
+        myProjects: myProjects || [],
+        upcomingDeliverables: upcomingDeliverables || [],
         overdueDeliverables: overdueDeliverables || [],
+        recentProjects: recentProjects || [],
+        recentActivity: recentActivity || [],
+        invitationCodes: invitationCodes || [],
+        notifications: notifications || [],
+        areaInfo: userDetails.area_trabajo_id ? {
+          id: userDetails.area_trabajo_id,
+          codigo: userDetails.area_codigo,
+          nombre: userDetails.area_nombre
+        } : null,
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -291,6 +426,7 @@ class DashboardController {
         directedProjects: directedProjects.slice(0, 10),
         directedDeliverables: directedDeliverables.slice(0, 10),
         pendingEvaluations: pendingEvaluations.slice(0, 10),
+        recentProjects: directedProjects.slice(0, 5), // Agregar recentProjects
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -867,7 +1003,7 @@ class DashboardController {
       const userDetails = await this.userModel.findById(user.id);
       
       res.render('student/profile', {
-        user,
+        user: userDetails || user,
         userDetails: userDetails || user,
         success: req.flash('success'),
         error: req.flash('error')
@@ -1115,6 +1251,267 @@ class DashboardController {
       res.json({
         success: false,
         message: 'Error interno del servidor al actualizar la información adicional'
+      });
+    }
+  }
+
+  // ===== MÉTODOS PARA COORDINADOR =====
+  
+  async coordinatorProjects(req, res) {
+    try {
+      const user = req.session.user;
+      const projectController = new (require('./ProjectController'))();
+      
+      const projects = await projectController.getProjectsByCoordinator(user.id);
+      
+      res.render('coordinator/projects', {
+        title: 'Mis Proyectos Asignados',
+        user: user,
+        projects: projects || []
+      });
+    } catch (error) {
+      console.error('Error loading coordinator projects:', error);
+      res.status(500).render('error', { 
+        message: 'Error al cargar los proyectos',
+        error: error 
+      });
+    }
+  }
+
+  async coordinatorStudents(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Primero obtenemos el área de trabajo del coordinador
+      const [coordinatorData] = await pool.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
+        [user.id]
+      );
+      
+      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
+        return res.render('coordinator/students', {
+          title: 'Estudiantes Asignados',
+          user: user,
+          students: []
+        });
+      }
+      
+      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
+      
+      // Obtener estudiantes de proyectos del área de trabajo
+      const query = `
+        SELECT DISTINCT 
+          u.id,
+          u.nombres,
+          u.apellidos,
+          u.email,
+          u.telefono,
+          u.created_at as fecha_registro,
+          p.titulo as proyecto_titulo,
+          p.id as proyecto_id,
+          p.estado as proyecto_estado
+        FROM usuarios u
+        INNER JOIN proyectos p ON u.id = p.estudiante_id
+        WHERE p.area_trabajo_id = ?
+        ORDER BY u.apellidos, u.nombres
+      `;
+      
+      const [students] = await pool.execute(query, [areaTrabajoId]);
+      
+      res.render('coordinator/students', {
+        title: 'Estudiantes Asignados',
+        user: user,
+        students: students
+      });
+    } catch (error) {
+      console.error('Error loading coordinator students:', error);
+      res.status(500).render('error', { 
+        message: 'Error al cargar los estudiantes',
+        error: error 
+      });
+    }
+  }
+
+  async coordinatorEvaluations(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Primero obtenemos el área de trabajo del coordinador
+      const [coordinatorData] = await pool.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
+        [user.id]
+      );
+      
+      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
+        return res.render('coordinator/evaluations', {
+          title: 'Evaluaciones de Proyectos',
+          user: user,
+          evaluations: []
+        });
+      }
+      
+      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
+      
+      // Obtener evaluaciones de proyectos del área de trabajo
+      const query = `
+        SELECT 
+          e.*,
+          p.titulo as proyecto_titulo,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          d.titulo as entregable_titulo
+        FROM evaluaciones e
+        INNER JOIN proyectos p ON e.proyecto_id = p.id
+        INNER JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN entregables d ON e.entregable_id = d.id
+        WHERE p.area_trabajo_id = ?
+        ORDER BY e.fecha_evaluacion DESC
+      `;
+      
+      const [evaluations] = await pool.execute(query, [areaTrabajoId]);
+      
+      res.render('coordinator/evaluations', {
+        title: 'Evaluaciones de Proyectos',
+        user: user,
+        evaluations: evaluations
+      });
+    } catch (error) {
+      console.error('Error loading coordinator evaluations:', error);
+      res.status(500).render('error', { 
+        message: 'Error al cargar las evaluaciones',
+        error: error 
+      });
+    }
+  }
+
+  async coordinatorReports(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Primero obtenemos el área de trabajo del coordinador
+      const [coordinatorData] = await pool.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
+        [user.id]
+      );
+      
+      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
+        return res.render('coordinator/reports', {
+          title: 'Reportes y Estadísticas',
+          user: user,
+          stats: { total_proyectos: 0, proyectos_activos: 0, proyectos_completados: 0, proyectos_pausados: 0 },
+          averageProgress: 0,
+          projects: []
+        });
+      }
+      
+      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
+      
+      // Obtener estadísticas de proyectos del área de trabajo
+      const statsQuery = `
+        SELECT 
+          COUNT(*) as total_proyectos,
+          COUNT(CASE WHEN estado = 'activo' THEN 1 END) as proyectos_activos,
+          COUNT(CASE WHEN estado = 'completado' THEN 1 END) as proyectos_completados,
+          COUNT(CASE WHEN estado = 'pausado' THEN 1 END) as proyectos_pausados
+        FROM proyectos 
+        WHERE area_trabajo_id = ?
+      `;
+      
+      const [stats] = await pool.execute(statsQuery, [areaTrabajoId]);
+      
+      // Obtener progreso promedio
+      const progressQuery = `
+        SELECT 
+          p.id,
+          p.titulo,
+          COUNT(d.id) as total_entregables,
+          COUNT(CASE WHEN d.estado = 'completado' THEN 1 END) as entregables_completados
+        FROM proyectos p
+        LEFT JOIN entregables d ON p.id = d.proyecto_id
+        WHERE p.area_trabajo_id = ?
+        GROUP BY p.id
+      `;
+      
+      const [projects] = await pool.execute(progressQuery, [areaTrabajoId]);
+      
+      // Calcular progreso promedio
+      let totalProgress = 0;
+      projects.forEach(project => {
+        const progress = project.total_entregables > 0 
+          ? (project.entregables_completados / project.total_entregables) * 100
+          : 0;
+        totalProgress += progress;
+      });
+      
+      const averageProgress = projects.length > 0 ? totalProgress / projects.length : 0;
+      
+      res.render('coordinator/reports', {
+        title: 'Reportes y Estadísticas',
+        user: user,
+        stats: stats[0],
+        averageProgress: Math.round(averageProgress),
+        projects: projects
+      });
+    } catch (error) {
+      console.error('Error loading coordinator reports:', error);
+      res.status(500).render('error', { 
+        message: 'Error al cargar los reportes',
+        error: error 
+      });
+    }
+  }
+
+  async coordinatorCalendar(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Primero obtenemos el área de trabajo del coordinador
+      const [coordinatorData] = await pool.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
+        [user.id]
+      );
+      
+      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
+        return res.render('coordinator/calendar', {
+          title: 'Calendario de Entregables',
+          user: user,
+          deliverables: []
+        });
+      }
+      
+      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
+      
+      // Obtener entregables próximos de proyectos del área de trabajo
+      const query = `
+        SELECT 
+          d.id,
+          d.titulo,
+          d.descripcion,
+          d.fecha_entrega,
+          d.estado,
+          p.titulo as proyecto_titulo,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos
+        FROM entregables d
+        INNER JOIN proyectos p ON d.proyecto_id = p.id
+        INNER JOIN usuarios u ON p.estudiante_id = u.id
+        WHERE p.area_trabajo_id = ?
+        ORDER BY d.fecha_entrega ASC
+        LIMIT 20
+      `;
+      
+      const [deliverables] = await pool.execute(query, [areaTrabajoId]);
+      
+      res.render('coordinator/calendar', {
+        title: 'Calendario de Entregables',
+        user: user,
+        deliverables: deliverables || []
+      });
+    } catch (error) {
+      console.error('Error loading coordinator calendar:', error);
+      res.status(500).render('error', { 
+        message: 'Error al cargar el calendario',
+        error: error 
       });
     }
   }

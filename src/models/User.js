@@ -245,6 +245,25 @@ class User extends BaseModel {
     }
   }
 
+  // Obtener usuarios por área y rol
+  async findByAreaAndRole(areaId, roleName) {
+    try {
+      const query = `
+        SELECT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
+        FROM usuarios u
+        INNER JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE uat.area_trabajo_id = ? AND r.nombre = ? AND u.activo = 1 AND uat.activo = 1
+        ORDER BY u.nombres, u.apellidos
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId, roleName]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding users by area and role: ${error.message}`);
+    }
+  }
+
   // Obtener el área principal de un usuario (la primera asignada)
   async getPrimaryArea(userId) {
     try {

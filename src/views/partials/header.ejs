@@ -4,7 +4,7 @@
             📚 Sistema Académico
         </div>
         <nav>
-            <a href="<%= userDashboardRoute %>" class="btn btn-secondary">Dashboard</a>
+            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
             <a href="/projects" class="btn btn-secondary">Proyectos</a>
             <% if (user && user.rol_nombre === 'Estudiante') { %>
                 <a href="/projects/join" class="btn btn-secondary">Unirse a Proyecto</a>

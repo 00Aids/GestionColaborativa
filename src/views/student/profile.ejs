@@ -727,7 +727,7 @@
                         <div class="form-group">
                             <label class="form-label">Fecha de Nacimiento</label>
                             <input type="date" name="fecha_nacimiento" class="form-input" 
-                                   value="<%= user.fecha_nacimiento ? user.fecha_nacimiento.toISOString().split('T')[0] : '' %>" 
+                                   value="<%= user.fecha_nacimiento ? (typeof user.fecha_nacimiento === 'string' ? user.fecha_nacimiento.split('T')[0] : user.fecha_nacimiento.toISOString().split('T')[0]) : '' %>" 
                                    disabled id="fecha_nacimiento">
                         </div>
                     </div>
@@ -965,16 +965,20 @@
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.innerHTML;
             
-            console.log('📝 Datos del formulario:', new FormData(this));
-            
             saveBtn.innerHTML = '<span class="spinner"></span> Guardando...';
             saveBtn.disabled = true;
 
             const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            console.log('📝 Datos del formulario:', data);
             
             fetch('/student/profile/update', {
                 method: 'PUT',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
             })
             .then(response => response.json())
             .then(data => {
@@ -1356,46 +1360,8 @@
             }
         });
 
-        // DEBUG: Agregar listener adicional para debuggear
-        console.log('🔧 Agregando listener de debug...');
-        
-        // Verificar que el formulario existe
-        const debugForm = document.getElementById('profileForm');
-        console.log('🔍 Formulario encontrado:', !!debugForm);
-        
-        if (debugForm) {
-            // Agregar listener directo
-            debugForm.addEventListener('submit', function(e) {
-                console.log('🚨 DEBUG: Submit event capturado!');
-                console.log('🚨 DEBUG: Event target:', e.target);
-                console.log('🚨 DEBUG: Form data:', new FormData(this));
-            });
-            
-            // Verificar botón de guardar
-            const debugSaveBtn = document.getElementById('saveBtn');
-            console.log('🔍 Botón guardar encontrado:', !!debugSaveBtn);
-            
-            if (debugSaveBtn) {
-                debugSaveBtn.addEventListener('click', function(e) {
-                    console.log('🚨 DEBUG: Save button clicked!');
-                    console.log('🚨 DEBUG: Button type:', this.type);
-                    console.log('🚨 DEBUG: Form:', this.form);
-                });
-            }
-        }
-        
-        // Verificar después de un delay
-        setTimeout(() => {
-            const delayedForm = document.getElementById('profileForm');
-            const delayedSaveBtn = document.getElementById('saveBtn');
-            console.log('🕐 DELAYED CHECK - Form:', !!delayedForm);
-            console.log('🕐 DELAYED CHECK - Save button:', !!delayedSaveBtn);
-            
-            if (delayedSaveBtn) {
-                console.log('🕐 DELAYED CHECK - Save button display:', delayedSaveBtn.style.display);
-                console.log('🕐 DELAYED CHECK - Save button disabled:', delayedSaveBtn.disabled);
-            }
-        }, 2000);
+        // Debug info - simplified
+        console.log('🔧 Formulario de perfil inicializado correctamente');
     </script>
 </body>
 </html>

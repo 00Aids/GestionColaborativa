@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyectos - <%= title %></title>
+    <title>Proyectos - Gestión de Proyectos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -12,93 +13,120 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             color: #2d3748;
         }
 
+        /* Header */
         .header {
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             padding: 0 20px;
-            height: 60px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
         }
 
         .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #5a67d8;
-            font-size: 18px;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .search-bar {
-            display: flex;
-            align-items: center;
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 8px 12px;
-            width: 300px;
+            position: relative;
         }
 
         .search-bar input {
-            border: none;
-            background: none;
-            outline: none;
-            width: 100%;
+            width: 300px;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
             font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-bar::before {
+            content: '🔍';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .user-info {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
         }
 
         .role-badge {
-            background: #e6fffa;
-            color: #234e52;
-            padding: 4px 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .logout-btn {
-            background: #f56565;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #e53e3e, #c53030);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            border-radius: 20px;
             cursor: pointer;
-            text-decoration: none;
             font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.4);
+        }
+
+        /* Container */
         .container {
-            max-width: 1200px;
-            margin: 80px auto 20px;
-            padding: 0 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
         }
 
+        /* Page Header */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -107,85 +135,380 @@
         }
 
         .page-title {
-            font-size: 28px;
-            font-weight: 600;
-            color: #2d3748;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .create-btn {
-            background: #5a67d8;
-            color: white;
             padding: 12px 24px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
             text-decoration: none;
-            font-weight: 500;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .create-btn:hover {
-            background: #4c51bf;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
         }
 
-        .filters {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
-        .filter-row {
+        .view-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #4a5568;
+        }
+
+        .view-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Filters */
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-header {
             display: flex;
-            gap: 20px;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         .filter-group label {
-            font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             color: #4a5568;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .filter-group select,
         .filter-group input {
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .filter-btn {
-            background: #38b2ac;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .clear-btn {
+            padding: 12px 24px;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-2px);
+        }
+
+        /* Projects Table */
+        .projects-table-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .projects-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .projects-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .projects-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .project-title-cell {
+            font-weight: 600;
+            color: #2d3748;
+            max-width: 250px;
+        }
+
+        .project-description-cell {
+            color: #4a5568;
+            font-size: 14px;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-propuesta {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-aprobado {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-en-desarrollo {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-finalizado {
+            background: #e9d8fd;
+            color: #553c9a;
+        }
+
+        .participant-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 13px;
+        }
+
+        .participant-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .participant-role {
+            color: #718096;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(135deg, #fc8181, #e53e3e);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(135deg, #f6ad55, #ed8936);
+        }
+
+        .progress-fill.high {
+            background: linear-gradient(135deg, #68d391, #48bb78);
+        }
+
+        .progress-fill.complete {
+            background: linear-gradient(135deg, #4fd1c7, #38b2ac);
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Projects Grid (Alternative View) */
         .projects-grid {
             display: grid;
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
 
         .project-card {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .project-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
         .project-header {
@@ -196,105 +519,79 @@
         }
 
         .project-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
             color: #2d3748;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            line-height: 1.3;
         }
 
         .project-meta {
             font-size: 14px;
             color: #718096;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-propuesta {
-            background: #fef5e7;
-            color: #744210;
-        }
-
-        .status-aprobado {
-            background: #f0fff4;
-            color: #22543d;
-        }
-
-        .status-en-desarrollo {
-            background: #ebf8ff;
-            color: #2a4365;
-        }
-
-        .status-finalizado {
-            background: #f7fafc;
-            color: #2d3748;
+            margin-bottom: 8px;
         }
 
         .project-description {
             color: #4a5568;
-            line-height: 1.5;
-            margin-bottom: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 14px;
         }
 
         .project-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
         }
 
         .project-participants {
             display: flex;
-            gap: 10px;
-            font-size: 14px;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
             color: #718096;
         }
 
-        .view-btn {
-            background: #5a67d8;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background 0.2s;
-        }
-
-        .view-btn:hover {
-            background: #4c51bf;
-        }
-
+        /* Pagination */
         .pagination {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 10px;
-            margin-top: 30px;
+            margin-top: 40px;
         }
 
         .pagination a,
         .pagination span {
-            padding: 8px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            text-decoration: none;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
             color: #4a5568;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .pagination a:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
         }
 
         .pagination .current {
-            background: #5a67d8;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            border-color: #5a67d8;
         }
 
+        /* Alerts */
         .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
+            padding: 15px 20px;
+            border-radius: 12px;
             margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .alert-success {
@@ -312,12 +609,58 @@
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #718096;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
         }
 
         .empty-state h3 {
-            font-size: 20px;
+            font-size: 24px;
             margin-bottom: 10px;
+            color: white;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        /* Statistics Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #667eea;
         }
 
         @media (max-width: 768px) {
@@ -325,7 +668,7 @@
                 padding: 0 15px;
             }
 
-            .search-bar {
+            .search-bar input {
                 width: 200px;
             }
 
@@ -340,9 +683,25 @@
             }
 
             .filter-row {
-                flex-direction: column;
-                align-items: stretch;
+                grid-template-columns: 1fr;
             }
+
+            .projects-table-container {
+                overflow-x: auto;
+            }
+
+            .projects-table {
+                min-width: 800px;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Hidden class for view toggle */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -350,7 +709,7 @@
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-            <div class="logo">Sistema de Gestión de Proyectos</div>
+            <div class="logo">📚 Sistema de Gestión de Proyectos</div>
             <form class="search-bar" method="GET">
                 <input type="text" name="search" placeholder="Buscar proyectos..." value="<%= search || '' %>">
             </form>
@@ -375,19 +734,86 @@
 
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-title">Mis Proyectos</h1>
+            <h1 class="page-title">
+                <i class="fas fa-project-diagram"></i>
+                Gestión de Proyectos
+            </h1>
             <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
-                <a href="/projects/create" class="create-btn">+ Nuevo Proyecto</a>
+                <a href="/projects/create" class="create-btn">
+                    <i class="fas fa-plus"></i>
+                    Nuevo Proyecto
+                </a>
             <% } %>
         </div>
 
-        <!-- Filters -->
+        <!-- Statistics Cards -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-number"><%= projects ? projects.length : 0 %></div>
+                <div class="stat-label">Total Proyectos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number">
+                    <%= projects ? projects.filter(p => p.estado === 'aprobado').length : 0 %>
+                </div>
+                <div class="stat-label">Aprobados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="stat-number">
+                    <%= projects ? projects.filter(p => p.estado === 'en-desarrollo').length : 0 %>
+                </div>
+                <div class="stat-label">En Desarrollo</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-flag-checkered"></i>
+                </div>
+                <div class="stat-number">
+                    <%= projects ? projects.filter(p => p.estado === 'finalizado').length : 0 %>
+                </div>
+                <div class="stat-label">Finalizados</div>
+            </div>
+        </div>
+
+        <!-- Advanced Filters -->
         <div class="filters">
-            <form method="GET">
+            <div class="filter-header">
+                <h3 class="filter-title">
+                    <i class="fas fa-filter"></i>
+                    Filtros Avanzados
+                </h3>
+                <div class="filter-actions">
+                    <button type="button" class="clear-btn" onclick="clearFilters()">
+                        <i class="fas fa-times"></i>
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+            
+            <form method="GET" id="filterForm">
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label>Estado</label>
-                        <select name="estado">
+                        <label for="search">
+                            <i class="fas fa-search"></i>
+                            Buscar:
+                        </label>
+                        <input type="text" id="search" name="search" value="<%= search || '' %>" placeholder="Título, descripción o participantes...">
+                    </div>
+                    <div class="filter-group">
+                        <label for="estado">
+                            <i class="fas fa-tasks"></i>
+                            Estado:
+                        </label>
+                        <select id="estado" name="estado">
                             <option value="">Todos los estados</option>
                             <option value="propuesta" <%= estado === 'propuesta' ? 'selected' : '' %>>Propuesta</option>
                             <option value="aprobado" <%= estado === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
@@ -396,27 +822,151 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label>Buscar</label>
-                        <input type="text" name="search" placeholder="Título, descripción..." value="<%= search || '' %>">
+                        <label for="dateFrom">
+                            <i class="fas fa-calendar-alt"></i>
+                            Desde:
+                        </label>
+                        <input type="date" id="dateFrom" name="dateFrom" value="<%= dateFrom || '' %>">
+                    </div>
+                    <div class="filter-group">
+                        <label for="dateTo">
+                            <i class="fas fa-calendar-check"></i>
+                            Hasta:
+                        </label>
+                        <input type="date" id="dateTo" name="dateTo" value="<%= dateTo || '' %>">
                     </div>
                 </div>
-                <button type="submit" class="filter-btn">Filtrar</button>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-search"></i>
+                        Aplicar Filtros
+                    </button>
+                </div>
             </form>
         </div>
 
-        <!-- Projects Grid -->
-        <div class="projects-grid">
-            <% if (projects && projects.length > 0) { %>
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="view-btn active" onclick="toggleView('table')" id="tableViewBtn">
+                <i class="fas fa-table"></i>
+            </button>
+            <button class="view-btn" onclick="toggleView('grid')" id="gridViewBtn">
+                <i class="fas fa-th"></i>
+            </button>
+        </div>
+
+        <% if (projects && projects.length > 0) { %>
+            <!-- Table View -->
+            <div class="projects-table-container" id="tableView">
+                <table class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Proyecto</th>
+                            <th>Estado</th>
+                            <th>Estudiante</th>
+                            <th>Director</th>
+                            <th>Progreso</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% projects.forEach(project => { %>
+                            <tr>
+                                <td>
+                                    <div class="project-title-cell">
+                                        <strong><%= project.titulo %></strong>
+                                        <div class="project-description-cell">
+                                            <%= project.descripcion ? project.descripcion.substring(0, 100) + (project.descripcion.length > 100 ? '...' : '') : 'Sin descripción' %>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-<%= project.estado || 'propuesta' %>">
+                                        <% if ((project.estado || 'propuesta') === 'propuesta') { %>
+                                            <i class="fas fa-clock"></i>
+                                        <% } else if (project.estado === 'aprobado') { %>
+                                            <i class="fas fa-check"></i>
+                                        <% } else if (project.estado === 'en-desarrollo') { %>
+                                            <i class="fas fa-cogs"></i>
+                                        <% } else if (project.estado === 'finalizado') { %>
+                                            <i class="fas fa-flag-checkered"></i>
+                                        <% } %>
+                                        <%= project.estado || 'Propuesta' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="participant-info">
+                                        <span class="participant-name">
+                                            <%= project.estudiante_nombre || 'No asignado' %>
+                                        </span>
+                                        <span class="participant-role">Estudiante</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="participant-info">
+                                        <span class="participant-name">
+                                            <%= project.director_nombre || 'No asignado' %>
+                                        </span>
+                                        <span class="participant-role">Director</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill <%= 
+                                            (project.progress || 0) >= 100 ? 'complete' : 
+                                            (project.progress || 0) >= 70 ? 'high' : 
+                                            (project.progress || 0) >= 40 ? 'medium' : 'low' 
+                                        %>" style="width: <%= project.progress || 0 %>%"></div>
+                                    </div>
+                                    <div class="progress-text"><%= project.progress || 0 %>%</div>
+                                </td>
+                                <td>
+                                    <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString('es-ES') : 'N/A' %>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="/projects/<%= project.id %>" class="action-btn btn-view">
+                                            <i class="fas fa-eye"></i>
+                                            Ver
+                                        </a>
+                                        <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
+                                            <a href="/projects/<%= project.id %>/edit" class="action-btn btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Editar
+                                            </a>
+                                        <% } %>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Grid View -->
+            <div class="projects-grid hidden" id="gridView">
                 <% projects.forEach(project => { %>
                     <div class="project-card">
                         <div class="project-header">
                             <div>
                                 <h3 class="project-title"><%= project.titulo %></h3>
                                 <div class="project-meta">
-                                    Creado: <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString() : 'N/A' %>
+                                    <i class="fas fa-calendar"></i>
+                                    Creado: <%= project.fecha_inicio ? new Date(project.fecha_inicio).toLocaleDateString('es-ES') : 'N/A' %>
                                 </div>
                             </div>
                             <span class="status-badge status-<%= project.estado || 'propuesta' %>">
+                                <% if ((project.estado || 'propuesta') === 'propuesta') { %>
+                                    <i class="fas fa-clock"></i>
+                                <% } else if (project.estado === 'aprobado') { %>
+                                    <i class="fas fa-check"></i>
+                                <% } else if (project.estado === 'en-desarrollo') { %>
+                                    <i class="fas fa-cogs"></i>
+                                <% } else if (project.estado === 'finalizado') { %>
+                                    <i class="fas fa-flag-checkered"></i>
+                                <% } %>
                                 <%= project.estado || 'Propuesta' %>
                             </span>
                         </div>
@@ -427,44 +977,117 @@
                         
                         <div class="project-footer">
                             <div class="project-participants">
-                                <span>Estudiante: <%= project.estudiante_nombre || 'No asignado' %></span>
-                                <span>Director: <%= project.director_nombre || 'No asignado' %></span>
+                                <div>
+                                    <i class="fas fa-user-graduate"></i>
+                                    <strong>Estudiante:</strong> <%= project.estudiante_nombre || 'No asignado' %>
+                                </div>
+                                <div>
+                                    <i class="fas fa-user-tie"></i>
+                                    <strong>Director:</strong> <%= project.director_nombre || 'No asignado' %>
+                                </div>
                             </div>
-                            <a href="/projects/<%= project.id %>" class="view-btn">Ver Detalles</a>
+                            <a href="/projects/<%= project.id %>" class="action-btn btn-view">
+                                <i class="fas fa-eye"></i>
+                                Ver Detalles
+                            </a>
                         </div>
                     </div>
                 <% }); %>
-            <% } else { %>
-                <div class="empty-state">
-                    <h3>No hay proyectos</h3>
-                    <p>No se encontraron proyectos que coincidan con los criterios de búsqueda.</p>
-                    <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
-                        <a href="/projects/create" class="create-btn" style="margin-top: 20px; display: inline-block;">Crear mi primer proyecto</a>
-                    <% } %>
-                </div>
-            <% } %>
-        </div>
+            </div>
+        <% } else { %>
+            <div class="empty-state">
+                <h3>
+                    <i class="fas fa-folder-open"></i>
+                    No hay proyectos
+                </h3>
+                <p>No se encontraron proyectos que coincidan con los criterios de búsqueda.</p>
+                <% if (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Administrador') { %>
+                    <a href="/projects/create" class="create-btn" style="margin-top: 20px; display: inline-block;">
+                        <i class="fas fa-plus"></i>
+                        Crear mi primer proyecto
+                    </a>
+                <% } %>
+            </div>
+        <% } %>
 
         <!-- Pagination -->
         <% if (totalPages > 1) { %>
             <div class="pagination">
                 <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>">« Anterior</a>
+                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= dateFrom ? '&dateFrom=' + dateFrom : '' %><%= dateTo ? '&dateTo=' + dateTo : '' %>">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </a>
                 <% } %>
                 
                 <% for (let i = 1; i <= totalPages; i++) { %>
                     <% if (i === currentPage) { %>
                         <span class="current"><%= i %></span>
                     <% } else { %>
-                        <a href="?page=<%= i %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>"><%= i %></a>
+                        <a href="?page=<%= i %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= dateFrom ? '&dateFrom=' + dateFrom : '' %><%= dateTo ? '&dateTo=' + dateTo : '' %>"><%= i %></a>
                     <% } %>
                 <% } %>
                 
                 <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %>">Siguiente »</a>
+                    <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= dateFrom ? '&dateFrom=' + dateFrom : '' %><%= dateTo ? '&dateTo=' + dateTo : '' %>">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </a>
                 <% } %>
             </div>
         <% } %>
     </div>
+
+    <script>
+        // Toggle between table and grid view
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const gridView = document.getElementById('gridView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const gridBtn = document.getElementById('gridViewBtn');
+
+            if (viewType === 'table') {
+                tableView.classList.remove('hidden');
+                gridView.classList.add('hidden');
+                tableBtn.classList.add('active');
+                gridBtn.classList.remove('active');
+                localStorage.setItem('projectsView', 'table');
+            } else {
+                tableView.classList.add('hidden');
+                gridView.classList.remove('hidden');
+                tableBtn.classList.remove('active');
+                gridBtn.classList.add('active');
+                localStorage.setItem('projectsView', 'grid');
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterForm').reset();
+            window.location.href = '/projects';
+        }
+
+        // Restore view preference
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('projectsView');
+            if (savedView) {
+                toggleView(savedView);
+            }
+        });
+
+        // Auto-submit form on filter change
+        document.querySelectorAll('#filterForm select, #filterForm input[type="date"]').forEach(element => {
+            element.addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
+            });
+        });
+
+        // Search input with debounce
+        let searchTimeout;
+        document.getElementById('search').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 500);
+        });
+    </script>
 </body>
 </html>

@@ -47,11 +47,18 @@ class Project extends BaseModel {
       const values = [];
       
       if (Object.keys(conditions).length > 0) {
-        const whereConditions = Object.keys(conditions)
-          .map(key => `p.${key} = ?`)
-          .join(' AND ');
-        query += ` AND ${whereConditions}`;
-        values.push(...Object.values(conditions));
+        for (const [key, value] of Object.entries(conditions)) {
+          if (key === 'fecha_inicio_desde') {
+            query += ` AND p.fecha_inicio >= ?`;
+            values.push(value);
+          } else if (key === 'fecha_fin_hasta') {
+            query += ` AND p.fecha_fin <= ?`;
+            values.push(value);
+          } else {
+            query += ` AND p.${key} = ?`;
+            values.push(value);
+          }
+        }
       }
       
       query += ` ORDER BY p.created_at DESC`;
@@ -201,33 +208,68 @@ class Project extends BaseModel {
   }
 
   // Buscar proyectos por término
-  async search(searchTerm, conditions = {}) {
+  async search(searchTerm, conditions = {}, searchType = 'general') {
     try {
       let query = `
         SELECT 
           p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
           u.nombres as estudiante_nombres,
-          u.apellidos as estudiante_apellidos
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          li.nombre as linea_investigacion,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin
         FROM proyectos p
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
-        WHERE (
-          p.titulo LIKE ? OR 
-          p.descripcion LIKE ? OR
-          CONCAT(u.nombres, ' ', u.apellidos) LIKE ?
-        )
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        WHERE 1=1
       `;
       
       const values = [];
       const searchPattern = `%${searchTerm}%`;
-      values.push(searchPattern, searchPattern, searchPattern);
       
-      // Agregar condiciones adicionales (como filtrado por área de trabajo)
+      // Diferentes tipos de búsqueda
+      if (searchType === 'participants') {
+        query += ` AND (
+          CONCAT(u.nombres, ' ', u.apellidos) LIKE ? OR
+          CONCAT(d.nombres, ' ', d.apellidos) LIKE ? OR
+          u.email LIKE ? OR
+          d.email LIKE ?
+        )`;
+        values.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      } else {
+        // Búsqueda general
+        query += ` AND (
+          p.titulo LIKE ? OR 
+          p.descripcion LIKE ? OR
+          CONCAT(u.nombres, ' ', u.apellidos) LIKE ? OR
+          CONCAT(d.nombres, ' ', d.apellidos) LIKE ?
+        )`;
+        values.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      }
+      
+      // Agregar condiciones adicionales
       if (Object.keys(conditions).length > 0) {
-        const whereConditions = Object.keys(conditions)
-          .map(key => `p.${key} = ?`)
-          .join(' AND ');
-        query += ` AND ${whereConditions}`;
-        values.push(...Object.values(conditions));
+        for (const [key, value] of Object.entries(conditions)) {
+          if (key === 'fecha_inicio_desde') {
+            query += ` AND p.fecha_inicio >= ?`;
+            values.push(value);
+          } else if (key === 'fecha_fin_hasta') {
+            query += ` AND p.fecha_fin <= ?`;
+            values.push(value);
+          } else {
+            query += ` AND p.${key} = ?`;
+            values.push(value);
+          }
+        }
       }
       
       query += ` ORDER BY p.created_at DESC`;
@@ -694,6 +736,107 @@ class Project extends BaseModel {
       return await this.findWithDetails({ area_trabajo_id: null });
     } catch (error) {
       throw new Error(`Error finding projects without area: ${error.message}`);
+    }
+  }
+
+  // ==================== GESTIÓN DE COMENTARIOS ====================
+
+  // Agregar comentario a un proyecto
+  async addComment(projectId, userId, comentario, tipo = 'comentario', archivo_adjunto = null) {
+    try {
+      const query = `
+        INSERT INTO proyecto_comentarios 
+        (proyecto_id, usuario_id, comentario, tipo, archivo_adjunto, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+      `;
+      
+      const [result] = await this.db.execute(query, [
+        projectId, 
+        userId, 
+        comentario, 
+        tipo, 
+        archivo_adjunto
+      ]);
+      
+      return result.insertId;
+    } catch (error) {
+      throw new Error(`Error adding project comment: ${error.message}`);
+    }
+  }
+
+  // Obtener comentarios de un proyecto
+  async getComments(projectId) {
+    try {
+      const query = `
+        SELECT 
+          pc.*,
+          u.nombres,
+          u.apellidos,
+          u.email,
+          r.nombre as rol_nombre
+        FROM proyecto_comentarios pc
+        LEFT JOIN usuarios u ON pc.usuario_id = u.id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE pc.proyecto_id = ?
+        ORDER BY pc.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [projectId]);
+      
+      // Procesar archivos adjuntos
+      return rows.map(comment => ({
+        ...comment,
+        archivo_adjunto: comment.archivo_adjunto ? JSON.parse(comment.archivo_adjunto) : null
+      }));
+    } catch (error) {
+      throw new Error(`Error getting project comments: ${error.message}`);
+    }
+  }
+
+  // Actualizar comentario de proyecto
+  async updateComment(commentId, comentario, userId) {
+    try {
+      const query = `
+        UPDATE proyecto_comentarios 
+        SET comentario = ?, updated_at = NOW()
+        WHERE id = ? AND usuario_id = ?
+      `;
+      
+      const [result] = await this.db.execute(query, [comentario, commentId, userId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error updating project comment: ${error.message}`);
+    }
+  }
+
+  // Eliminar comentario de proyecto
+  async deleteComment(commentId, userId) {
+    try {
+      const query = `
+        DELETE FROM proyecto_comentarios 
+        WHERE id = ? AND usuario_id = ?
+      `;
+      
+      const [result] = await this.db.execute(query, [commentId, userId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw new Error(`Error deleting project comment: ${error.message}`);
+    }
+  }
+
+  // Contar comentarios de un proyecto
+  async countComments(projectId) {
+    try {
+      const query = `
+        SELECT COUNT(*) as total 
+        FROM proyecto_comentarios 
+        WHERE proyecto_id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [projectId]);
+      return rows[0].total;
+    } catch (error) {
+      throw new Error(`Error counting project comments: ${error.message}`);
     }
   }
 }

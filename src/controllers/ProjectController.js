@@ -20,7 +20,19 @@ class ProjectController {
   async index(req, res) {
     try {
       const user = req.session.user;
-      const { search, estado, page = 1 } = req.query;
+      const { 
+        search, 
+        searchParticipants,
+        estado, 
+        fechaInicio, 
+        fechaFin, 
+        director, 
+        estudiante,
+        sortBy = 'created_at',
+        sortOrder = 'desc',
+        page = 1 
+      } = req.query;
+      
       const limit = 10;
       const offset = (page - 1) * limit;
       
@@ -32,9 +44,15 @@ class ProjectController {
       
       if (estado) conditions.estado = estado;
       if (areaTrabajoId) conditions.area_trabajo_id = areaTrabajoId;
+      if (fechaInicio) conditions.fecha_inicio_desde = fechaInicio;
+      if (fechaFin) conditions.fecha_fin_hasta = fechaFin;
+      if (director) conditions.director_id = director;
+      if (estudiante) conditions.estudiante_id = estudiante;
       
-      if (search) {
-        projects = await this.projectModel.search(search, conditions);
+      // Búsqueda general o por participantes
+      if (search || searchParticipants) {
+        const searchTerm = search || searchParticipants;
+        projects = await this.projectModel.search(searchTerm, conditions, searchParticipants ? 'participants' : 'general');
       } else {
         projects = await this.projectModel.findWithDetails(conditions);
       }
@@ -42,11 +60,62 @@ class ProjectController {
       // Filtrar según el rol del usuario
       if (user.rol_nombre === 'Estudiante') {
         projects = projects.filter(project => project.estudiante_id === user.id);
-      } else if (user.rol_nombre === 'Director de Proyecto') { // ← CAMBIO AQUÍ
+      } else if (user.rol_nombre === 'Director de Proyecto') {
         projects = projects.filter(project => project.director_id === user.id);
       }
       
-      // Paginación simple
+      // Ordenamiento
+      projects.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+          case 'titulo':
+            aValue = a.titulo?.toLowerCase() || '';
+            bValue = b.titulo?.toLowerCase() || '';
+            break;
+          case 'estado':
+            aValue = a.estado || '';
+            bValue = b.estado || '';
+            break;
+          case 'estudiante':
+            aValue = a.estudiante_nombre?.toLowerCase() || '';
+            bValue = b.estudiante_nombre?.toLowerCase() || '';
+            break;
+          case 'director':
+            aValue = a.director_nombre?.toLowerCase() || '';
+            bValue = b.director_nombre?.toLowerCase() || '';
+            break;
+          case 'fecha_inicio':
+            aValue = new Date(a.fecha_inicio || 0);
+            bValue = new Date(b.fecha_inicio || 0);
+            break;
+          case 'created_at':
+          default:
+            aValue = new Date(a.created_at || 0);
+            bValue = new Date(b.created_at || 0);
+            break;
+        }
+        
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+      
+      // Obtener estadísticas para las tarjetas
+      const stats = await this.getProjectStats(projects, user);
+      
+      // Obtener listas para filtros
+      const [directors, students] = await Promise.all([
+        this.userModel.findByRole('Director de Proyecto'),
+        this.userModel.findByRole('Estudiante')
+      ]);
+      
+      // Calcular progreso para cada proyecto
+      for (let project of projects) {
+        project.progress = await this.calculateProjectProgress(project.id);
+      }
+
+      // Paginación
       const totalProjects = projects.length;
       const paginatedProjects = projects.slice(offset, offset + limit);
       const totalPages = Math.ceil(totalProjects / limit);
@@ -58,7 +127,17 @@ class ProjectController {
         currentPage: parseInt(page),
         totalPages,
         search,
+        searchParticipants,
         estado,
+        fechaInicio,
+        fechaFin,
+        director,
+        estudiante,
+        sortBy,
+        sortOrder,
+        stats,
+        directors: directors || [],
+        students: students || [],
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -66,6 +145,18 @@ class ProjectController {
       console.error('Error listing projects:', error);
       res.status(500).render('errors/500', { error: 'Error interno del servidor' });
     }
+  }
+
+  // Método auxiliar para obtener estadísticas
+  async getProjectStats(projects, user) {
+    const stats = {
+      total: projects.length,
+      activos: projects.filter(p => p.estado === 'activo').length,
+      completados: projects.filter(p => p.estado === 'finalizado').length,
+      pendientes: projects.filter(p => p.estado === 'borrador').length
+    };
+    
+    return stats;
   }
 
   // Mostrar formulario de creación
@@ -889,6 +980,502 @@ class ProjectController {
       console.error('Error logging in from invitation:', error);
       req.flash('error', 'Error al procesar el inicio de sesión');
       res.redirect(`/projects/invitations/accept/${req.params.codigo}`);
+    }
+  }
+
+  // =============================================
+  // GESTIÓN DE ENTREGABLES DEL PROYECTO
+  // =============================================
+
+  // Obtener entregables del proyecto (API)
+  async getProjectDeliverables(req, res) {
+    try {
+      const projectId = req.params.id;
+      const user = req.session.user;
+
+      // Verificar acceso al proyecto
+      const hasAccess = await this.checkProjectAccess(projectId, user);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'No tienes acceso a este proyecto' });
+      }
+
+      // Obtener entregables del proyecto
+      const deliverables = await this.deliverableModel.findByProject(projectId);
+
+      // Calcular información adicional para cada entregable
+      const deliverablesWithDetails = deliverables.map(deliverable => {
+        const dueDate = new Date(deliverable.fecha_entrega);
+        const today = new Date();
+        const diffTime = dueDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return {
+          ...deliverable,
+          dias_restantes: diffDays,
+          is_overdue: diffDays < 0 && deliverable.estado === 'pendiente',
+          is_due_soon: diffDays <= 7 && diffDays >= 0 && deliverable.estado === 'pendiente'
+        };
+      });
+
+      res.json({
+        success: true,
+        deliverables: deliverablesWithDetails
+      });
+
+    } catch (error) {
+      console.error('Error getting project deliverables:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Crear nuevo entregable
+  async createDeliverable(req, res) {
+    try {
+      const projectId = req.params.id;
+      const user = req.session.user;
+      const { titulo, descripcion, fecha_entrega, fase_id } = req.body;
+
+      // Verificar acceso al proyecto
+      const hasAccess = await this.checkProjectAccess(projectId, user);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'No tienes acceso a este proyecto' });
+      }
+
+      // Validaciones
+      if (!titulo || !fecha_entrega) {
+        return res.status(400).json({ 
+          error: 'El título y la fecha de entrega son obligatorios' 
+        });
+      }
+
+      // Verificar que la fecha de entrega sea futura
+      const dueDate = new Date(fecha_entrega);
+      const today = new Date();
+      if (dueDate <= today) {
+        return res.status(400).json({ 
+          error: 'La fecha de entrega debe ser posterior a hoy' 
+        });
+      }
+
+      // Crear el entregable
+      const deliverableData = {
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : null,
+        proyecto_id: projectId,
+        fase_id: fase_id || 1, // Por defecto fase 1 (Propuesta)
+        fecha_entrega: fecha_entrega,
+        estado: 'pendiente',
+        created_by: user.id
+      };
+
+      const newDeliverable = await this.deliverableModel.create(deliverableData);
+
+      res.json({
+        success: true,
+        message: 'Entregable creado exitosamente',
+        deliverable: newDeliverable
+      });
+
+    } catch (error) {
+      console.error('Error creating deliverable:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Actualizar entregable
+  async updateDeliverable(req, res) {
+    try {
+      const projectId = req.params.id;
+      const deliverableId = req.params.deliverableId;
+      const user = req.session.user;
+      const { titulo, descripcion, fecha_entrega, estado, fase_id } = req.body;
+
+      // Verificar acceso al proyecto
+      const hasAccess = await this.checkProjectAccess(projectId, user);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'No tienes acceso a este proyecto' });
+      }
+
+      // Verificar que el entregable existe y pertenece al proyecto
+      const deliverable = await this.deliverableModel.findById(deliverableId);
+      if (!deliverable || deliverable.proyecto_id != projectId) {
+        return res.status(404).json({ error: 'Entregable no encontrado' });
+      }
+
+      // Validaciones
+      if (!titulo || !fecha_entrega) {
+        return res.status(400).json({ 
+          error: 'El título y la fecha de entrega son obligatorios' 
+        });
+      }
+
+      // Preparar datos de actualización
+      const updateData = {
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : null,
+        fecha_entrega: fecha_entrega,
+        updated_at: new Date()
+      };
+
+      // Solo permitir cambio de estado a coordinadores y directores
+      if (estado && ['Coordinador Académico', 'Director de Proyecto'].includes(user.rol_nombre)) {
+        updateData.estado = estado;
+      }
+
+      // Solo permitir cambio de fase a coordinadores y directores
+      if (fase_id && ['Coordinador Académico', 'Director de Proyecto'].includes(user.rol_nombre)) {
+        updateData.fase_id = fase_id;
+      }
+
+      // Actualizar el entregable
+      await this.deliverableModel.update(deliverableId, updateData);
+
+      res.json({
+        success: true,
+        message: 'Entregable actualizado exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error updating deliverable:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Eliminar entregable
+  async deleteDeliverable(req, res) {
+    try {
+      const projectId = req.params.id;
+      const deliverableId = req.params.deliverableId;
+      const user = req.session.user;
+
+      // Verificar acceso al proyecto
+      const hasAccess = await this.checkProjectAccess(projectId, user);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'No tienes acceso a este proyecto' });
+      }
+
+      // Solo coordinadores y directores pueden eliminar entregables
+      if (!['Coordinador Académico', 'Director de Proyecto'].includes(user.rol_nombre)) {
+        return res.status(403).json({ error: 'No tienes permisos para eliminar entregables' });
+      }
+
+      // Verificar que el entregable existe y pertenece al proyecto
+      const deliverable = await this.deliverableModel.findById(deliverableId);
+      if (!deliverable || deliverable.proyecto_id != projectId) {
+        return res.status(404).json({ error: 'Entregable no encontrado' });
+      }
+
+      // No permitir eliminar entregables que ya fueron entregados
+      if (deliverable.estado === 'entregado' || deliverable.estado === 'aprobado') {
+        return res.status(400).json({ 
+          error: 'No se puede eliminar un entregable que ya fue entregado o aprobado' 
+        });
+      }
+
+      // Eliminar el entregable
+      await this.deliverableModel.delete(deliverableId);
+
+      res.json({
+        success: true,
+        message: 'Entregable eliminado exitosamente'
+      });
+
+    } catch (error) {
+      console.error('Error deleting deliverable:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  }
+
+  // Método para calcular el progreso de un proyecto
+  async calculateProjectProgress(projectId) {
+    try {
+      // Obtener entregables del proyecto
+      const deliverables = await this.deliverableModel.findByProject(projectId);
+      
+      if (deliverables.length === 0) {
+        return 0;
+      }
+
+      // Calcular progreso basado en entregables
+      const completedDeliverables = deliverables.filter(d => d.estado === 'completado').length;
+      const deliverableProgress = (completedDeliverables / deliverables.length) * 100;
+
+      // Obtener información del proyecto para calcular progreso temporal
+      const project = await this.projectModel.findById(projectId);
+      let timeProgress = 0;
+      
+      if (project && project.fecha_inicio && project.fecha_fin) {
+        const startDate = new Date(project.fecha_inicio);
+        const endDate = new Date(project.fecha_fin);
+        const currentDate = new Date();
+        
+        const totalDuration = endDate - startDate;
+        const elapsedTime = currentDate - startDate;
+        
+        if (totalDuration > 0) {
+          timeProgress = Math.min(100, Math.max(0, (elapsedTime / totalDuration) * 100));
+        }
+      }
+
+      // Progreso ponderado: 70% entregables, 30% tiempo
+      const overallProgress = Math.round((deliverableProgress * 0.7) + (timeProgress * 0.3));
+      
+      return Math.min(100, Math.max(0, overallProgress));
+    } catch (error) {
+      console.error('Error calculating project progress:', error);
+      return 0;
+    }
+  }
+
+  // Método auxiliar para verificar acceso al proyecto
+  async checkProjectAccess(projectId, user) {
+    try {
+      const project = await this.projectModel.findById(projectId);
+      
+      if (!project) {
+        return false;
+      }
+
+      // Verificar que el proyecto pertenezca al área de trabajo del usuario
+      if (project.area_trabajo_id !== user.area_trabajo_id) {
+        return false;
+      }
+
+      // Verificar permisos según el rol
+      switch (user.rol_nombre) {
+        case 'Estudiante':
+          return project.estudiante_id === user.id;
+        case 'Director de Proyecto':
+          return project.director_id === user.id;
+        case 'Coordinador Académico':
+        case 'Administrador General':
+          return true;
+        default:
+          return false;
+      }
+    } catch (error) {
+       console.error('Error checking project access:', error);
+       return false;
+     }
+   }
+
+   // ==================== GESTIÓN DE COMENTARIOS ====================
+
+   // Obtener comentarios de un proyecto
+   async getProjectComments(req, res) {
+     try {
+       const { projectId } = req.params;
+       const user = req.session.user;
+
+       if (!user) {
+         return res.status(401).json({ success: false, message: 'No autorizado' });
+       }
+
+       // Verificar acceso al proyecto
+       const hasAccess = await this.checkProjectAccess(projectId, user);
+       if (!hasAccess) {
+         return res.status(403).json({ success: false, message: 'No tienes acceso a este proyecto' });
+       }
+
+       const comments = await this.projectModel.getComments(projectId);
+       res.json({ success: true, data: comments });
+     } catch (error) {
+       console.error('Error getting project comments:', error);
+       res.status(500).json({ success: false, message: 'Error interno del servidor' });
+     }
+   }
+
+   // Agregar comentario a un proyecto
+   async addProjectComment(req, res) {
+     try {
+       const { projectId } = req.params;
+       const { comentario, tipo } = req.body;
+       const user = req.session.user;
+
+       if (!user) {
+         return res.status(401).json({ success: false, message: 'No autorizado' });
+       }
+
+       if (!comentario || comentario.trim() === '') {
+         return res.status(400).json({ success: false, message: 'El comentario no puede estar vacío' });
+       }
+
+       // Verificar acceso al proyecto
+       const hasAccess = await this.checkProjectAccess(projectId, user);
+       if (!hasAccess) {
+         return res.status(403).json({ success: false, message: 'No tienes acceso a este proyecto' });
+       }
+
+       // Manejar archivo adjunto si existe
+       let archivo_adjunto = null;
+       if (req.file) {
+         archivo_adjunto = {
+           nombre_original: req.file.originalname,
+           nombre_archivo: req.file.filename,
+           ruta: req.file.path,
+           tipo_mime: req.file.mimetype,
+           tamaño: req.file.size
+         };
+       }
+
+       const commentId = await this.projectModel.addComment(
+         projectId,
+         user.id,
+         comentario.trim(),
+         tipo || 'comentario',
+         archivo_adjunto ? JSON.stringify(archivo_adjunto) : null
+       );
+
+       if (commentId) {
+         res.json({ success: true, message: 'Comentario agregado correctamente', commentId });
+       } else {
+         res.status(400).json({ success: false, message: 'No se pudo agregar el comentario' });
+       }
+     } catch (error) {
+       console.error('Error adding project comment:', error);
+       res.status(500).json({ success: false, message: 'Error interno del servidor' });
+     }
+   }
+
+   // Obtener comentarios de un entregable
+   async getDeliverableComments(req, res) {
+     try {
+       const { deliverableId } = req.params;
+       const user = req.session.user;
+
+       if (!user) {
+         return res.status(401).json({ success: false, message: 'No autorizado' });
+       }
+
+       // Verificar que el entregable existe y el usuario tiene acceso
+       const deliverable = await this.deliverableModel.findById(deliverableId);
+       if (!deliverable) {
+         return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
+       }
+
+       // Verificar acceso al proyecto del entregable
+       const hasAccess = await this.checkProjectAccess(deliverable.proyecto_id, user);
+       if (!hasAccess) {
+         return res.status(403).json({ success: false, message: 'No tienes acceso a este entregable' });
+       }
+
+       const comments = await this.deliverableModel.getComments(deliverableId);
+       res.json({ success: true, data: comments });
+     } catch (error) {
+       console.error('Error getting deliverable comments:', error);
+       res.status(500).json({ success: false, message: 'Error interno del servidor' });
+     }
+   }
+
+   // Agregar comentario a un entregable
+   async addDeliverableComment(req, res) {
+     try {
+       const { deliverableId } = req.params;
+       const { comentario, tipo } = req.body;
+       const user = req.session.user;
+
+       if (!user) {
+         return res.status(401).json({ success: false, message: 'No autorizado' });
+       }
+
+       if (!comentario || comentario.trim() === '') {
+         return res.status(400).json({ success: false, message: 'El comentario no puede estar vacío' });
+       }
+
+       // Verificar que el entregable existe y el usuario tiene acceso
+       const deliverable = await this.deliverableModel.findById(deliverableId);
+       if (!deliverable) {
+         return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
+       }
+
+       // Verificar acceso al proyecto del entregable
+       const hasAccess = await this.checkProjectAccess(deliverable.proyecto_id, user);
+       if (!hasAccess) {
+         return res.status(403).json({ success: false, message: 'No tienes acceso a este entregable' });
+       }
+
+       // Manejar archivo adjunto si existe
+       let archivo_adjunto = null;
+       if (req.file) {
+         archivo_adjunto = {
+           nombre_original: req.file.originalname,
+           nombre_archivo: req.file.filename,
+           ruta: req.file.path,
+           tipo_mime: req.file.mimetype,
+           tamaño: req.file.size
+         };
+       }
+
+       const commentId = await this.deliverableModel.addComment(
+         deliverableId,
+         user.id,
+         comentario.trim(),
+         tipo || 'comentario',
+         archivo_adjunto ? JSON.stringify(archivo_adjunto) : null
+       );
+
+       if (commentId) {
+         res.json({ success: true, message: 'Comentario agregado correctamente', commentId });
+       } else {
+         res.status(400).json({ success: false, message: 'No se pudo agregar el comentario' });
+       }
+     } catch (error) {
+       console.error('Error adding deliverable comment:', error);
+       res.status(500).json({ success: false, message: 'Error interno del servidor' });
+     }
+  }
+
+  // ===== MÉTODOS PARA COORDINADOR =====
+  
+  async getProjectsByCoordinator(coordinatorId) {
+    try {
+      // Primero obtenemos el área de trabajo del coordinador
+      const [coordinatorData] = await pool.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
+        [coordinatorId]
+      );
+      
+      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
+        return [];
+      }
+      
+      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
+      
+      const query = `
+        SELECT 
+          p.*,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          director.nombres as director_nombres,
+          director.apellidos as director_apellidos,
+          evaluador.nombres as evaluador_nombres,
+          evaluador.apellidos as evaluador_apellidos,
+          COUNT(d.id) as total_entregables,
+          COUNT(CASE WHEN d.estado = 'completado' THEN 1 END) as entregables_completados
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios director ON p.director_id = director.id
+        LEFT JOIN usuarios evaluador ON p.evaluador_id = evaluador.id
+        LEFT JOIN entregables d ON p.id = d.proyecto_id
+        WHERE p.area_trabajo_id = ?
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `;
+      
+      const [projects] = await pool.execute(query, [areaTrabajoId]);
+      
+      // Calcular progreso para cada proyecto
+      for (let project of projects) {
+        project.progreso = project.total_entregables > 0 
+          ? Math.round((project.entregables_completados / project.total_entregables) * 100)
+          : 0;
+      }
+      
+      return projects || [];
+    } catch (error) {
+      console.error('Error getting projects by coordinator:', error);
+      return [];
     }
   }
 }
