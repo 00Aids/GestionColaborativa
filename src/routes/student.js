@@ -3,6 +3,7 @@ const router = express.Router();
 const DashboardController = require('../controllers/DashboardController');
 const AuthMiddleware = require('../middlewares/auth');
 const { loadUserAreas } = require('../middlewares/areaAuth');
+const { upload: uploadDeliverables, handleError } = require('../middlewares/uploadDeliverables');
 
 // Instanciar el controlador
 const dashboardController = new DashboardController();
@@ -19,7 +20,9 @@ router.get('/evaluations', dashboardController.studentEvaluations.bind(dashboard
 router.get('/profile', dashboardController.studentProfile.bind(dashboardController));
 
 // Rutas para acciones específicas
-router.post('/deliverables/upload', dashboardController.uploadDeliverable.bind(dashboardController));
+router.post('/deliverables/upload', uploadDeliverables.array('files', 5), handleError, dashboardController.uploadDeliverable.bind(dashboardController));
 router.put('/profile/update', dashboardController.updateStudentProfile.bind(dashboardController));
+router.post('/profile/password', dashboardController.changeStudentPassword.bind(dashboardController));
+router.post('/profile/additional-info', dashboardController.updateAdditionalInfo.bind(dashboardController));
 
 module.exports = router;

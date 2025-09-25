@@ -1021,42 +1021,72 @@ class DashboardController {
       const user = req.session.user;
       const { deliverable_id, content } = req.body;
       
-      // Validar que el contenido tenga al menos 50 caracteres
-      if (!content || content.trim().length < 50) {
-        req.flash('error', 'El contenido del entregable debe tener al menos 50 caracteres');
-        return res.redirect('/student/deliverables');
+      console.log('📤 Upload deliverable request:', {
+        user: user?.email,
+        deliverable_id,
+        content: content?.substring(0, 100) + '...',
+        files: req.files?.length || 0
+      });
+
+      // Validar que se proporcione al menos contenido o archivos
+      if ((!content || content.trim().length < 10) && (!req.files || req.files.length === 0)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Debes proporcionar contenido (mínimo 10 caracteres) o al menos un archivo'
+        });
       }
 
-      // Verificar que el entregable pertenece al estudiante
+      // Verificar que el entregable existe
+      if (!deliverable_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID de entregable requerido'
+        });
+      }
+
       const deliverable = await this.deliverableModel.findById(deliverable_id);
       if (!deliverable) {
-        req.flash('error', 'Entregable no encontrado');
-        return res.redirect('/student/deliverables');
+        return res.status(404).json({
+          success: false,
+          message: 'Entregable no encontrado'
+        });
       }
 
-      // Actualizar el entregable con el contenido
+      // Preparar datos de actualización
       const updateData = {
-        contenido: content.trim(),
         estado: 'entregado',
         fecha_entrega: new Date(),
-        usuario_entrega_id: user.id
+        asignado_a: user.id
       };
 
-      // Si hay archivo adjunto, manejarlo
-      if (req.file) {
-        updateData.archivo_url = `/uploads/deliverables/${req.file.filename}`;
-        updateData.archivo_nombre = req.file.originalname;
+      // Agregar contenido si se proporciona
+      if (content && content.trim().length > 0) {
+        updateData.descripcion = content.trim();
+      }
+
+      // Manejar archivos adjuntos
+      if (req.files && req.files.length > 0) {
+        const fileUrls = req.files.map(file => `/uploads/deliverables/${file.filename}`);
+        
+        updateData.archivo_url = fileUrls.join(',');
       }
 
       // Actualizar en la base de datos
       await this.deliverableModel.update(deliverable_id, updateData);
       
-      req.flash('success', 'Entregable enviado exitosamente');
-      res.redirect('/student/deliverables');
+      console.log('✅ Deliverable updated successfully');
+      
+      res.json({
+        success: true,
+        message: 'Entregable enviado exitosamente'
+      });
+      
     } catch (error) {
-      console.error('Error in uploadDeliverable:', error);
-      req.flash('error', 'Error al enviar el entregable');
-      res.redirect('/student/deliverables');
+      console.error('❌ Error in uploadDeliverable:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor al enviar el entregable'
+      });
     }
   }
 

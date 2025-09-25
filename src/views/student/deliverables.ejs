@@ -771,13 +771,13 @@
                                             <i class="fas fa-align-left"></i>
                                             Contenido del Entregable *
                                         </label>
-                                        <textarea name="content" class="form-textarea" 
+                                        <textarea name="content" id="content-<%= deliverable.id %>" class="form-textarea" 
                                                   placeholder="Escribe aquí el contenido de tu entregable. Puedes incluir explicaciones, análisis, conclusiones, etc."
-                                                  rows="8" required></textarea>
+                                                  rows="8"></textarea>
                                         <div class="textarea-info">
                                             <small class="text-muted">
                                                 <i class="fas fa-info-circle"></i>
-                                                Mínimo 50 caracteres. Puedes usar formato de texto plano.
+                                                Mínimo 10 caracteres o al menos un archivo adjunto. Puedes usar formato de texto plano.
                                             </small>
                                         </div>
                                     </div>
@@ -958,16 +958,31 @@
         // Enviar entregable
         function submitDeliverable(deliverableId) {
             const files = selectedFiles[deliverableId];
+            const contentTextarea = document.querySelector(`#content-${deliverableId}`);
+            const content = contentTextarea ? contentTextarea.value.trim() : '';
             
-            if (!files || files.length === 0) {
-                alert('Por favor selecciona al menos un archivo para entregar.');
+            // Validar que se proporcione al menos contenido o archivos
+            if ((!files || files.length === 0) && (!content || content.length < 10)) {
+                alert('Por favor proporciona contenido (mínimo 10 caracteres) o selecciona al menos un archivo para entregar.');
                 return;
             }
 
             const formData = new FormData();
-            files.forEach(file => {
-                formData.append('files', file);
-            });
+            
+            // Agregar deliverable_id
+            formData.append('deliverable_id', deliverableId);
+            
+            // Agregar contenido si existe
+            if (content) {
+                formData.append('content', content);
+            }
+            
+            // Agregar archivos si existen
+            if (files && files.length > 0) {
+                files.forEach(file => {
+                    formData.append('files', file);
+                });
+            }
 
             // Mostrar loading
             const button = event.target;
@@ -975,7 +990,7 @@
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
             button.disabled = true;
 
-            fetch(`/student/deliverables/${deliverableId}/upload`, {
+            fetch('/student/deliverables/upload', {
                 method: 'POST',
                 body: formData
             })
