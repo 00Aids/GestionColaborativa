@@ -9,6 +9,7 @@ require('dotenv').config();
 // Importar middlewares
 const AuthMiddleware = require('./src/middlewares/auth');
 const DashboardHelper = require('./src/helpers/dashboardHelper');
+const ActivityLoggerMiddleware = require('./src/middleware/activityLogger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,11 @@ app.use(AuthMiddleware.addUserToViews);
 // Middleware para agregar helper de dashboard a las vistas
 app.use(DashboardHelper.addToLocals);
 
+// Configurar middleware de logging de actividades
+const activityLogger = new ActivityLoggerMiddleware();
+app.set('activityLoggerMiddleware', activityLogger);
+app.use(activityLogger.logActivity());
+
 // Agregar antes de las rutas
 app.use((req, res, next) => {
   res.setHeader(
@@ -69,6 +75,7 @@ app.use('/projects', require('./src/routes/projects'));
 app.use('/admin', require('./src/routes/admin'));
 app.use('/coordinator', require('./src/routes/coordinator')); // ← Nueva línea para coordinadores
 app.use('/student', require('./src/routes/student')); // ← Nueva línea para estudiantes
+app.use('/api/historial', require('./src/routes/historial')); // ← Nueva línea para historial de actividades
 
 // Manejo de errores 404
 app.use((req, res) => {

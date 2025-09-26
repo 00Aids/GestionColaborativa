@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión de Entregables - Coordinador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .area-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .nav {
+            background: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: #667eea;
+            color: white;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        .page-header {
+            margin-bottom: 30px;
+        }
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .page-subtitle {
+            color: #718096;
+            font-size: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+        }
+        .stat-card.pending { border-left-color: #f6ad55; }
+        .stat-card.review { border-left-color: #4299e1; }
+        .stat-card.changes { border-left-color: #fc8181; }
+        .stat-card.approved { border-left-color: #68d391; }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+        }
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filter-tab {
+            padding: 10px 20px;
+            border: none;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .filter-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        .deliverables-grid {
+            display: grid;
+            gap: 20px;
+        }
+        .deliverable-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .deliverable-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+        .deliverable-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .deliverable-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .deliverable-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #718096;
+        }
+        .deliverable-body {
+            padding: 20px;
+        }
+        .project-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .project-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        .student-name {
+            color: #4a5568;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-entregado { background: #fed7d7; color: #c53030; }
+        .status-en_revision { background: #bee3f8; color: #2b6cb0; }
+        .status-requiere_cambios { background: #fbb6ce; color: #b83280; }
+        .status-aceptado { background: #c6f6d5; color: #2f855a; }
+        .status-rechazado { background: #fed7d7; color: #c53030; }
+        .deliverable-actions {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        .days-remaining {
+            font-weight: 600;
+        }
+        .days-remaining.overdue {
+            color: #e53e3e;
+        }
+        .days-remaining.due-soon {
+            color: #dd6b20;
+        }
+        .days-remaining.safe {
+            color: #38a169;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #9ae6b4;
+        }
+        .alert-error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #718096;
+        }
+        .close-btn:hover {
+            color: #2d3748;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                📋 Sistema de Gestión Colaborativa
+            </div>
+            <div class="user-info">
+                <span class="area-badge">Coordinador Académico</span>
+                <span><%= user.nombres %> <%= user.apellidos %></span>
+                <a href="/auth/logout" class="btn btn-secondary">Cerrar Sesión</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-content">
+            <ul class="nav-links">
+                <li><a href="/dashboard/coordinator">Dashboard</a></li>
+                <li><a href="/coordinator/projects">Proyectos</a></li>
+                <li><a href="/coordinator/students">Estudiantes</a></li>
+                <li><a href="/coordinator/deliverables" class="active">Entregables</a></li>
+                <li><a href="/coordinator/evaluations">Evaluaciones</a></li>
+                <li><a href="/coordinator/reports">Reportes</a></li>
+                <li><a href="/coordinator/calendar">Calendario</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Revisión de Entregables</h1>
+            <p class="page-subtitle">Gestiona y revisa los entregables de tu área de trabajo</p>
+        </div>
+
+        <!-- Alerts -->
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <%= success %>
+            </div>
+        <% } %>
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-error">
+                <%= error %>
+            </div>
+        <% } %>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-number"><%= deliverablesByStatus.entregado.length %></div>
+                <div class="stat-label">Nuevos Entregables</div>
+            </div>
+            <div class="stat-card review">
+                <div class="stat-number"><%= deliverablesByStatus.en_revision.length %></div>
+                <div class="stat-label">En Revisión</div>
+            </div>
+            <div class="stat-card changes">
+                <div class="stat-number"><%= deliverablesByStatus.requiere_cambios.length %></div>
+                <div class="stat-label">Requieren Cambios</div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-number">
+                    <%= deliverables.filter(d => d.estado === 'aceptado').length %>
+                </div>
+                <div class="stat-label">Aprobados Hoy</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-status="all">Todos</button>
+                <button class="filter-tab" data-status="entregado">Nuevos (<%= deliverablesByStatus.entregado.length %>)</button>
+                <button class="filter-tab" data-status="en_revision">En Revisión (<%= deliverablesByStatus.en_revision.length %>)</button>
+                <button class="filter-tab" data-status="requiere_cambios">Requieren Cambios (<%= deliverablesByStatus.requiere_cambios.length %>)</button>
+            </div>
+        </div>
+
+        <!-- Deliverables Grid -->
+        <div class="deliverables-grid" id="deliverables-container">
+            <% if (deliverables && deliverables.length > 0) { %>
+                <% deliverables.forEach(deliverable => { %>
+                    <div class="deliverable-card" data-status="<%= deliverable.estado %>">
+                        <div class="deliverable-header">
+                            <h3 class="deliverable-title"><%= deliverable.titulo %></h3>
+                            <div class="deliverable-meta">
+                                <span>📅 Entregado: <%= new Date(deliverable.fecha_entrega).toLocaleDateString('es-ES') %></span>
+                                <span>⏰ Vence: <%= new Date(deliverable.fecha_limite).toLocaleDateString('es-ES') %></span>
+                                <span class="days-remaining <%= deliverable.dias_restantes < 0 ? 'overdue' : deliverable.dias_restantes <= 3 ? 'due-soon' : 'safe' %>">
+                                    <%= deliverable.dias_restantes < 0 ? 'Vencido hace ' + Math.abs(deliverable.dias_restantes) + ' días' : deliverable.dias_restantes + ' días restantes' %>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="deliverable-body">
+                            <div class="project-info">
+                                <div class="project-title"><%= deliverable.proyecto_titulo %></div>
+                                <div class="student-name">👤 <%= deliverable.estudiante_nombres %> <%= deliverable.estudiante_apellidos %></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <span class="status-badge status-<%= deliverable.estado %>">
+                                    <%= deliverable.estado.replace('_', ' ').toUpperCase() %>
+                                </span>
+                            </div>
+                            
+                            <% if (deliverable.fase_nombre) { %>
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Fase:</strong> <%= deliverable.fase_nombre %>
+                                </div>
+                            <% } %>
+                            
+                            <% if (deliverable.total_comentarios > 0) { %>
+                                <div style="color: #718096; font-size: 14px;">
+                                    💬 <%= deliverable.total_comentarios %> comentario(s)
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <div class="deliverable-actions">
+                            <button class="btn btn-secondary" onclick="viewDeliverable('<%= deliverable.id %>')">
+                                👁️ Ver Detalles
+                            </button>
+                            
+                            <% if (deliverable.estado === 'entregado') { %>
+                                <button class="btn btn-primary" onclick="startReview('<%= deliverable.id %>')">
+                                    🔍 Iniciar Revisión
+                                </button>
+                            <% } else if (deliverable.estado === 'en_revision') { %>
+                                <button class="btn btn-success" onclick="approveDeliverable('<%= deliverable.id %>')">
+                                    ✅ Aprobar
+                                </button>
+                                <button class="btn btn-warning" onclick="requestChanges('<%= deliverable.id %>')">
+                                    📝 Solicitar Cambios
+                                </button>
+                                <button class="btn btn-danger" onclick="rejectDeliverable('<%= deliverable.id %>')">
+                                    ❌ Rechazar
+                                </button>
+                            <% } else if (deliverable.estado === 'requiere_cambios') { %>
+                                <button class="btn btn-primary" onclick="startReview('<%= deliverable.id %>')">
+                                    🔍 Revisar Cambios
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <h3>No hay entregables para revisar</h3>
+                    <p>Cuando los estudiantes envíen entregables, aparecerán aquí para tu revisión.</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Modal for Comments -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Agregar Comentario</h2>
+            </div>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label class="form-label" for="observaciones">Observaciones:</label>
+                    <textarea class="form-control" id="observaciones" name="observaciones" rows="4" 
+                              placeholder="Escribe tus observaciones sobre el entregable..."></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span class="loading" style="display: none;"></span>
+                        Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentDeliverableId = null;
+        let currentAction = null;
+
+        // Filter functionality
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Filter deliverables
+                const status = this.dataset.status;
+                const cards = document.querySelectorAll('.deliverable-card');
+                
+                cards.forEach(card => {
+                    if (status === 'all' || card.dataset.status === status) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function viewDeliverable(deliverableId) {
+            // Implement view deliverable details
+            window.open(`/coordinator/api/deliverables/${deliverableId}`, '_blank');
+        }
+
+        function startReview(deliverableId) {
+            updateDeliverableStatus(deliverableId, 'start_review', 'Entregable marcado como en revisión');
+        }
+
+        function approveDeliverable(deliverableId) {
+            currentDeliverableId = deliverableId;
+            currentAction = 'approve';
+            document.getElementById('modalTitle').textContent = 'Aprobar Entregable';
+            document.getElementById('observaciones').placeholder = 'Comentarios sobre la aprobación (opcional)...';
+            document.getElementById('commentModal').style.display = 'block';
+        }
+
+        function requestChanges(deliverableId) {
+            currentDeliverableId = deliverableId;
+            currentAction = 'request_changes';
+            document.getElementById('modalTitle').textContent = 'Solicitar Cambios';
+            document.getElementById('observaciones').placeholder = 'Describe los cambios necesarios...';
+            document.getElementById('observaciones').required = true;
+            document.getElementById('commentModal').style.display = 'block';
+        }
+
+        function rejectDeliverable(deliverableId) {
+            currentDeliverableId = deliverableId;
+            currentAction = 'reject';
+            document.getElementById('modalTitle').textContent = 'Rechazar Entregable';
+            document.getElementById('observaciones').placeholder = 'Motivo del rechazo...';
+            document.getElementById('observaciones').required = true;
+            document.getElementById('commentModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            document.getElementById('commentForm').reset();
+            document.getElementById('observaciones').required = false;
+            currentDeliverableId = null;
+            currentAction = null;
+        }
+
+        function updateDeliverableStatus(deliverableId, action, defaultMessage = '') {
+            const observaciones = document.getElementById('observaciones')?.value || defaultMessage;
+            
+            // Show loading
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.loading').style.display = 'inline-block';
+            }
+
+            fetch(`/coordinator/api/deliverables/${deliverableId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    observaciones: observaciones
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showAlert(data.message, 'success');
+                    // Reload page to update the interface
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(data.message || 'Error al actualizar el entregable', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Error de conexión', 'error');
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('.loading').style.display = 'none';
+                }
+                closeModal();
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Handle comment form submission
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (currentDeliverableId && currentAction) {
+                updateDeliverableStatus(currentDeliverableId, currentAction);
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('commentModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

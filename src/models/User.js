@@ -165,11 +165,11 @@ class User extends BaseModel {
   async getUserAreas(userId) {
     try {
       const query = `
-        SELECT a.*, uat.created_at as fecha_asignacion, uat.es_admin, a.id as area_trabajo_id
+        SELECT a.*, uat.created_at as fecha_asignacion, uat.es_admin, uat.es_propietario, a.id as area_trabajo_id
         FROM areas_trabajo a
         INNER JOIN usuario_areas_trabajo uat ON a.id = uat.area_trabajo_id
         WHERE uat.usuario_id = ? AND uat.activo = 1 AND a.activo = 1
-        ORDER BY a.codigo
+        ORDER BY uat.es_propietario DESC, uat.es_admin DESC, a.codigo
       `;
       
       const [rows] = await this.db.execute(query, [userId]);
@@ -195,7 +195,7 @@ class User extends BaseModel {
   }
 
   // Asignar usuario a área de trabajo
-  async assignToArea(userId, areaId, isAdmin = false) {
+  async assignToArea(userId, areaId, isAdmin = false, isOwner = false) {
     try {
       // Verificar que no exista la relación
       const exists = await this.belongsToArea(userId, areaId);
@@ -203,12 +203,17 @@ class User extends BaseModel {
         throw new Error('El usuario ya pertenece a esta área de trabajo');
       }
 
+      // Si es propietario, debe ser también admin
+      if (isOwner) {
+        isAdmin = true;
+      }
+
       const query = `
-        INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, activo, created_at)
-        VALUES (?, ?, ?, 1, ?)
+        INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, es_propietario, activo, created_at)
+        VALUES (?, ?, ?, ?, 1, ?)
       `;
       
-      const [result] = await this.db.execute(query, [userId, areaId, isAdmin ? 1 : 0, new Date()]);
+      const [result] = await this.db.execute(query, [userId, areaId, isAdmin ? 1 : 0, isOwner ? 1 : 0, new Date()]);
       return result;
     } catch (error) {
       throw new Error(`Error assigning user to area: ${error.message}`);
@@ -338,6 +343,156 @@ class User extends BaseModel {
       return rows.length > 0;
     } catch (error) {
       throw new Error(`Error checking area access: ${error.message}`);
+    }
+  }
+
+  // ===== FUNCIONES DEL SISTEMA PROPIETARIO/INVITADO =====
+
+  // Verificar si un usuario es propietario de un área específica
+  async isAreaOwner(userId, areaTrabajoId) {
+    try {
+      const query = `
+        SELECT 1 FROM usuario_areas_trabajo 
+        WHERE usuario_id = ? AND area_trabajo_id = ? AND es_propietario = 1 AND activo = 1
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId, areaTrabajoId]);
+      return rows.length > 0;
+    } catch (error) {
+      throw new Error(`Error checking if user is area owner: ${error.message}`);
+    }
+  }
+
+  // Obtener el propietario de un área específica
+  async getAreaOwner(areaTrabajoId) {
+    try {
+      const query = `
+        SELECT u.*, uat.fecha_asignacion
+        FROM usuarios u
+        INNER JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id
+        WHERE uat.area_trabajo_id = ? AND uat.es_propietario = 1 AND uat.activo = 1 AND u.activo = 1
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaTrabajoId]);
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      throw new Error(`Error getting area owner: ${error.message}`);
+    }
+  }
+
+  // Obtener áreas donde el usuario es propietario
+  async getOwnedAreas(userId) {
+    try {
+      const query = `
+        SELECT a.*, uat.fecha_asignacion
+        FROM areas_trabajo a
+        INNER JOIN usuario_areas_trabajo uat ON a.id = uat.area_trabajo_id
+        WHERE uat.usuario_id = ? AND uat.es_propietario = 1 AND uat.activo = 1 AND a.activo = 1
+        ORDER BY a.codigo
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting owned areas: ${error.message}`);
+    }
+  }
+
+  // Obtener áreas donde el usuario es invitado (no propietario)
+  async getGuestAreas(userId) {
+    try {
+      const query = `
+        SELECT a.*, uat.fecha_asignacion, uat.es_admin
+        FROM areas_trabajo a
+        INNER JOIN usuario_areas_trabajo uat ON a.id = uat.area_trabajo_id
+        WHERE uat.usuario_id = ? AND uat.es_propietario = 0 AND uat.activo = 1 AND a.activo = 1
+        ORDER BY a.codigo
+      `;
+      
+      const [rows] = await this.db.execute(query, [userId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting guest areas: ${error.message}`);
+    }
+  }
+
+  // Transferir propiedad de un área a otro usuario
+  async transferAreaOwnership(currentOwnerId, newOwnerId, areaTrabajoId) {
+    try {
+      // Verificar que el usuario actual es propietario
+      const isOwner = await this.isAreaOwner(currentOwnerId, areaTrabajoId);
+      if (!isOwner) {
+        throw new Error('El usuario actual no es propietario de esta área');
+      }
+
+      // Verificar que el nuevo propietario tiene acceso al área
+      const hasAccess = await this.hasAreaAccess(newOwnerId, areaTrabajoId);
+      if (!hasAccess) {
+        throw new Error('El nuevo propietario debe tener acceso al área primero');
+      }
+
+      // Iniciar transacción
+      await this.db.execute('START TRANSACTION');
+
+      try {
+        // Remover propiedad del propietario actual
+        await this.db.execute(`
+          UPDATE usuario_areas_trabajo 
+          SET es_propietario = 0 
+          WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
+        `, [currentOwnerId, areaTrabajoId]);
+
+        // Asignar propiedad al nuevo propietario (y hacerlo admin si no lo es)
+        await this.db.execute(`
+          UPDATE usuario_areas_trabajo 
+          SET es_propietario = 1, es_admin = 1 
+          WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1
+        `, [newOwnerId, areaTrabajoId]);
+
+        await this.db.execute('COMMIT');
+        return true;
+      } catch (error) {
+        await this.db.execute('ROLLBACK');
+        throw error;
+      }
+    } catch (error) {
+      throw new Error(`Error transferring area ownership: ${error.message}`);
+    }
+  }
+
+  // Verificar permisos de propietario para acciones críticas
+  async canPerformOwnerAction(userId, areaTrabajoId, action) {
+    try {
+      const isOwner = await this.isAreaOwner(userId, areaTrabajoId);
+      
+      // Acciones que solo puede realizar el propietario
+      const ownerOnlyActions = [
+        'delete_area',
+        'transfer_ownership',
+        'remove_admin',
+        'change_area_settings'
+      ];
+
+      if (ownerOnlyActions.includes(action)) {
+        return isOwner;
+      }
+
+      // Acciones que puede realizar propietario o admin
+      const adminActions = [
+        'invite_user',
+        'remove_user',
+        'manage_projects',
+        'view_reports'
+      ];
+
+      if (adminActions.includes(action)) {
+        return isOwner || await this.isAreaAdmin(userId, areaTrabajoId);
+      }
+
+      // Acciones que puede realizar cualquier miembro
+      return await this.hasAreaAccess(userId, areaTrabajoId);
+    } catch (error) {
+      throw new Error(`Error checking owner permissions: ${error.message}`);
     }
   }
 

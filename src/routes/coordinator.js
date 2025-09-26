@@ -3,6 +3,7 @@ const router = express.Router();
 const AuthMiddleware = require('../middlewares/auth');
 const ProjectController = require('../controllers/ProjectController');
 const DashboardController = require('../controllers/DashboardController');
+const DeliverableController = require('../controllers/DeliverableController');
 
 // Middleware para verificar que el usuario sea coordinador
 router.use(AuthMiddleware.requireAuth);
@@ -10,6 +11,7 @@ router.use(AuthMiddleware.requireRole('Coordinador Académico'));
 
 const projectController = new ProjectController();
 const dashboardController = new DashboardController();
+const deliverableController = new DeliverableController();
 
 // ===== RUTAS DE PROYECTOS =====
 router.get('/projects', async (req, res) => {
@@ -78,6 +80,17 @@ router.get('/calendar', async (req, res) => {
   }
 });
 
+// ===== RUTAS DE REVISIÓN DE ENTREGABLES =====
+router.get('/deliverables', async (req, res) => {
+  try {
+    await deliverableController.coordinatorReview(req, res);
+  } catch (error) {
+    console.error('Error loading coordinator deliverable review:', error);
+    req.flash('error', 'Error al cargar la revisión de entregables');
+    res.redirect('/dashboard/coordinator');
+  }
+});
+
 // ===== API ENDPOINTS =====
 
 // API para obtener proyectos del coordinador
@@ -88,6 +101,36 @@ router.get('/api/projects', async (req, res) => {
   } catch (error) {
     console.error('Error in coordinator projects API:', error);
     res.status(500).json({ success: false, error: 'Error al obtener proyectos' });
+  }
+});
+
+// API para actualizar estado de entregable
+router.post('/api/deliverables/:deliverableId/status', async (req, res) => {
+  try {
+    await deliverableController.updateDeliverableStatus(req, res);
+  } catch (error) {
+    console.error('Error updating deliverable status:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+});
+
+// API para obtener detalles de entregable
+router.get('/api/deliverables/:deliverableId', async (req, res) => {
+  try {
+    await deliverableController.getDeliverableDetails(req, res);
+  } catch (error) {
+    console.error('Error getting deliverable details:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
+  }
+});
+
+// API para agregar comentario a entregable
+router.post('/api/deliverables/:deliverableId/comments', async (req, res) => {
+  try {
+    await deliverableController.addComment(req, res);
+  } catch (error) {
+    console.error('Error adding deliverable comment:', error);
+    res.status(500).json({ success: false, error: 'Error interno del servidor' });
   }
 });
 

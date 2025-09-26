@@ -307,6 +307,298 @@ class Deliverable extends BaseModel {
       throw new Error(`Error counting deliverable comments: ${error.message}`);
     }
   }
+
+  // ==================== GESTIÓN DE WORKFLOW EXPANDIDO ====================
+
+  // Obtener estados válidos para transiciones
+  getValidStates() {
+    return [
+      'pendiente',
+      'en_progreso', 
+      'entregado',
+      'en_revision',
+      'aceptado',
+      'rechazado',
+      'requiere_cambios',
+      'completado'
+    ];
+  }
+
+  // Obtener transiciones válidas desde un estado
+  getValidTransitions(currentState) {
+    const transitions = {
+      'pendiente': ['en_progreso', 'entregado'],
+      'en_progreso': ['entregado', 'pendiente'],
+      'entregado': ['en_revision', 'en_progreso'],
+      'en_revision': ['aceptado', 'rechazado', 'requiere_cambios'],
+      'requiere_cambios': ['en_progreso', 'entregado'],
+      'aceptado': ['completado'],
+      'rechazado': [], // Estado final
+      'completado': [] // Estado final
+    };
+    
+    return transitions[currentState] || [];
+  }
+
+  // Validar si una transición es válida
+  isValidTransition(currentState, newState) {
+    const validTransitions = this.getValidTransitions(currentState);
+    return validTransitions.includes(newState);
+  }
+
+  // Actualizar estado con validación de workflow
+  async updateStatusWithWorkflow(deliverableId, newStatus, observaciones = null, userId = null) {
+    try {
+      // Obtener estado actual
+      const deliverable = await this.findById(deliverableId);
+      if (!deliverable) {
+        throw new Error('Entregable no encontrado');
+      }
+
+      // Validar transición
+      if (!this.isValidTransition(deliverable.estado, newStatus)) {
+        throw new Error(`Transición inválida de '${deliverable.estado}' a '${newStatus}'`);
+      }
+
+      // Preparar datos de actualización
+      const updateData = {
+        estado: newStatus,
+        updated_at: new Date()
+      };
+      
+      if (observaciones) {
+        updateData.observaciones = observaciones;
+      }
+
+      // Acciones específicas por estado
+      switch (newStatus) {
+        case 'entregado':
+          updateData.fecha_entrega_real = new Date();
+          break;
+        case 'en_revision':
+          updateData.fecha_revision = new Date();
+          break;
+        case 'aceptado':
+        case 'completado':
+          updateData.fecha_finalizacion = new Date();
+          break;
+      }
+
+      // Actualizar entregable
+      const result = await this.update(deliverableId, updateData);
+
+      // Registrar cambio de estado si se proporciona userId
+      if (userId) {
+        await this.logStateChange(deliverableId, deliverable.estado, newStatus, userId, observaciones);
+      }
+
+      return result;
+    } catch (error) {
+      throw new Error(`Error updating deliverable status with workflow: ${error.message}`);
+    }
+  }
+
+  // Registrar cambio de estado en el historial
+  async logStateChange(deliverableId, fromState, toState, userId, observaciones = null) {
+    try {
+      const query = `
+        INSERT INTO entregable_historial_estados 
+        (entregable_id, estado_anterior, estado_nuevo, usuario_id, observaciones, created_at)
+        VALUES (?, ?, ?, ?, ?, NOW())
+      `;
+      
+      await this.db.execute(query, [deliverableId, fromState, toState, userId, observaciones]);
+    } catch (error) {
+      // Si la tabla no existe, crear comentario como alternativa
+      await this.addComment(deliverableId, userId, 
+        `Estado cambiado de '${fromState}' a '${toState}'. ${observaciones || ''}`, 
+        'cambio_estado'
+      );
+    }
+  }
+
+  // Obtener entregables por estado específico con información adicional
+  async findByStatusWithDetails(estado) {
+    try {
+      const query = `
+        SELECT 
+          e.*,
+          p.titulo as proyecto_titulo,
+          p.estado as proyecto_estado,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          fp.nombre as fase_nombre,
+          at.codigo as area_trabajo_codigo,
+          at.nombre as area_trabajo_nombre
+        FROM entregables e
+        LEFT JOIN proyectos p ON e.proyecto_id = p.id
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
+        LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
+        WHERE e.estado = ?
+        ORDER BY e.fecha_entrega ASC
+      `;
+      
+      const [rows] = await this.db.execute(query, [estado]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding deliverables by status with details: ${error.message}`);
+    }
+  }
+
+  // Obtener entregables que requieren atención (en revisión, requiere cambios)
+  async findRequiringAttention() {
+    try {
+      return await this.findByStatusWithDetails('en_revision');
+    } catch (error) {
+      throw new Error(`Error finding deliverables requiring attention: ${error.message}`);
+    }
+  }
+
+  // Obtener entregables que requieren cambios
+  async findRequiringChanges() {
+    try {
+      return await this.findByStatusWithDetails('requiere_cambios');
+    } catch (error) {
+      throw new Error(`Error finding deliverables requiring changes: ${error.message}`);
+    }
+  }
+
+  // Obtener estadísticas expandidas por estado
+  async getExpandedStatistics() {
+    try {
+      const query = `
+        SELECT 
+          estado,
+          COUNT(*) as cantidad,
+          COUNT(CASE WHEN fecha_limite < NOW() AND estado NOT IN ('aceptado', 'completado', 'rechazado') THEN 1 END) as vencidos
+        FROM entregables 
+        GROUP BY estado
+        ORDER BY 
+          CASE estado
+            WHEN 'pendiente' THEN 1
+            WHEN 'en_progreso' THEN 2
+            WHEN 'entregado' THEN 3
+            WHEN 'en_revision' THEN 4
+            WHEN 'requiere_cambios' THEN 5
+            WHEN 'aceptado' THEN 6
+            WHEN 'completado' THEN 7
+            WHEN 'rechazado' THEN 8
+            ELSE 9
+          END
+      `;
+      
+      const [rows] = await this.db.execute(query);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting expanded deliverable statistics: ${error.message}`);
+    }
+  }
+
+  // Obtener resumen de workflow para un área de trabajo
+  async getWorkflowSummary(areaTrabajoId = null) {
+    try {
+      let query = `
+        SELECT 
+          e.estado,
+          COUNT(*) as cantidad,
+          AVG(DATEDIFF(NOW(), e.created_at)) as dias_promedio,
+          COUNT(CASE WHEN e.fecha_limite < NOW() AND e.estado NOT IN ('aceptado', 'completado', 'rechazado') THEN 1 END) as vencidos
+        FROM entregables e
+      `;
+      
+      const values = [];
+      
+      if (areaTrabajoId) {
+        query += ` WHERE e.area_trabajo_id = ?`;
+        values.push(areaTrabajoId);
+      }
+      
+      query += ` GROUP BY e.estado`;
+      
+      const [rows] = await this.db.execute(query, values);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error getting workflow summary: ${error.message}`);
+    }
+  }
+
+  // Obtener entregable por ID con detalles completos
+  async findByIdWithDetails(deliverableId) {
+    try {
+      const query = `
+        SELECT 
+          e.*,
+          p.titulo as proyecto_titulo,
+          p.estado as proyecto_estado,
+          p.descripcion as proyecto_descripcion,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          director.nombres as director_nombres,
+          director.apellidos as director_apellidos,
+          director.email as director_email,
+          fp.nombre as fase_nombre,
+          fp.descripcion as fase_descripcion,
+          at.codigo as area_trabajo_codigo,
+          at.nombre as area_trabajo_nombre,
+          DATEDIFF(e.fecha_limite, NOW()) as dias_restantes,
+          (SELECT COUNT(*) FROM entregable_comentarios ec WHERE ec.entregable_id = e.id) as total_comentarios
+        FROM entregables e
+        LEFT JOIN proyectos p ON e.proyecto_id = p.id
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios director ON p.director_id = director.id
+        LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
+        LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
+        WHERE e.id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [deliverableId]);
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      throw new Error(`Error finding deliverable by ID with details: ${error.message}`);
+    }
+  }
+
+  // Obtener entregables por área que requieren revisión del coordinador
+  async findByAreaForReview(areaTrabajoId) {
+    try {
+      const query = `
+        SELECT 
+          e.*,
+          p.titulo as proyecto_titulo,
+          p.estado as proyecto_estado,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          fp.nombre as fase_nombre,
+          fp.descripcion as fase_descripcion,
+          at.codigo as area_trabajo_codigo,
+          at.nombre as area_trabajo_nombre,
+          DATEDIFF(e.fecha_limite, NOW()) as dias_restantes,
+          (SELECT COUNT(*) FROM entregable_comentarios ce WHERE ce.entregable_id = e.id) as total_comentarios
+        FROM entregables e
+        LEFT JOIN proyectos p ON e.proyecto_id = p.id
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
+        LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
+        WHERE e.area_trabajo_id = ? 
+          AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios')
+        ORDER BY 
+          CASE e.estado
+            WHEN 'entregado' THEN 1
+            WHEN 'en_revision' THEN 2
+            WHEN 'requiere_cambios' THEN 3
+          END,
+          e.fecha_entrega ASC
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaTrabajoId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding deliverables by area for review: ${error.message}`);
+    }
+  }
 }
 
 module.exports = Deliverable;

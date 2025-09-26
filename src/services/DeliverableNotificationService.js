@@ -1,0 +1,176 @@
+const Notification = require('../models/Notification');
+const User = require('../models/User');
+const Project = require('../models/Project');
+
+class DeliverableNotificationService {
+    constructor() {
+        this.notificationModel = new Notification();
+        this.userModel = new User();
+        this.projectModel = new Project();
+    }
+
+    // Notificar cuando un estudiante entrega un trabajo
+    async notifyDeliverableSubmitted(deliverableId, deliverableData) {
+        try {
+            const { proyecto_id, estudiante_id, titulo } = deliverableData;
+            
+            // Obtener información del proyecto y coordinador
+            const projectInfo = await this.projectModel.findByIdWithDetails(proyecto_id);
+            if (!projectInfo || !projectInfo.coordinador_id) {
+                console.log('No se encontró coordinador para el proyecto');
+                return;
+            }
+
+            const notificationData = {
+                titulo: '📋 Nuevo Entregable Recibido',
+                mensaje: `El estudiante ha entregado: "${titulo}" en el proyecto "${projectInfo.nombre}"`,
+                tipo: 'info',
+                url_accion: `/coordinator/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(projectInfo.coordinador_id, notificationData);
+            console.log(`✅ Notificación enviada al coordinador ${projectInfo.coordinador_id} por entregable ${deliverableId}`);
+        } catch (error) {
+            console.error('Error notifying deliverable submission:', error);
+        }
+    }
+
+    // Notificar cuando el coordinador aprueba un entregable
+    async notifyDeliverableApproved(deliverableId, deliverableData, coordinatorId) {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+
+            const notificationData = {
+                titulo: '✅ Entregable Aprobado',
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido aprobado`,
+                tipo: 'success',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, notificationData);
+            console.log(`✅ Notificación de aprobación enviada al estudiante ${estudiante_id}`);
+        } catch (error) {
+            console.error('Error notifying deliverable approval:', error);
+        }
+    }
+
+    // Notificar cuando el coordinador rechaza un entregable
+    async notifyDeliverableRejected(deliverableId, deliverableData, coordinatorId, comentario = '') {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+
+            const mensaje = comentario 
+                ? `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido rechazado. Comentario: ${comentario}`
+                : `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido rechazado`;
+
+            const notificationData = {
+                titulo: '❌ Entregable Rechazado',
+                mensaje,
+                tipo: 'error',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, notificationData);
+            console.log(`✅ Notificación de rechazo enviada al estudiante ${estudiante_id}`);
+        } catch (error) {
+            console.error('Error notifying deliverable rejection:', error);
+        }
+    }
+
+    // Notificar cuando se requieren cambios en un entregable
+    async notifyDeliverableNeedsChanges(deliverableId, deliverableData, coordinatorId, comentario = '') {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+
+            const mensaje = comentario 
+                ? `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" requiere cambios. Comentario: ${comentario}`
+                : `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" requiere cambios`;
+
+            const notificationData = {
+                titulo: '🔄 Entregable Requiere Cambios',
+                mensaje,
+                tipo: 'warning',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, notificationData);
+            console.log(`✅ Notificación de cambios requeridos enviada al estudiante ${estudiante_id}`);
+        } catch (error) {
+            console.error('Error notifying deliverable changes needed:', error);
+        }
+    }
+
+    // Notificar cuando un entregable está próximo a vencer
+    async notifyDeliverableDueSoon(deliverableId, deliverableData, daysUntilDue) {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre, fecha_limite } = deliverableData;
+
+            const notificationData = {
+                titulo: '⏰ Entregable Próximo a Vencer',
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" vence en ${daysUntilDue} días (${fecha_limite})`,
+                tipo: 'warning',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, notificationData);
+            console.log(`✅ Notificación de vencimiento enviada al estudiante ${estudiante_id}`);
+        } catch (error) {
+            console.error('Error notifying deliverable due soon:', error);
+        }
+    }
+
+    // Notificar cuando un entregable ha vencido
+    async notifyDeliverableOverdue(deliverableId, deliverableData) {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre, coordinador_id } = deliverableData;
+
+            // Notificar al estudiante
+            const studentNotification = {
+                titulo: '🚨 Entregable Vencido',
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha vencido`,
+                tipo: 'error',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, studentNotification);
+
+            // Notificar al coordinador
+            if (coordinador_id) {
+                const coordinatorNotification = {
+                    titulo: '🚨 Entregable Vencido',
+                    mensaje: `El entregable "${titulo}" del proyecto "${proyecto_nombre}" ha vencido sin ser entregado`,
+                    tipo: 'error',
+                    url_accion: `/coordinator/deliverables?deliverable=${deliverableId}`
+                };
+
+                await this.notificationModel.createForUser(coordinador_id, coordinatorNotification);
+            }
+
+            console.log(`✅ Notificaciones de vencimiento enviadas para entregable ${deliverableId}`);
+        } catch (error) {
+            console.error('Error notifying deliverable overdue:', error);
+        }
+    }
+
+    // Notificar cuando se agrega un comentario a un entregable
+    async notifyDeliverableComment(deliverableId, deliverableData, commentData) {
+        try {
+            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+            const { autor_nombre, comentario } = commentData;
+
+            const notificationData = {
+                titulo: '💬 Nuevo Comentario en Entregable',
+                mensaje: `${autor_nombre} ha comentado en tu entregable "${titulo}": ${comentario.substring(0, 100)}${comentario.length > 100 ? '...' : ''}`,
+                tipo: 'info',
+                url_accion: `/student/deliverables?deliverable=${deliverableId}`
+            };
+
+            await this.notificationModel.createForUser(estudiante_id, notificationData);
+            console.log(`✅ Notificación de comentario enviada al estudiante ${estudiante_id}`);
+        } catch (error) {
+            console.error('Error notifying deliverable comment:', error);
+        }
+    }
+}
+
+module.exports = DeliverableNotificationService;

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Form</title>
+</head>
+<body>
+    <h1>Test de Formulario de Perfil</h1>
+    
+    <form id="testForm">
+        <div>
+            <label>Nombres:</label>
+            <input type="text" name="nombres" value="Juan Carlos" required>
+        </div>
+        <div>
+            <label>Apellidos:</label>
+            <input type="text" name="apellidos" value="Pérez García" required>
+        </div>
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" value="estudiante1@test.com" required>
+        </div>
+        <div>
+            <label>Teléfono:</label>
+            <input type="tel" name="telefono" value="3001234567">
+        </div>
+        <div>
+            <label>Fecha de Nacimiento:</label>
+            <input type="date" name="fecha_nacimiento" value="1995-05-15">
+        </div>
+        <button type="submit">Guardar Cambios</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            console.log('🚀 Formulario enviado');
+            
+            const formData = new FormData(this);
+            
+            // Log de los datos del formulario
+            console.log('📝 Datos del formulario:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            
+            try {
+                const response = await fetch('/student/profile/update', {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+                
+                const result = await response.text();
+                console.log('📄 Contenido de la respuesta:', result);
+                
+                document.getElementById('result').innerHTML = `
+                    <h3>Resultado:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Response: ${result}</p>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <h3>Error:</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
