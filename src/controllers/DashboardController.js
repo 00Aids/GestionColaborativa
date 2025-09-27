@@ -84,91 +84,10 @@ class DashboardController {
         return res.redirect('/auth/login');
       }
       
-      // Obtener estadísticas filtradas por área del usuario
-      let projectStatsRaw, deliverableStatsRaw, evaluationStatsRaw;
-      let overdueDeliverables, recentProjects;
+      // Redirigir al dashboard kanban donde están los proyectos y la funcionalidad completa
+      // El dashboard kanban ya tiene la corrección para "Administrador General"
+      return res.redirect('/dashboard/kanban');
       
-      if (req.areaTrabajoId) {
-        // Usuario tiene área asignada - filtrar por área
-        
-        // Usar método específico para estadísticas por área si existe
-        projectStatsRaw = await this.projectModel.getStatisticsByArea(req.areaTrabajoId);
-        
-        // Para entregables, obtener todos los de proyectos del área
-        const areaProjects = await this.projectModel.findByArea(req.areaTrabajoId);
-        const areaProjectIds = areaProjects.map(p => p.id);
-        
-        if (areaProjectIds.length > 0) {
-          // Obtener entregables de proyectos del área
-          const areaDeliverables = await this.deliverableModel.findWithProject({ 
-            area_trabajo_id: req.areaTrabajoId 
-          });
-          
-          // Calcular estadísticas manualmente
-          deliverableStatsRaw = [
-            { estado: 'pendiente', cantidad: areaDeliverables.filter(d => d.estado === 'pendiente').length },
-            { estado: 'en_progreso', cantidad: areaDeliverables.filter(d => d.estado === 'en_progreso').length },
-            { estado: 'completado', cantidad: areaDeliverables.filter(d => d.estado === 'completado').length }
-          ].filter(stat => stat.cantidad > 0);
-          
-          // Entregables vencidos del área
-          overdueDeliverables = areaDeliverables.filter(d => {
-            const today = new Date();
-            const dueDate = new Date(d.fecha_limite);
-            return dueDate < today && d.estado !== 'completado';
-          });
-        } else {
-          deliverableStatsRaw = [];
-          overdueDeliverables = [];
-        }
-        
-        // Evaluaciones del área (simplificado por ahora)
-        evaluationStatsRaw = [];
-        
-        // Proyectos recientes del área
-        recentProjects = areaProjects.slice(0, 5);
-        
-      } else {
-        // Usuario sin área - mostrar estadísticas vacías o globales según política
-        projectStatsRaw = [];
-        deliverableStatsRaw = [];
-        evaluationStatsRaw = [];
-        overdueDeliverables = [];
-        recentProjects = [];
-      }
-  
-      // Procesar estadísticas para obtener totales
-      const projectStats = {
-        total: projectStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
-        byStatus: projectStatsRaw
-      };
-  
-      const deliverableStats = {
-        total: deliverableStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
-        byStatus: deliverableStatsRaw
-      };
-  
-      const evaluationStats = {
-        total: evaluationStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
-        byStatus: evaluationStatsRaw,
-        averageGrade: evaluationStatsRaw.length > 0 ? 
-          evaluationStatsRaw.reduce((sum, stat) => sum + (stat.promedio_nota || 0), 0) / evaluationStatsRaw.length : 0
-      };
-  
-      // Obtener usuarios recientes (sin filtrar por área por ahora)
-      const recentUsers = await this.userModel.findWithRole({ activo: true });
-  
-      res.render('admin/dashboard', {
-        user: user,
-        projectStats,
-        deliverableStats,
-        evaluationStats,
-        overdueDeliverables: overdueDeliverables || [],
-        recentUsers: recentUsers || [],
-        recentProjects: recentProjects || [],
-        success: req.flash('success'),
-        error: req.flash('error')
-      });
     } catch (error) {
       console.error('Error in admin dashboard:', error);
       res.status(500).render('errors/500', { error: 'Error interno del servidor' });
@@ -502,6 +421,7 @@ class DashboardController {
           userProjects = await this.projectModel.findByDirector(user.id, areaFilter);
           break;
         case 'Administrador':
+        case 'Administrador General':
         case 'Coordinador':
           userProjects = await this.projectModel.findWithDetails(areaFilter);
           break;

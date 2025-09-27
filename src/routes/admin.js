@@ -25,6 +25,9 @@ router.get('/users/new', adminController.newUser.bind(adminController));
 router.post('/users/:userId/toggle-status', adminController.toggleUserStatus.bind(adminController));
 router.post('/users/:userId/change-role', adminController.changeUserRole.bind(adminController));
 
+// API route para obtener usuarios por rol (devuelve JSON)
+router.get('/api/users', adminController.getUsersByRole.bind(adminController));
+
 // =============================================
 // RUTAS DE GESTIÓN DE PROYECTOS
 // =============================================
