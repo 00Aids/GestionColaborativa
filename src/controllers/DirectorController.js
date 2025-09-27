@@ -1,0 +1,300 @@
+const Project = require('../models/Project');
+const User = require('../models/User');
+const Deliverable = require('../models/Deliverable');
+const Evaluation = require('../models/Evaluation');
+const pool = require('../config/database');
+
+class DirectorController {
+  constructor() {
+    this.projectModel = new Project();
+    this.userModel = new User();
+    this.deliverableModel = new Deliverable();
+    this.evaluationModel = new Evaluation();
+  }
+
+  // ===== GESTIÓN DE PROYECTOS DIRIGIDOS =====
+
+  // Listar proyectos dirigidos por el director
+  async projects(req, res) {
+    try {
+      const user = req.session.user;
+      const { search, estado, page = 1 } = req.query;
+      const limit = 10;
+      const offset = (page - 1) * limit;
+
+      // Obtener proyectos dirigidos por este director
+      let conditions = { director_id: user.id };
+      
+      // Aplicar filtros
+      if (estado) conditions.estado = estado;
+      
+      let directedProjects = await this.projectModel.findByDirector(user.id, conditions);
+
+      // Aplicar búsqueda por título si se especifica
+      if (search) {
+        directedProjects = directedProjects.filter(project => 
+          project.titulo.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      // Calcular estadísticas
+      const stats = {
+        total: directedProjects.length,
+        activos: directedProjects.filter(p => ['en_desarrollo', 'en_revision'].includes(p.estado)).length,
+        finalizados: directedProjects.filter(p => p.estado === 'finalizado').length,
+        pendientes: directedProjects.filter(p => p.estado === 'borrador').length
+      };
+
+      // Paginación
+      const totalProjects = directedProjects.length;
+      const paginatedProjects = directedProjects.slice(offset, offset + limit);
+      const totalPages = Math.ceil(totalProjects / limit);
+
+      res.render('director/projects', {
+        title: 'Proyectos Dirigidos',
+        user,
+        projects: paginatedProjects,
+        stats,
+        currentPage: parseInt(page),
+        totalPages,
+        search,
+        estado,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error loading director projects:', error);
+      req.flash('error', 'Error al cargar los proyectos dirigidos');
+      res.redirect('/dashboard/director');
+    }
+  }
+
+  // Obtener proyectos dirigidos (API)
+  async getProjectsByDirector(directorId) {
+    try {
+      return await this.projectModel.findByDirector(directorId);
+    } catch (error) {
+      console.error('Error getting projects by director:', error);
+      throw error;
+    }
+  }
+
+  // ===== GESTIÓN DE ENTREGABLES =====
+
+  // Listar entregables de proyectos dirigidos
+  async deliverables(req, res) {
+    try {
+      const user = req.session.user;
+      const { estado, proyecto, page = 1 } = req.query;
+      const limit = 15;
+      const offset = (page - 1) * limit;
+
+      // Obtener proyectos dirigidos
+      const directedProjects = await this.projectModel.findByDirector(user.id);
+      const projectIds = directedProjects.map(p => p.id);
+
+      if (projectIds.length === 0) {
+        return res.render('director/deliverables', {
+          title: 'Entregables de Proyectos Dirigidos',
+          user,
+          deliverables: [],
+          projects: [],
+          stats: { total: 0, pendientes: 0, aprobados: 0, rechazados: 0 },
+          currentPage: 1,
+          totalPages: 0,
+          estado,
+          proyecto,
+          success: req.flash('success'),
+          error: req.flash('error')
+        });
+      }
+
+      // Obtener entregables de todos los proyectos dirigidos
+      let allDeliverables = [];
+      for (const project of directedProjects) {
+        const deliverables = await this.deliverableModel.findByProject(project.id);
+        if (deliverables && deliverables.length > 0) {
+          // Agregar información del proyecto a cada entregable
+          const deliverablesWithProject = deliverables.map(deliverable => ({
+            ...deliverable,
+            proyecto_titulo: project.titulo,
+            estudiante_nombres: project.estudiante_nombres,
+            estudiante_apellidos: project.estudiante_apellidos
+          }));
+          allDeliverables.push(...deliverablesWithProject);
+        }
+      }
+
+      // Aplicar filtros
+      if (estado) {
+        allDeliverables = allDeliverables.filter(d => d.estado === estado);
+      }
+      if (proyecto) {
+        allDeliverables = allDeliverables.filter(d => d.proyecto_id == proyecto);
+      }
+
+      // Ordenar por fecha de entrega más reciente
+      allDeliverables.sort((a, b) => new Date(b.fecha_entrega) - new Date(a.fecha_entrega));
+
+      // Calcular estadísticas
+      const stats = {
+        total: allDeliverables.length,
+        pendientes: allDeliverables.filter(d => d.estado === 'pendiente').length,
+        aprobados: allDeliverables.filter(d => d.estado === 'aprobado').length,
+        rechazados: allDeliverables.filter(d => d.estado === 'rechazado').length
+      };
+
+      // Paginación
+      const totalDeliverables = allDeliverables.length;
+      const paginatedDeliverables = allDeliverables.slice(offset, offset + limit);
+      const totalPages = Math.ceil(totalDeliverables / limit);
+
+      res.render('director/deliverables', {
+        title: 'Entregables de Proyectos Dirigidos',
+        user,
+        deliverables: paginatedDeliverables,
+        projects: directedProjects,
+        stats,
+        currentPage: parseInt(page),
+        totalPages,
+        estado,
+        proyecto,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error loading director deliverables:', error);
+      req.flash('error', 'Error al cargar los entregables');
+      res.redirect('/dashboard/director');
+    }
+  }
+
+  // ===== GESTIÓN DE EVALUACIONES =====
+
+  // Listar evaluaciones de proyectos dirigidos
+  async evaluations(req, res) {
+    try {
+      const user = req.session.user;
+      const { estado, proyecto, page = 1 } = req.query;
+      const limit = 15;
+      const offset = (page - 1) * limit;
+
+      // Obtener proyectos dirigidos
+      const directedProjects = await this.projectModel.findByDirector(user.id);
+
+      if (directedProjects.length === 0) {
+        return res.render('director/evaluations', {
+          title: 'Evaluaciones de Proyectos Dirigidos',
+          user,
+          evaluations: [],
+          projects: [],
+          stats: { total: 0, pendientes: 0, completadas: 0 },
+          currentPage: 1,
+          totalPages: 0,
+          estado,
+          proyecto,
+          success: req.flash('success'),
+          error: req.flash('error')
+        });
+      }
+
+      // Obtener evaluaciones de todos los proyectos dirigidos
+      let allEvaluations = [];
+      for (const project of directedProjects) {
+        const evaluations = await this.evaluationModel.findByProject(project.id);
+        if (evaluations && evaluations.length > 0) {
+          // Agregar información del proyecto a cada evaluación
+          const evaluationsWithProject = evaluations.map(evaluation => ({
+            ...evaluation,
+            proyecto_titulo: project.titulo,
+            estudiante_nombres: project.estudiante_nombres,
+            estudiante_apellidos: project.estudiante_apellidos
+          }));
+          allEvaluations.push(...evaluationsWithProject);
+        }
+      }
+
+      // Aplicar filtros
+      if (estado) {
+        allEvaluations = allEvaluations.filter(e => e.estado === estado);
+      }
+      if (proyecto) {
+        allEvaluations = allEvaluations.filter(e => e.proyecto_id == proyecto);
+      }
+
+      // Ordenar por fecha de evaluación más reciente
+      allEvaluations.sort((a, b) => new Date(b.fecha_evaluacion) - new Date(a.fecha_evaluacion));
+
+      // Calcular estadísticas
+      const stats = {
+        total: allEvaluations.length,
+        pendientes: allEvaluations.filter(e => e.estado === 'pendiente').length,
+        completadas: allEvaluations.filter(e => e.estado === 'completada').length
+      };
+
+      // Paginación
+      const totalEvaluations = allEvaluations.length;
+      const paginatedEvaluations = allEvaluations.slice(offset, offset + limit);
+      const totalPages = Math.ceil(totalEvaluations / limit);
+
+      res.render('director/evaluations', {
+        title: 'Evaluaciones de Proyectos Dirigidos',
+        user,
+        evaluations: paginatedEvaluations,
+        projects: directedProjects,
+        stats,
+        currentPage: parseInt(page),
+        totalPages,
+        estado,
+        proyecto,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error loading director evaluations:', error);
+      req.flash('error', 'Error al cargar las evaluaciones');
+      res.redirect('/dashboard/director');
+    }
+  }
+
+  // ===== MÉTODOS DE APOYO =====
+
+  // Obtener proyecto por ID (verificando que sea dirigido por este director)
+  async getProjectById(projectId, directorId) {
+    try {
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      const project = projects[0];
+      
+      if (!project || project.director_id !== directorId) {
+        return null;
+      }
+      
+      return project;
+    } catch (error) {
+      console.error('Error getting project by ID:', error);
+      throw error;
+    }
+  }
+
+  // Obtener entregables por proyecto
+  async getDeliverablesByProject(projectId) {
+    try {
+      return await this.deliverableModel.findByProject(projectId);
+    } catch (error) {
+      console.error('Error getting deliverables by project:', error);
+      throw error;
+    }
+  }
+
+  // Obtener evaluaciones por proyecto
+  async getEvaluationsByProject(projectId) {
+    try {
+      return await this.evaluationModel.findByProject(projectId);
+    } catch (error) {
+      console.error('Error getting evaluations by project:', error);
+      throw error;
+    }
+  }
+}
+
+module.exports = DirectorController;

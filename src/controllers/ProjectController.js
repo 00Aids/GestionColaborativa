@@ -38,12 +38,15 @@ class ProjectController {
       
       let projects;
       
-      // Agregar filtro por área de trabajo
+      // Agregar filtro por área de trabajo (solo para roles que no sean Director de Proyecto)
       const areaTrabajoId = req.areaTrabajoId;
       const conditions = {};
       
       if (estado) conditions.estado = estado;
-      if (areaTrabajoId) conditions.area_trabajo_id = areaTrabajoId;
+      // Solo aplicar filtro por área de trabajo si no es Director de Proyecto
+      if (areaTrabajoId && user.rol_nombre !== 'Director de Proyecto') {
+        conditions.area_trabajo_id = areaTrabajoId;
+      }
       if (fechaInicio) conditions.fecha_inicio_desde = fechaInicio;
       if (fechaFin) conditions.fecha_fin_hasta = fechaFin;
       if (director) conditions.director_id = director;
@@ -131,6 +134,8 @@ class ProjectController {
         estado,
         fechaInicio,
         fechaFin,
+        dateFrom: fechaInicio, // Agregar alias para la vista
+        dateTo: fechaFin,      // Agregar alias para la vista
         director,
         estudiante,
         sortBy,
@@ -164,20 +169,28 @@ class ProjectController {
     try {
       const user = req.session.user;
       
-      // Solo Coordinadores y Administradores pueden crear proyectos
-      if (!['Coordinador Académico', 'Administrador General'].includes(user.rol_nombre)) {
+      // Solo Coordinadores, Administradores y Directores pueden crear proyectos
+      if (!['Coordinador Académico', 'Administrador General', 'Director de Proyecto'].includes(user.rol_nombre)) {
         req.flash('error', 'No tienes permisos para crear proyectos');
         return res.redirect('/projects');
       }
       
       // Obtener datos necesarios para el formulario
-      const [directors, students, coordinators, evaluators, lineasResult, ciclosResult] = await Promise.all([
+      const [directors, students, coordinators, evaluators, lineasResult, ciclosResult, administradoresResult] = await Promise.all([
         this.userModel.findByRole('Director de Proyecto'),
         this.userModel.findByRole('Estudiante'),
         this.userModel.findByRole('Coordinador Académico'),
         this.userModel.findByRole('Evaluador'),
         this.userModel.db.execute('SELECT * FROM lineas_investigacion WHERE activo = 1'),
-        this.userModel.db.execute('SELECT * FROM ciclos_academicos WHERE activo = 1')
+        this.userModel.db.execute('SELECT * FROM ciclos_academicos WHERE activo = 1'),
+        this.userModel.db.execute(`
+          SELECT u.id, u.nombres, u.apellidos, u.area_trabajo_id, at.nombre as area_nombre
+          FROM usuarios u
+          LEFT JOIN areas_trabajo at ON u.area_trabajo_id = at.id
+          WHERE u.rol_id = (SELECT id FROM roles WHERE nombre = 'Administrador General')
+          AND u.activo = 1
+          ORDER BY u.nombres, u.apellidos
+        `)
       ]);
       
       res.render('projects/create', {
@@ -187,6 +200,7 @@ class ProjectController {
         students: students || [],
         coordinators: coordinators || [],
         evaluators: evaluators || [],
+        administradores: administradoresResult[0] || [],
         lineasInvestigacion: lineasResult[0] || [],
         ciclosAcademicos: ciclosResult[0] || [],
         error: req.flash('error'),
@@ -209,6 +223,7 @@ class ProjectController {
         fecha_inicio,
         fecha_fin,
         director_id,
+        administrador_id,
         linea_investigacion_id,
         ciclo_academico_id,
         generate_invitation,
@@ -217,8 +232,8 @@ class ProjectController {
       } = req.body;
       
       // Validaciones básicas
-      if (!titulo || !descripcion || !objetivos || !director_id || !fecha_inicio || !fecha_fin) {
-        req.flash('error', 'Los campos Título, Descripción, Objetivos, Director, Fecha de Inicio y Fecha de Fin son obligatorios');
+      if (!titulo || !descripcion || !objetivos || !director_id || !administrador_id || !fecha_inicio || !fecha_fin) {
+        req.flash('error', 'Los campos Título, Descripción, Objetivos, Director, Administrador, Fecha de Inicio y Fecha de Fin son obligatorios');
         return res.redirect('/projects/create');
       }
       
@@ -234,17 +249,34 @@ class ProjectController {
         return res.redirect('/projects/create');
       }
       
+      // Obtener el área de trabajo del administrador seleccionado
+      const [adminResult] = await this.userModel.db.execute(
+        'SELECT area_trabajo_id FROM usuarios WHERE id = ? AND rol_id = (SELECT id FROM roles WHERE nombre = "Administrador General")',
+        [parseInt(administrador_id)]
+      );
+      
+      if (!adminResult || adminResult.length === 0) {
+        req.flash('error', 'El administrador seleccionado no es válido');
+        return res.redirect('/projects/create');
+      }
+      
+      const adminAreaTrabajoId = adminResult[0].area_trabajo_id;
+      if (!adminAreaTrabajoId) {
+        req.flash('error', 'El administrador seleccionado no tiene un área de trabajo asignada');
+        return res.redirect('/projects/create');
+      }
+      
       const projectData = {
         titulo: titulo.trim(),
         descripcion: descripcion.trim(),
         objetivos: objetivos.trim(),
         fecha_inicio,
         fecha_fin,
-        estudiante_id: user.id,
+        estudiante_id: null, // No asignar estudiante automáticamente
         director_id: parseInt(director_id),
         linea_investigacion_id: linea_investigacion_id ? parseInt(linea_investigacion_id) : null,
         ciclo_academico_id: ciclo_academico_id ? parseInt(ciclo_academico_id) : null,
-        area_trabajo_id: req.areaTrabajoId, // Asignar área de trabajo del usuario
+        area_trabajo_id: adminAreaTrabajoId, // Asignar área de trabajo del administrador seleccionado
         estado: 'borrador'
       };
       
@@ -258,12 +290,12 @@ class ProjectController {
         };
         
         const invitation = await this.projectModel.createInvitation(project.id, user.id, invitationOptions);
-        req.flash('success', `Proyecto creado exitosamente. Código de invitación: ${invitation.codigo}`);
+        req.flash('success', `Proyecto creado exitosamente y asignado al área de trabajo del administrador seleccionado. Código de invitación: ${invitation.codigo}`);
       } else {
-        req.flash('success', 'Proyecto creado exitosamente');
+        req.flash('success', 'Proyecto creado exitosamente y asignado al área de trabajo del administrador seleccionado');
       }
       
-      res.redirect(`/projects/${project.id}`);
+      res.redirect('/projects');
       
     } catch (error) {
       console.error('Error creating project:', error);
@@ -286,21 +318,25 @@ class ProjectController {
         return res.redirect('/projects');
       }
       
-      // Verificar que el proyecto pertenezca al área de trabajo del usuario
-      if (project.area_trabajo_id !== req.areaTrabajoId) {
-        req.flash('error', 'No tienes permisos para ver este proyecto');
-        return res.redirect('/projects');
-      }
-      
-      // Verificar permisos
-      if (user.rol_nombre === 'Estudiante' && project.estudiante_id !== user.id) {
-        req.flash('error', 'No tienes permisos para ver este proyecto');
-        return res.redirect('/projects');
-      }
-      
-      if (user.rol_nombre === 'Director' && project.director_id !== user.id) {
-        req.flash('error', 'No tienes permisos para ver este proyecto');
-        return res.redirect('/projects');
+      // Verificar permisos según el rol del usuario
+      if (user.rol_nombre === 'Estudiante') {
+        // Los estudiantes solo pueden ver proyectos de su área de trabajo donde sean estudiantes
+        if (project.area_trabajo_id !== req.areaTrabajoId || project.estudiante_id !== user.id) {
+          req.flash('error', 'No tienes permisos para ver este proyecto');
+          return res.redirect('/projects');
+        }
+      } else if (user.rol_nombre === 'Director de Proyecto') {
+        // Los directores pueden ver cualquier proyecto donde sean directores, independientemente del área
+        if (project.director_id !== user.id) {
+          req.flash('error', 'No tienes permisos para ver este proyecto');
+          return res.redirect('/projects');
+        }
+      } else {
+        // Para otros roles, verificar que el proyecto pertenezca al área de trabajo del usuario
+        if (project.area_trabajo_id !== req.areaTrabajoId) {
+          req.flash('error', 'No tienes permisos para ver este proyecto');
+          return res.redirect('/projects');
+        }
       }
       
       // Obtener entregables y evaluaciones

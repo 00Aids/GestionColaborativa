@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sistema de Gestión Académica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav-menu {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #4a5568;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: #667eea;
+            color: white;
+        }
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .dashboard-header h1 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        .text-muted {
+            color: #6c757d;
+        }
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .filters-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .form-control {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .bg-primary { background: #667eea; }
+        .bg-success { background: #28a745; }
+        .bg-warning { background: #ffc107; }
+        .bg-danger { background: #dc3545; }
+        .bg-info { background: #17a2b8; }
+        .stat-content h3 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+        }
+        .stat-content p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .deliverables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        .deliverable-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 4px solid #e2e8f0;
+        }
+        .deliverable-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .deliverable-card.pendiente {
+            border-left-color: #ffc107;
+        }
+        .deliverable-card.entregado {
+            border-left-color: #17a2b8;
+        }
+        .deliverable-card.en_revision {
+            border-left-color: #fd7e14;
+        }
+        .deliverable-card.aprobado {
+            border-left-color: #28a745;
+        }
+        .deliverable-card.rechazado {
+            border-left-color: #dc3545;
+        }
+        .deliverable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .deliverable-header h4 {
+            color: #2d3748;
+            margin: 0;
+            flex: 1;
+            margin-right: 1rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pendiente { background: #fff3cd; color: #856404; }
+        .status-entregado { background: #cce5ff; color: #004085; }
+        .status-en_revision { background: #ffeaa7; color: #d63031; }
+        .status-aprobado { background: #d1ecf1; color: #0c5460; }
+        .status-rechazado { background: #f8d7da; color: #721c24; }
+        .deliverable-info {
+            margin-bottom: 1rem;
+        }
+        .project-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        .deliverable-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+        }
+        .date-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .date-item.overdue {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .date-item.due-soon {
+            color: #fd7e14;
+            font-weight: bold;
+        }
+        .deliverable-description {
+            color: #6c757d;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .deliverable-files {
+            margin-bottom: 1rem;
+        }
+        .files-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            background: #f8f9fa;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+        .deliverable-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .review-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        .empty-state i {
+            margin-bottom: 1rem;
+        }
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        .pagination a, .pagination span {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            color: #4a5568;
+        }
+        .pagination a:hover {
+            background: #f7fafc;
+        }
+        .pagination .current {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        .fa-3x { font-size: 3rem; }
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .close:hover {
+            color: #dc3545;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                Sistema de Gestión Académica
+            </div>
+            <div class="user-info">
+                <span>Bienvenido, <%= user.nombres %> <%= user.apellidos %></span>
+                <a href="/auth/logout" class="btn btn-outline" style="margin-left: 1rem;">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav-menu">
+        <div class="nav-content">
+            <a href="/dashboard/director" class="nav-link">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="/director/projects" class="nav-link">
+                <i class="fas fa-project-diagram"></i> Proyectos Dirigidos
+            </a>
+            <a href="/director/deliverables" class="nav-link active">
+                <i class="fas fa-file-alt"></i> Entregables
+            </a>
+            <a href="/director/evaluations" class="nav-link">
+                <i class="fas fa-clipboard-check"></i> Evaluaciones
+            </a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Mensajes Flash -->
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <%= success %>
+            </div>
+        <% } %>
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <%= error %>
+            </div>
+        <% } %>
+
+        <div class="dashboard-header">
+            <h1><i class="fas fa-file-alt"></i> <%= title %></h1>
+            <p class="text-muted">Supervisa y revisa los entregables de tus proyectos dirigidos</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <form method="GET" action="/director/deliverables">
+                <div class="filters-row">
+                    <div class="form-group">
+                        <label for="search">Buscar entregable</label>
+                        <input type="text" id="search" name="search" class="form-control" 
+                               placeholder="Título del entregable..." value="<%= search || '' %>">
+                    </div>
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado" class="form-control">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente" <%= estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                            <option value="entregado" <%= estado === 'entregado' ? 'selected' : '' %>>Entregado</option>
+                            <option value="en_revision" <%= estado === 'en_revision' ? 'selected' : '' %>>En Revisión</option>
+                            <option value="aprobado" <%= estado === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
+                            <option value="rechazado" <%= estado === 'rechazado' ? 'selected' : '' %>>Rechazado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="proyecto">Proyecto</label>
+                        <select id="proyecto" name="proyecto" class="form-control">
+                            <option value="">Todos los proyectos</option>
+                            <% if (projects && projects.length > 0) { %>
+                                <% projects.forEach(project => { %>
+                                    <option value="<%= project.id %>" <%= proyecto == project.id ? 'selected' : '' %>>
+                                        <%= project.titulo %>
+                                    </option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="stats-row mb-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.total %></h3>
+                    <p>Total Entregables</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.entregados %></h3>
+                    <p>Entregados</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.en_revision %></h3>
+                    <p>En Revisión</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.aprobados %></h3>
+                    <p>Aprobados</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon bg-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3><%= stats.vencidos %></h3>
+                    <p>Vencidos</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Entregables -->
+        <div class="deliverables-grid">
+            <% if (deliverables.length === 0) { %>
+                <div class="empty-state">
+                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                    <h3>No hay entregables</h3>
+                    <p class="text-muted">
+                        <% if (search || estado || proyecto) { %>
+                            No se encontraron entregables que coincidan con los filtros aplicados.
+                        <% } else { %>
+                            Aún no hay entregables en tus proyectos dirigidos.
+                        <% } %>
+                    </p>
+                </div>
+            <% } else { %>
+                <% deliverables.forEach(deliverable => { %>
+                    <div class="deliverable-card <%= deliverable.estado || 'pendiente' %>" data-deliverable-id="<%= deliverable.id %>">
+                        <div class="deliverable-header">
+                            <h4><%= deliverable.titulo || 'Sin título' %></h4>
+                            <span class="status-badge status-<%= deliverable.estado || 'pendiente' %>">
+                                <%= (deliverable.estado || 'pendiente').replace('_', ' ').charAt(0).toUpperCase() + (deliverable.estado || 'pendiente').replace('_', ' ').slice(1) %>
+                            </span>
+                        </div>
+                        
+                        <div class="deliverable-info">
+                            <div class="project-info">
+                                <i class="fas fa-project-diagram"></i>
+                                <span><%= deliverable.proyecto_titulo || 'Sin proyecto' %></span>
+                            </div>
+                            
+                            <div class="student-info">
+                                <i class="fas fa-user-graduate"></i>
+                                <span><%= deliverable.estudiante_nombres ? deliverable.estudiante_nombres + ' ' + (deliverable.estudiante_apellidos || '') : 'Sin estudiante' %></span>
+                            </div>
+                            
+                            <div class="deliverable-dates">
+                                <% if (deliverable.fecha_entrega) { %>
+                                    <div class="date-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span>Entregado: <%= new Date(deliverable.fecha_entrega).toLocaleDateString('es-ES') %></span>
+                                    </div>
+                                <% } %>
+                                <% if (deliverable.fecha_limite) { %>
+                                    <div class="date-item <%= deliverable.is_overdue ? 'overdue' : deliverable.dias_restantes <= 3 ? 'due-soon' : '' %>">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <span>
+                                            <% if (deliverable.is_overdue) { %>
+                                                Vencido hace <%= Math.abs(deliverable.dias_restantes) %> día<%= Math.abs(deliverable.dias_restantes) !== 1 ? 's' : '' %>
+                                            <% } else { %>
+                                                Vence: <%= new Date(deliverable.fecha_limite).toLocaleDateString('es-ES') %>
+                                                <% if (deliverable.dias_restantes <= 3) { %>
+                                                    (<%= deliverable.dias_restantes %> día<%= deliverable.dias_restantes !== 1 ? 's' : '' %> restante<%= deliverable.dias_restantes !== 1 ? 's' : '' %>)
+                                                <% } %>
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <% if (deliverable.descripcion) { %>
+                            <div class="deliverable-description">
+                                <%= deliverable.descripcion %>
+                            </div>
+                        <% } %>
+
+                        <% if (deliverable.archivo_url) { %>
+                            <div class="deliverable-files">
+                                <div class="files-list">
+                                    <% 
+                                    const files = deliverable.archivo_url.split(',').filter(file => file.trim());
+                                    files.forEach(file => {
+                                        const fileName = file.split('/').pop();
+                                    %>
+                                        <div class="file-item">
+                                            <i class="fas fa-file"></i>
+                                            <span><%= fileName %></span>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
+                        <% } %>
+                        
+                        <div class="deliverable-actions">
+                            <a href="/deliverables/<%= deliverable.id %>" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </a>
+                            
+                            <% if (deliverable.archivo_url) { %>
+                                <% 
+                                const files = deliverable.archivo_url.split(',').filter(file => file.trim());
+                                if (files.length === 1) {
+                                %>
+                                    <a href="<%= files[0] %>" class="btn btn-outline btn-sm" target="_blank">
+                                        <i class="fas fa-download"></i> Descargar
+                                    </a>
+                                <% } else if (files.length > 1) { %>
+                                    <button class="btn btn-outline btn-sm" onclick="showFiles('<%= deliverable.id %>')">
+                                        <i class="fas fa-download"></i> Archivos (<%= files.length %>)
+                                    </button>
+                                <% } %>
+                            <% } %>
+                        </div>
+
+                        <!-- Acciones de revisión para entregables entregados -->
+                        <% if (deliverable.estado === 'entregado' || deliverable.estado === 'en_revision') { %>
+                            <div class="review-actions">
+                                <button class="btn btn-success btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'aprobado')">
+                                    <i class="fas fa-check"></i> Aprobar
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'rechazado')">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="addComment('<%= deliverable.id %>')">
+                                    <i class="fas fa-comment"></i> Comentar
+                                </button>
+                            </div>
+                        <% } %>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <!-- Paginación -->
+        <% if (totalPages > 1) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>">
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </a>
+                <% } %>
+                
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <% if (i === currentPage) { %>
+                        <span class="current"><%= i %></span>
+                    <% } else { %>
+                        <a href="?page=<%= i %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>"><%= i %></a>
+                    <% } %>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= estado ? '&estado=' + estado : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Modal para comentarios -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Agregar Comentario</h3>
+                <button class="close" onclick="closeModal('commentModal')">&times;</button>
+            </div>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label for="commentText">Comentario</label>
+                    <textarea id="commentText" name="comentario" class="form-control" 
+                              placeholder="Escribe tu comentario aquí..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('commentModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Comentario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para archivos -->
+    <div id="filesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Archivos del Entregable</h3>
+                <button class="close" onclick="closeModal('filesModal')">&times;</button>
+            </div>
+            <div id="filesList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentDeliverableId = null;
+
+        // Función para revisar entregable
+        function reviewDeliverable(deliverableId, action) {
+            if (!confirm(`¿Estás seguro de que deseas ${action === 'aprobado' ? 'aprobar' : 'rechazar'} este entregable?`)) {
+                return;
+            }
+
+            fetch(`/api/director/deliverables/${deliverableId}/review`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo procesar la acción'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la acción');
+            });
+        }
+
+        // Función para agregar comentario
+        function addComment(deliverableId) {
+            currentDeliverableId = deliverableId;
+            document.getElementById('commentModal').style.display = 'block';
+            document.getElementById('commentText').value = '';
+        }
+
+        // Función para mostrar archivos
+        function showFiles(deliverableId) {
+            const deliverableCard = document.querySelector(`[data-deliverable-id="${deliverableId}"]`);
+            const filesContainer = deliverableCard.querySelector('.deliverable-files .files-list');
+            
+            if (filesContainer) {
+                const fileItems = filesContainer.querySelectorAll('.file-item');
+                let filesHtml = '<div class="files-list">';
+                
+                fileItems.forEach(item => {
+                    const fileName = item.querySelector('span').textContent;
+                    // Aquí necesitarías obtener la URL real del archivo
+                    filesHtml += `
+                        <div class="file-item" style="justify-content: space-between; padding: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-file"></i>
+                                <span>${fileName}</span>
+                            </div>
+                            <a href="#" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                        </div>
+                    `;
+                });
+                
+                filesHtml += '</div>';
+                document.getElementById('filesList').innerHTML = filesHtml;
+                document.getElementById('filesModal').style.display = 'block';
+            }
+        }
+
+        // Función para cerrar modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Manejar envío de comentario
+        document.getElementById('commentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const comentario = document.getElementById('commentText').value;
+            
+            if (!comentario.trim()) {
+                alert('Por favor, escribe un comentario');
+                return;
+            }
+
+            fetch(`/api/director/deliverables/${currentDeliverableId}/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ comentario })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('commentModal');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo enviar el comentario'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar el comentario');
+            });
+        });
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const commentModal = document.getElementById('commentModal');
+            const filesModal = document.getElementById('filesModal');
+            
+            if (event.target === commentModal) {
+                closeModal('commentModal');
+            }
+            if (event.target === filesModal) {
+                closeModal('filesModal');
+            }
+        }
+
+        // Auto-submit del formulario de filtros
+        document.getElementById('estado').addEventListener('change', function() {
+            this.form.submit();
+        });
+
+        document.getElementById('proyecto').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+</body>
+</html>

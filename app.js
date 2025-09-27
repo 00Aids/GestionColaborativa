@@ -74,6 +74,7 @@ app.use('/dashboard', require('./src/routes/dashboard'));
 app.use('/projects', require('./src/routes/projects'));
 app.use('/admin', require('./src/routes/admin'));
 app.use('/coordinator', require('./src/routes/coordinator')); // ← Nueva línea para coordinadores
+app.use('/director', require('./src/routes/director')); // ← Nueva línea para directores
 app.use('/student', require('./src/routes/student')); // ← Nueva línea para estudiantes
 app.use('/api/historial', require('./src/routes/historial')); // ← Nueva línea para historial de actividades
 

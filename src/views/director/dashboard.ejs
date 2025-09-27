@@ -296,14 +296,14 @@
                         <% recentProjects.forEach(project => { %>
                             <div class="project-item">
                                 <div class="project-info">
-                                    <h4><%= project.title %></h4>
+                                    <h4><%= project.titulo %></h4>
                                     <div class="project-meta">
-                                        Estudiante: <%= project.student_name || 'No asignado' %> | 
+                                        Estudiante: <%= project.estudiante_nombre || 'No asignado' %> | 
                                         Fecha: <%= project.created_at ? new Date(project.created_at).toLocaleDateString() : 'N/A' %>
                                     </div>
                                 </div>
-                                <span class="status-badge status-<%= project.status || 'pending' %>">
-                                    <%= project.status || 'Pendiente' %>
+                                <span class="status-badge status-<%= project.estado || 'pending' %>">
+                                    <%= project.estado || 'Pendiente' %>
                                 </span>
                             </div>
                         <% }); %>

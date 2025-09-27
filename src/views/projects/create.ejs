@@ -457,6 +457,24 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="administrador_id" class="form-label">Administrador Asignado *</label>
+                    <select id="administrador_id" name="administrador_id" class="form-select" required>
+                        <option value="">Seleccionar administrador...</option>
+                        <% if (typeof administradores !== 'undefined' && administradores.length > 0) { %>
+                            <% administradores.forEach(admin => { %>
+                                <option value="<%= admin.id %>" data-area="<%= admin.area_trabajo_id %>">
+                                    <%= admin.nombres %> <%= admin.apellidos %> 
+                                    <% if (admin.area_nombre) { %>
+                                        - <%= admin.area_nombre %>
+                                    <% } %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                    <small class="form-help">El proyecto se asignará al área de trabajo del administrador seleccionado</small>
+                </div>
+
+                <div class="form-group">
                     <label for="linea_investigacion_id" class="form-label">Línea de Investigación</label>
                     <select id="linea_investigacion_id" name="linea_investigacion_id" class="form-select">
                         <option value="">Seleccionar línea...</option>

@@ -413,8 +413,23 @@ class DashboardController {
         }
       }
 
+      // Calcular proyectos activos (estados que indican que el proyecto está en desarrollo)
+      const activeProjects = directedProjects.filter(p => 
+        ['en_desarrollo', 'en_revision', 'aprobado'].includes(p.estado)
+      ).length;
+
+      // Obtener estudiantes únicos de todos los proyectos dirigidos
+      const uniqueStudents = new Set();
+      directedProjects.forEach(project => {
+        if (project.estudiante_id) {
+          uniqueStudents.add(project.estudiante_id);
+        }
+      });
+
       const stats = {
         totalProjects: directedProjects.length,
+        activeProjects: activeProjects,
+        totalStudents: uniqueStudents.size,
         totalDeliverables: directedDeliverables.length,
         completedEvaluations: directedDeliverables.filter(d => d.estado === 'aprobado').length,
         pendingEvaluations: pendingEvaluations.length

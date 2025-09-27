@@ -2,18 +2,22 @@ const express = require('express');
 const router = express.Router();
 const ProjectController = require('../controllers/ProjectController');
 const AuthMiddleware = require('../middlewares/auth');
+const { loadUserAreas } = require('../middlewares/areaAuth');
 
 // Crear instancia del controlador
 const projectController = new ProjectController();
 
+// Aplicar middleware para cargar áreas de trabajo del usuario
+router.use(loadUserAreas);
+
 // IMPORTANTE: Las rutas específicas deben ir ANTES que las rutas con parámetros
 router.get('/create', 
-  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico', 'Administrador General']),
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
   projectController.showCreate.bind(projectController)
 );
 
 router.post('/create', 
-  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico', 'Administrador General']),
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
   projectController.create.bind(projectController)
 );
 
