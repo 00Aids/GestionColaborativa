@@ -68,6 +68,60 @@ class AdminController {
     }
   }
 
+  // API para obtener usuarios por rol (devuelve JSON)
+  async getUsersByRole(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar que el usuario existe y es administrador
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No tienes permisos para acceder a esta información.' });
+      }
+
+      const { role } = req.query;
+      
+      if (!role) {
+        return res.status(400).json({ error: 'El parámetro role es requerido.' });
+      }
+
+      // Obtener usuarios con información de rol
+      const allUsers = await this.userModel.findWithRole();
+      
+      // Filtrar usuarios por rol
+      let filteredUsers = [];
+      
+      if (role === 'director') {
+        filteredUsers = allUsers.filter(u => u.rol_nombre === 'Director de Proyecto' && u.activo);
+      } else if (role === 'student') {
+        filteredUsers = allUsers.filter(u => u.rol_nombre === 'Estudiante' && u.activo);
+      } else if (role === 'coordinator') {
+        filteredUsers = allUsers.filter(u => u.rol_nombre === 'Coordinador Académico' && u.activo);
+      } else if (role === 'evaluator') {
+        filteredUsers = allUsers.filter(u => u.rol_nombre === 'Evaluador' && u.activo);
+      } else {
+        // Si se especifica un rol específico, buscar por ese nombre
+        filteredUsers = allUsers.filter(u => u.rol_nombre === role && u.activo);
+      }
+
+      // Formatear la respuesta para incluir solo los campos necesarios
+      const formattedUsers = filteredUsers.map(u => ({
+        id: u.id,
+        nombre: u.nombre,
+        apellido: u.apellido,
+        email: u.email,
+        rol_nombre: u.rol_nombre,
+        area_trabajo_id: u.area_trabajo_id,
+        area_trabajo_nombre: u.area_trabajo_nombre,
+        area_trabajo_codigo: u.area_trabajo_codigo
+      }));
+
+      res.json(formattedUsers);
+    } catch (error) {
+      console.error('Error in getUsersByRole:', error);
+      res.status(500).json({ error: 'Error al obtener usuarios por rol' });
+    }
+  }
+
   // Mostrar página de gestión de roles
   async roles(req, res) {
     try {

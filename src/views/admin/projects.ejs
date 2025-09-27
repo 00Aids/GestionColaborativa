@@ -2427,15 +2427,15 @@
         // Load dynamic filter options
         function loadFilterOptions() {
             // Load directors
-            fetch('/admin/users?role=director')
+            fetch('/admin/api/users?role=director')
                 .then(response => response.json())
                 .then(data => {
                     const directorSelect = document.getElementById('directorFilter');
-                    if (data.users) {
-                        data.users.forEach(user => {
+                    if (Array.isArray(data)) {
+                        data.forEach(user => {
                             const option = document.createElement('option');
                             option.value = user.id;
-                            option.textContent = user.name;
+                            option.textContent = `${user.nombre} ${user.apellido}`;
                             directorSelect.appendChild(option);
                         });
                     }
@@ -2443,15 +2443,15 @@
                 .catch(error => console.error('Error loading directors:', error));
 
             // Load students
-            fetch('/admin/users?role=student')
+            fetch('/admin/api/users?role=student')
                 .then(response => response.json())
                 .then(data => {
                     const studentSelect = document.getElementById('estudianteFilter');
-                    if (data.users) {
-                        data.users.forEach(user => {
+                    if (Array.isArray(data)) {
+                        data.forEach(user => {
                             const option = document.createElement('option');
                             option.value = user.id;
-                            option.textContent = user.name;
+                            option.textContent = `${user.nombre} ${user.apellido}`;
                             studentSelect.appendChild(option);
                         });
                     }
