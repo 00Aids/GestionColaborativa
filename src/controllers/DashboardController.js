@@ -22,8 +22,26 @@ class DashboardController {
       const user = req.session.user;
       const roleName = user.rol_nombre;
       
-      // En lugar de redirigir, usar directamente el dashboard Kanban
-      return this.kanbanDashboard(req, res);
+      if (!user) {
+        req.flash('error', 'Sesión expirada. Por favor, inicia sesión nuevamente.');
+        return res.redirect('/auth/login');
+      }
+
+      // Redirigir según el rol del usuario
+      switch (roleName) {
+        case 'Administrador General':
+          return res.redirect('/dashboard/admin');
+        case 'Coordinador Académico':
+          return res.redirect('/dashboard/coordinator');
+        case 'Director de Proyecto':
+          return res.redirect('/dashboard/director');
+        case 'Evaluador':
+          return res.redirect('/dashboard/evaluator');
+        case 'Estudiante':
+        default:
+          // Para estudiantes y otros roles, usar el dashboard kanban
+          return this.kanbanDashboard(req, res);
+      }
       
       // Comentar o eliminar las redirecciones específicas por rol
       /*
@@ -76,17 +94,167 @@ class DashboardController {
   // Dashboard para Administrador
   async adminDashboard(req, res) {
     try {
-      const { user } = req.session;
+      const user = req.session.user;
+      const areaTrabajoId = req.areaTrabajoId;
       
       // Verificar que el usuario existe
       if (!user) {
         req.flash('error', 'Sesión expirada. Por favor, inicia sesión nuevamente.');
         return res.redirect('/auth/login');
       }
+
+      // Obtener datos actualizados del usuario desde la base de datos
+      const userDetails = await this.userModel.findById(user.id);
       
-      // Redirigir al dashboard kanban donde están los proyectos y la funcionalidad completa
-      // El dashboard kanban ya tiene la corrección para "Administrador General"
-      return res.redirect('/dashboard/kanban');
+      // Filtrar por área de trabajo del administrador si tiene una asignada
+      const areaFilter = areaTrabajoId ? { area_trabajo_id: areaTrabajoId } : {};
+      
+      // Obtener estadísticas del área o globales
+      const [projectStatsRaw, allProjects] = await Promise.all([
+        areaTrabajoId 
+          ? this.projectModel.getStatisticsByArea(areaTrabajoId)
+          : this.projectModel.getStatistics(),
+        areaTrabajoId 
+          ? this.projectModel.findByArea(areaTrabajoId)
+          : this.projectModel.findWithDetails(areaFilter)
+      ]);
+
+      // Procesar estadísticas de proyectos
+      const projectStats = {
+        total: projectStatsRaw.reduce((sum, stat) => sum + stat.cantidad, 0),
+        activos: projectStatsRaw.filter(s => ['en_desarrollo', 'en_revision', 'aprobado'].includes(s.estado))
+                                .reduce((sum, stat) => sum + stat.cantidad, 0),
+        completados: projectStatsRaw.filter(s => s.estado === 'finalizado')
+                                   .reduce((sum, stat) => sum + stat.cantidad, 0),
+        pendientes: projectStatsRaw.filter(s => ['borrador', 'enviado'].includes(s.estado))
+                                  .reduce((sum, stat) => sum + stat.cantidad, 0),
+        byStatus: projectStatsRaw
+      };
+
+      // Obtener entregables del área
+      const allDeliverables = areaTrabajoId 
+        ? await this.deliverableModel.findWithProject(areaFilter)
+        : await this.deliverableModel.findWithProject();
+
+      // Estadísticas de entregables
+      const deliverableStats = {
+        total: allDeliverables.length,
+        pendientes: allDeliverables.filter(d => d.estado === 'pendiente').length,
+        en_progreso: allDeliverables.filter(d => d.estado === 'en_progreso').length,
+        completados: allDeliverables.filter(d => d.estado === 'completado').length,
+        vencidos: allDeliverables.filter(d => {
+          const today = new Date();
+          const dueDate = new Date(d.fecha_limite);
+          return dueDate < today && d.estado !== 'completado';
+        }).length
+      };
+
+      // Obtener evaluaciones del área
+      const allEvaluations = areaTrabajoId 
+        ? await this.evaluationModel.findByArea(areaTrabajoId)
+        : await this.evaluationModel.findAll();
+
+      const evaluationStats = {
+        total: allEvaluations.length,
+        pendientes: allEvaluations.filter(e => e.estado === 'pendiente').length,
+        completadas: allEvaluations.filter(e => e.estado === 'completada').length,
+        promedio: allEvaluations.length > 0 
+          ? (allEvaluations.reduce((sum, e) => sum + (e.calificacion || 0), 0) / allEvaluations.length).toFixed(1)
+          : 0
+      };
+
+      // Obtener usuarios del área
+      const allUsers = areaTrabajoId 
+        ? await this.userModel.findByArea(areaTrabajoId)
+        : await this.userModel.findWithRole();
+
+      const userStats = {
+        total: allUsers.length,
+        estudiantes: allUsers.filter(u => u.rol_nombre === 'Estudiante').length,
+        coordinadores: allUsers.filter(u => u.rol_nombre === 'Coordinador Académico').length,
+        directores: allUsers.filter(u => u.rol_nombre === 'Director de Proyecto').length,
+        evaluadores: allUsers.filter(u => u.rol_nombre === 'Evaluador').length,
+        administradores: allUsers.filter(u => u.rol_nombre === 'Administrador General').length
+      };
+
+      // Proyectos recientes (últimos 10)
+      const recentProjects = allProjects
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 10);
+
+      // Entregables próximos a vencer (próximos 7 días)
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      
+      const upcomingDeliverables = allDeliverables.filter(d => {
+        const dueDate = new Date(d.fecha_limite);
+        const today = new Date();
+        return dueDate >= today && dueDate <= nextWeek && d.estado !== 'completado';
+      }).sort((a, b) => new Date(a.fecha_limite) - new Date(b.fecha_limite)).slice(0, 10);
+
+      // Entregables vencidos
+      const overdueDeliverables = allDeliverables.filter(d => {
+        const today = new Date();
+        const dueDate = new Date(d.fecha_limite);
+        return dueDate < today && d.estado !== 'completado';
+      }).slice(0, 10);
+
+      // Actividad reciente
+      const recentActivity = [
+        ...recentProjects.map(p => ({
+          tipo: 'proyecto',
+          titulo: `Nuevo proyecto: ${p.titulo}`,
+          fecha: p.created_at,
+          icono: '📁',
+          usuario: p.estudiante_nombre || 'Sistema'
+        })),
+        ...upcomingDeliverables.map(d => ({
+          tipo: 'entregable',
+          titulo: `Entregable próximo: ${d.titulo}`,
+          fecha: d.fecha_limite,
+          icono: '⏰',
+          usuario: d.proyecto_titulo || 'N/A'
+        }))
+      ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 15);
+
+      // Notificaciones recientes
+      const notifications = await this.notificationModel.findByUser(user.id, { limit: 10 });
+
+      // Usuarios recientes (últimos 7 días)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const recentUsers = allUsers.filter(u => {
+        const createdAt = new Date(u.created_at);
+        return createdAt >= sevenDaysAgo;
+      });
+
+      // Información del área de trabajo
+      const areaInfo = areaTrabajoId ? {
+        id: areaTrabajoId,
+        // Obtener información del área desde userAreas
+        ...(req.userAreas && req.userAreas[0] ? {
+          codigo: req.userAreas[0].codigo,
+          nombre: req.userAreas[0].nombre
+        } : {})
+      } : null;
+
+      res.render('admin/dashboard', {
+        user: userDetails,
+        projectStats,
+        deliverableStats,
+        evaluationStats,
+        userStats,
+        recentProjects: recentProjects || [],
+        recentUsers: recentUsers || [],
+        upcomingDeliverables: upcomingDeliverables || [],
+        overdueDeliverables: overdueDeliverables || [],
+        recentActivity: recentActivity || [],
+        notifications: notifications || [],
+        areaInfo,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
       
     } catch (error) {
       console.error('Error in admin dashboard:', error);
@@ -378,6 +546,14 @@ class DashboardController {
       // Obtener evaluaciones asignadas al evaluador
       const assignedEvaluations = await this.evaluationModel.findByEvaluator(user.id);
       
+      // Obtener proyectos donde el evaluador es miembro (para casos donde un evaluador también participa en proyectos)
+      let userProjects = [];
+      try {
+        userProjects = await this.projectModel.findStudentProjects(user.id);
+      } catch (projectError) {
+        console.log('No se pudieron cargar proyectos para el evaluador:', projectError.message);
+      }
+      
       // Estadísticas
       const stats = {
         totalEvaluations: assignedEvaluations.length,
@@ -385,13 +561,15 @@ class DashboardController {
         pendingEvaluations: assignedEvaluations.filter(e => e.estado === 'pendiente').length,
         overdueEvaluations: assignedEvaluations.filter(e => 
           e.estado === 'pendiente' && new Date(e.fecha_limite) < new Date()
-        ).length
+        ).length,
+        totalProjects: userProjects.length
       };
 
       res.render('evaluator/dashboard', {
         user,
         stats,
         assignedEvaluations: assignedEvaluations.slice(0, 10),
+        userProjects: userProjects.slice(0, 5), // Mostrar solo los primeros 5 proyectos
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -863,16 +1041,9 @@ class DashboardController {
     try {
       const user = req.session.user;
       
-      // Obtener proyectos donde el estudiante es miembro y que estén en su área de trabajo
-      let myProjects = [];
-      
-      if (req.areaTrabajoId) {
-        // Obtener proyectos del área de trabajo donde el usuario es miembro
-        myProjects = await this.projectModel.findStudentProjectsByArea(user.id, req.areaTrabajoId);
-      } else {
-        // Si no tiene área asignada, obtener proyectos donde es miembro (sin filtro de área)
-        myProjects = await this.projectModel.findStudentProjects(user.id);
-      }
+      // Obtener TODOS los proyectos donde el estudiante es miembro
+      // Sin filtrar por área para permitir que vea proyectos de diferentes áreas
+      const myProjects = await this.projectModel.findStudentProjects(user.id);
       
       res.render('student/projects', {
         user,

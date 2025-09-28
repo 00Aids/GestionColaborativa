@@ -98,14 +98,17 @@ class Project extends BaseModel {
           ca.nombre as ciclo_nombre,
           ca.fecha_inicio as ciclo_fecha_inicio,
           ca.fecha_fin as ciclo_fecha_fin,
-          pm.created_at as fecha_union
+          at.codigo as area_trabajo_codigo,
+          at.nombre as area_trabajo_nombre,
+          pu.fecha_asignacion as fecha_union
         FROM proyectos p
-        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN usuarios d ON p.director_id = d.id
         LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
         LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
-        WHERE pm.usuario_id = ? AND pm.activo = true
+        LEFT JOIN areas_trabajo at ON p.area_trabajo_id = at.id
+        WHERE pu.usuario_id = ? AND pu.estado = 'activo'
         ORDER BY p.created_at DESC
       `;
       
@@ -134,14 +137,17 @@ class Project extends BaseModel {
           ca.nombre as ciclo_nombre,
           ca.fecha_inicio as ciclo_fecha_inicio,
           ca.fecha_fin as ciclo_fecha_fin,
-          pm.created_at as fecha_union
+          at.codigo as area_trabajo_codigo,
+          at.nombre as area_trabajo_nombre,
+          pu.fecha_asignacion as fecha_union
         FROM proyectos p
-        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN usuarios d ON p.director_id = d.id
         LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
         LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
-        WHERE pm.usuario_id = ? AND pm.activo = true AND p.area_trabajo_id = ?
+        LEFT JOIN areas_trabajo at ON p.area_trabajo_id = at.id
+        WHERE pu.usuario_id = ? AND pu.estado = 'activo' AND p.area_trabajo_id = ?
         ORDER BY p.created_at DESC
       `;
       
@@ -413,28 +419,26 @@ class Project extends BaseModel {
       }
 
       // Agregar usuario como miembro del proyecto
-      // Nota: No incluimos invitacion_id porque la tabla project_members 
-      // tiene una FK a project_invitations, no a invitaciones
       const memberData = {
         proyecto_id: invitation.proyecto_id,
         usuario_id: userId,
-        rol_en_proyecto: 'estudiante',
-        activo: true,
-        created_at: new Date()
+        rol: 'estudiante',
+        estado: 'activo',
+        fecha_asignacion: new Date()
       };
 
       const insertQuery = `
-        INSERT INTO project_members 
-        (proyecto_id, usuario_id, rol_en_proyecto, activo, created_at)
+        INSERT INTO proyecto_usuarios 
+        (proyecto_id, usuario_id, rol, estado, fecha_asignacion)
         VALUES (?, ?, ?, ?, ?)
       `;
 
       await this.db.execute(insertQuery, [
         memberData.proyecto_id,
         memberData.usuario_id,
-        memberData.rol_en_proyecto,
-        memberData.activo,
-        memberData.created_at
+        memberData.rol,
+        memberData.estado,
+        memberData.fecha_asignacion
       ]);
 
       // Incrementar contador de usos de la invitación usando el modelo Invitation
@@ -457,8 +461,8 @@ class Project extends BaseModel {
   async findProjectMember(projectId, userId) {
     try {
       const query = `
-        SELECT * FROM project_members 
-        WHERE proyecto_id = ? AND usuario_id = ? AND activo = true
+        SELECT * FROM proyecto_usuarios 
+        WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'activo'
       `;
       
       const [rows] = await this.db.execute(query, [projectId, userId]);
@@ -473,19 +477,17 @@ class Project extends BaseModel {
     try {
       const query = `
         SELECT 
-          pm.*,
+          pu.*,
           u.nombres,
           u.apellidos,
           u.email,
           u.codigo_usuario,
-          r.nombre as rol_nombre,
-          pi.codigo_invitacion
-        FROM project_members pm
-        LEFT JOIN usuarios u ON pm.usuario_id = u.id
+          r.nombre as rol_nombre
+        FROM proyecto_usuarios pu
+        LEFT JOIN usuarios u ON pu.usuario_id = u.id
         LEFT JOIN roles r ON u.rol_id = r.id
-        LEFT JOIN project_invitations pi ON pm.invitacion_id = pi.id
-        WHERE pm.proyecto_id = ? AND pm.activo = true
-        ORDER BY pm.created_at ASC
+        WHERE pu.proyecto_id = ? AND pu.estado = 'activo'
+        ORDER BY pu.fecha_asignacion ASC
       `;
       
       const [rows] = await this.db.execute(query, [projectId]);
@@ -622,7 +624,7 @@ class Project extends BaseModel {
 
   // Contar todos los miembros
   async countAllMembers() {
-    const query = 'SELECT COUNT(*) as total FROM project_members';
+    const query = 'SELECT COUNT(*) as total FROM proyecto_usuarios WHERE estado = "activo"';
     const result = await this.db.query(query);
     return result[0].total;
   }
