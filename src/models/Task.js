@@ -80,19 +80,32 @@ class Task extends BaseModel {
                 descripcion,
                 fecha_limite,
                 prioridad = 'medium',
+                asignado_a = null,
+                estimacion_horas = null,
+                etiquetas = null,
+                estado_workflow = 'todo',
                 tipo_enfoque = 'feature'
             } = taskData;
 
             const query = `
                 INSERT INTO entregables (
                     proyecto_id, fase_id, titulo, descripcion, 
-                    fecha_limite, prioridad, estado, observaciones
-                ) VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?)
+                    fecha_limite, prioridad, asignado_a, estado, 
+                    estado_workflow, observaciones
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)
             `;
+            
+            // Crear objeto de observaciones con todos los datos adicionales
+            const observaciones = {
+                tipo_enfoque,
+                estimacion_horas,
+                etiquetas
+            };
             
             const [result] = await this.db.execute(query, [
                 proyecto_id, fase_id, titulo, descripcion, 
-                fecha_limite, prioridad, JSON.stringify({tipo_enfoque})
+                fecha_limite, prioridad, asignado_a, estado_workflow,
+                JSON.stringify(observaciones)
             ]);
             
             return result.insertId;

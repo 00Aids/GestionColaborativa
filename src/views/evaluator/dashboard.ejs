@@ -296,10 +296,50 @@
                 <div class="stat-number"><%= stats ? stats.overdueEvaluations : '0' %></div>
                 <div class="stat-label">Evaluaciones Vencidas</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats ? stats.totalProjects : '0' %></div>
+                <div class="stat-label">Mis Proyectos</div>
+            </div>
         </div>
 
         <!-- Dashboard Content -->
         <div class="dashboard-grid">
+            <!-- My Projects -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Mis Proyectos</h3>
+                </div>
+                <div class="card-content">
+                    <% if (userProjects && userProjects.length > 0) { %>
+                        <% userProjects.forEach(project => { %>
+                            <div class="evaluation-item">
+                                <div class="evaluation-info">
+                                    <h4><%= project.titulo || project.nombre || 'Proyecto sin título' %></h4>
+                                    <div class="evaluation-meta">
+                                        Estado: <%= project.estado || 'N/A' %> | 
+                                        Área: <%= project.area_trabajo_id || 'N/A' %> | 
+                                        Fecha de unión: <%= project.fecha_union ? new Date(project.fecha_union).toLocaleDateString() : 'N/A' %>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="status-badge <%= project.estado === 'completado' ? 'status-completed' : 'status-pending' %>">
+                                        <%= project.estado || 'N/A' %>
+                                    </span>
+                                    <a href="/projects/<%= project.id %>" class="evaluate-btn">Ver Proyecto</a>
+                                </div>
+                            </div>
+                        <% }); %>
+                        <% if (userProjects.length >= 5) { %>
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <a href="/student/projects" class="action-btn" style="display: inline-block; padding: 0.5rem 1rem; font-size: 0.875rem;">Ver Todos los Proyectos</a>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <p>No estás asignado a ningún proyecto actualmente.</p>
+                    <% } %>
+                </div>
+            </div>
+
             <!-- Pending Evaluations -->
             <div class="card">
                 <div class="card-header">
@@ -363,6 +403,7 @@
             </div>
             <div class="card-content">
                 <div class="quick-actions">
+                    <a href="/student/projects" class="action-btn">Ver Mis Proyectos</a>
                     <a href="/evaluations" class="action-btn">Ver Todas las Evaluaciones</a>
                     <a href="/evaluations/pending" class="action-btn">Evaluaciones Pendientes</a>
                     <a href="/evaluations/completed" class="action-btn">Evaluaciones Completadas</a>

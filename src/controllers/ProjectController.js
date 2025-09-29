@@ -315,15 +315,38 @@ class ProjectController {
       
       if (!project) {
         req.flash('error', 'Proyecto no encontrado');
-        return res.redirect('/projects');
+        const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : '/projects';
+        return res.redirect(redirectUrl);
       }
       
       // Verificar permisos según el rol del usuario
       if (user.rol_nombre === 'Estudiante') {
-        // Los estudiantes solo pueden ver proyectos de su área de trabajo donde sean estudiantes
-        if (project.area_trabajo_id !== req.areaTrabajoId || project.estudiante_id !== user.id) {
+        // Los estudiantes pueden ver proyectos donde sean el estudiante principal O sean miembros del proyecto
+        const isMainStudent = project.estudiante_id === user.id;
+        const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+        
+        // Debug logs
+        console.log('=== DEBUG PERMISSION CHECK ===');
+        console.log('User ID:', user.id);
+        console.log('Project ID:', projectId);
+        console.log('Project area_trabajo_id:', project.area_trabajo_id);
+        console.log('User area_trabajo_id (req.areaTrabajoId):', req.areaTrabajoId);
+        console.log('Project estudiante_id:', project.estudiante_id);
+        console.log('Is main student:', isMainStudent);
+        console.log('Is project member:', !!isProjectMember);
+        console.log('Project member data:', isProjectMember);
+        console.log('==============================');
+        
+        // Si el usuario es miembro del proyecto o es el estudiante principal, puede acceder
+        if (!isMainStudent && !isProjectMember) {
           req.flash('error', 'No tienes permisos para ver este proyecto');
-          return res.redirect('/projects');
+          return res.redirect('/student/projects');
+        }
+        
+        // Si no es miembro pero el área de trabajo no coincide, también denegar acceso
+        if (!isProjectMember && project.area_trabajo_id !== req.areaTrabajoId) {
+          req.flash('error', 'No tienes permisos para ver este proyecto');
+          return res.redirect('/student/projects');
         }
       } else if (user.rol_nombre === 'Director de Proyecto') {
         // Los directores pueden ver cualquier proyecto donde sean directores, independientemente del área
@@ -661,6 +684,22 @@ class ProjectController {
           if (!invitationData) {
               return res.status(404).json({ error: 'Invitación no encontrada o expirada' });
           }
+
+          // Obtener información del proyecto para asignar el área de trabajo correcta
+          const project = await this.projectModel.findById(invitationData.proyecto_id);
+          if (!project) {
+              return res.status(404).json({ error: 'Proyecto no encontrado' });
+          }
+
+          // Asegurar que el usuario esté en el área de trabajo del proyecto
+          const User = require('../models/User');
+          const userModel = new User();
+          const userBelongsToArea = await userModel.belongsToArea(userId, project.area_trabajo_id);
+          
+          if (!userBelongsToArea) {
+              await userModel.assignToArea(userId, project.area_trabajo_id, false, false);
+              console.log(`Usuario ${userId} agregado al área de trabajo ${project.area_trabajo_id}`);
+          }
   
           // Aceptar la invitación
           await invitation.accept(invitationData.id, userId);
@@ -922,10 +961,14 @@ class ProjectController {
         return res.redirect(`/projects/invitations/accept/${codigo}`);
       }
 
+      // Obtener información del proyecto para asignar el área de trabajo correcta
+      const project = await this.projectModel.findById(invitationData.proyecto_id);
+      if (!project) {
+        req.flash('error', 'Proyecto no encontrado');
+        return res.redirect('/auth/login');
+      }
+
       // Crear nuevo usuario con rol de estudiante
-      const bcrypt = require('bcrypt');
-      const hashedPassword = await bcrypt.hash(password, 10);
-      
       // Generar código de usuario único
       const generateUserCode = () => {
         const timestamp = Date.now().toString().slice(-6);
@@ -938,16 +981,17 @@ class ProjectController {
         nombres,
         apellidos,
         email,
-        password: hashedPassword,
-        rol_id: 4, // Rol de estudiante
-        area_trabajo_id: invitationData.area_trabajo_id || 1
+        password: password, // El modelo User se encarga del hash automáticamente
+        rol_id: 5, // Rol de estudiante
+        area_trabajo_id: project.area_trabajo_id || 1
       });
 
       // Extraer el ID del resultado
       const newUserId = newUserResult.id;
 
-      // Iniciar sesión automáticamente
-      const newUser = await userModel.findById(newUserId);
+      // Iniciar sesión automáticamente con información del rol
+      const usersWithRole = await userModel.findWithRole({ id: newUserId });
+      const newUser = usersWithRole[0];
       req.session.user = newUser;
 
       // Agregar usuario al proyecto y marcar invitación como aceptada
@@ -955,7 +999,7 @@ class ProjectController {
       await invitation.accept(invitationData.id, newUserId);
 
       req.flash('success', `¡Bienvenido! Te has registrado y unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
-      res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
+      res.redirect(`/projects/${invitationData.proyecto_id}`);
 
     } catch (error) {
       console.error('Error registering from invitation:', error);
@@ -1002,15 +1046,32 @@ class ProjectController {
         return res.redirect(`/projects/invitations/accept/${codigo}`);
       }
 
-      // Iniciar sesión
-      req.session.user = user;
+      // Iniciar sesión con información del rol
+      const usersWithRole = await userModel.findWithRole({ id: user.id });
+      const userWithRole = usersWithRole[0];
+      req.session.user = userWithRole;
+
+      // Obtener información del proyecto para asignar el área de trabajo correcta
+      const project = await this.projectModel.findById(invitationData.proyecto_id);
+      if (!project) {
+        req.flash('error', 'Proyecto no encontrado');
+        return res.redirect('/auth/login');
+      }
+
+      // Asegurar que el usuario esté en el área de trabajo del proyecto
+      const userBelongsToArea = await userModel.belongsToArea(user.id, project.area_trabajo_id);
+      
+      if (!userBelongsToArea) {
+          await userModel.assignToArea(user.id, project.area_trabajo_id, false, false);
+          console.log(`Usuario ${user.id} agregado al área de trabajo ${project.area_trabajo_id}`);
+      }
 
       // Agregar usuario al proyecto y marcar invitación como aceptada
       await this.addUserToProject(invitationData.proyecto_id, user.id);
       await invitation.accept(invitationData.id, user.id);
 
       req.flash('success', `¡Bienvenido de vuelta! Te has unido al proyecto "${invitationData.proyecto_nombre}" exitosamente.`);
-      res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
+      res.redirect(`/projects/${invitationData.proyecto_id}`);
 
     } catch (error) {
       console.error('Error logging in from invitation:', error);
@@ -1280,7 +1341,10 @@ class ProjectController {
       // Verificar permisos según el rol
       switch (user.rol_nombre) {
         case 'Estudiante':
-          return project.estudiante_id === user.id;
+          // Verificar si es el estudiante principal O es miembro del proyecto
+          const isMainStudent = project.estudiante_id === user.id;
+          const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+          return isMainStudent || isProjectMember;
         case 'Director de Proyecto':
           return project.director_id === user.id;
         case 'Coordinador Académico':

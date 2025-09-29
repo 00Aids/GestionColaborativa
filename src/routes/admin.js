@@ -134,6 +134,38 @@ router.get('/invitations/stats/:projectId', adminController.getInvitationStats.b
 // API para obtener miembros de un proyecto
 router.get('/projects/:projectId/members', adminController.getProjectMembers.bind(adminController));
 
+// =============================================
+// RUTAS DE GESTIÓN DE LÍNEAS DE INVESTIGACIÓN
+// =============================================
+
+// Página principal de gestión de líneas de investigación
+router.get('/research-lines', adminController.researchLines.bind(adminController));
+
+// API para crear nueva línea de investigación
+router.post('/research-lines', adminController.createResearchLine.bind(adminController));
+
+// API para actualizar línea de investigación
+router.put('/research-lines/:lineId', adminController.updateResearchLine.bind(adminController));
+
+// API para eliminar línea de investigación
+router.delete('/research-lines/:lineId', adminController.deleteResearchLine.bind(adminController));
+
+// =============================================
+// RUTAS DE GESTIÓN DE CICLOS ACADÉMICOS
+// =============================================
+
+// Página principal de gestión de ciclos académicos
+router.get('/academic-cycles', adminController.academicCycles.bind(adminController));
+
+// API para crear nuevo ciclo académico
+router.post('/academic-cycles', adminController.createAcademicCycle.bind(adminController));
+
+// API para actualizar ciclo académico
+router.put('/academic-cycles/:cycleId', adminController.updateAcademicCycle.bind(adminController));
+
+// API para eliminar ciclo académico
+router.delete('/academic-cycles/:cycleId', adminController.deleteAcademicCycle.bind(adminController));
+
 // Rutas futuras para otras funcionalidades admin
 router.get('/reports', adminController.reports.bind(adminController));
 
@@ -194,6 +226,16 @@ router.put('/api/tasks/:taskId', adminController.updateTask.bind(adminController
 
 // Eliminar tarea
 router.delete('/api/tasks/:taskId', adminController.deleteTask.bind(adminController));
+
+// =============================================
+// API ENDPOINTS PARA CREACIÓN RÁPIDA
+// =============================================
+
+// API para crear línea de investigación desde formulario de proyecto
+router.post('/api/lineas-investigacion', adminController.createResearchLineAPI.bind(adminController));
+
+// API para crear ciclo académico desde formulario de proyecto
+router.post('/api/ciclos-academicos', adminController.createAcademicCycleAPI.bind(adminController));
 
 router.get('/settings', adminController.settings.bind(adminController));
 router.post('/settings', adminController.updateSettings.bind(adminController));

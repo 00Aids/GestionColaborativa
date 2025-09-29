@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Ciclos Académicos - <%= areaTrabajoNombre %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/dashboard.css" rel="stylesheet">
+    <style>
+        .cycle-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        .cycle-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .cycle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .cycle-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .cycle-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .cycle-dates {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .date-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .date-item:last-child {
+            margin-bottom: 0;
+        }
+        .btn-create {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+        .area-info {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+        }
+        .status-current {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-upcoming {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .status-past {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../layouts/sidebar') %>
+    
+    <div class="main-content">
+        <%- include('../layouts/header') %>
+        
+        <div class="content-wrapper">
+            <!-- Información del área -->
+            <div class="area-info">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="mb-2">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            Ciclos Académicos
+                        </h1>
+                        <p class="mb-0">Gestiona los ciclos académicos de tu área: <strong><%= areaTrabajoNombre %></strong></p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createCycleModal">
+                            <i class="fas fa-plus me-2"></i>
+                            Nuevo Ciclo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number"><%= ciclosAcademicos.length %></div>
+                        <div>Ciclos Totales</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number"><%= ciclosAcademicos.filter(c => c.activo).length %></div>
+                        <div>Ciclos Activos</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number">
+                            <%= ciclosAcademicos.filter(c => {
+                                const now = new Date();
+                                const inicio = new Date(c.fecha_inicio);
+                                const fin = new Date(c.fecha_fin);
+                                return now >= inicio && now <= fin;
+                            }).length %>
+                        </div>
+                        <div>En Curso</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number">
+                            <%= ciclosAcademicos.filter(c => {
+                                const now = new Date();
+                                const inicio = new Date(c.fecha_inicio);
+                                return now < inicio;
+                            }).length %>
+                        </div>
+                        <div>Próximos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de ciclos académicos -->
+            <div class="row">
+                <div class="col-12">
+                    <% if (ciclosAcademicos && ciclosAcademicos.length > 0) { %>
+                        <% ciclosAcademicos.forEach(ciclo => { 
+                            const now = new Date();
+                            const inicio = new Date(ciclo.fecha_inicio);
+                            const fin = new Date(ciclo.fecha_fin);
+                            let status = 'past';
+                            let statusText = 'Finalizado';
+                            
+                            if (now < inicio) {
+                                status = 'upcoming';
+                                statusText = 'Próximo';
+                            } else if (now >= inicio && now <= fin) {
+                                status = 'current';
+                                statusText = 'En Curso';
+                            }
+                        %>
+                            <div class="cycle-card">
+                                <div class="cycle-header">
+                                    <h3 class="cycle-title">
+                                        <%= ciclo.nombre %>
+                                        <span class="badge status-<%= status %> status-badge ms-2"><%= statusText %></span>
+                                        <% if (!ciclo.activo) { %>
+                                            <span class="badge bg-secondary ms-2">Inactivo</span>
+                                        <% } %>
+                                    </h3>
+                                    <div class="cycle-actions">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editCycle(<%= ciclo.id %>)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCycle(<%= ciclo.id %>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <% if (ciclo.descripcion) { %>
+                                    <p class="text-muted mb-3"><%= ciclo.descripcion %></p>
+                                <% } %>
+                                
+                                <div class="cycle-dates">
+                                    <div class="date-item">
+                                        <span><i class="fas fa-play-circle me-2 text-success"></i>Fecha de Inicio:</span>
+                                        <strong><%= new Date(ciclo.fecha_inicio).toLocaleDateString('es-ES') %></strong>
+                                    </div>
+                                    <div class="date-item">
+                                        <span><i class="fas fa-stop-circle me-2 text-danger"></i>Fecha de Fin:</span>
+                                        <strong><%= new Date(ciclo.fecha_fin).toLocaleDateString('es-ES') %></strong>
+                                    </div>
+                                    <div class="date-item">
+                                        <span><i class="fas fa-clock me-2 text-info"></i>Duración:</span>
+                                        <strong>
+                                            <%= Math.ceil((new Date(ciclo.fecha_fin) - new Date(ciclo.fecha_inicio)) / (1000 * 60 * 60 * 24)) %> días
+                                        </strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Creado: <%= new Date(ciclo.created_at).toLocaleDateString('es-ES') %>
+                                    </small>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-alt"></i>
+                            <h3>No hay ciclos académicos</h3>
+                            <p>Crea tu primer ciclo académico para comenzar a organizar tus proyectos por períodos.</p>
+                            <button class="btn btn-create" data-bs-toggle="modal" data-bs-target="#createCycleModal">
+                                <i class="fas fa-plus me-2"></i>
+                                Crear Primer Ciclo
+                            </button>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar ciclo -->
+    <div class="modal fade" id="createCycleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Ciclo Académico</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="cycleForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="cycleId" name="id">
+                        
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required 
+                                   placeholder="Ej: 2024-I, Primer Semestre 2024">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3"
+                                      placeholder="Descripción opcional del ciclo académico"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
+                                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="activo" name="activo" checked>
+                            <label class="form-check-label" for="activo">
+                                Ciclo activo
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Manejar formulario de ciclo
+        document.getElementById('cycleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            data.activo = document.getElementById('activo').checked;
+            
+            // Validar fechas
+            const fechaInicio = new Date(data.fecha_inicio);
+            const fechaFin = new Date(data.fecha_fin);
+            
+            if (fechaFin <= fechaInicio) {
+                alert('La fecha de fin debe ser posterior a la fecha de inicio');
+                return;
+            }
+            
+            const isEdit = data.id && data.id !== '';
+            const url = isEdit ? `/admin/academic-cycles/${data.id}` : '/admin/academic-cycles';
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error al guardar el ciclo académico');
+                console.error(error);
+            }
+        });
+        
+        // Función para editar ciclo
+        function editCycle(id) {
+            const ciclos = <%- JSON.stringify(ciclosAcademicos) %>;
+            const ciclo = ciclos.find(c => c.id === id);
+            
+            if (ciclo) {
+                document.getElementById('cycleId').value = ciclo.id;
+                document.getElementById('nombre').value = ciclo.nombre;
+                document.getElementById('descripcion').value = ciclo.descripcion || '';
+                document.getElementById('fecha_inicio').value = ciclo.fecha_inicio.split('T')[0];
+                document.getElementById('fecha_fin').value = ciclo.fecha_fin.split('T')[0];
+                document.getElementById('activo').checked = ciclo.activo;
+                
+                document.querySelector('#createCycleModal .modal-title').textContent = 'Editar Ciclo Académico';
+                new bootstrap.Modal(document.getElementById('createCycleModal')).show();
+            }
+        }
+        
+        // Función para eliminar ciclo
+        async function deleteCycle(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este ciclo académico?')) {
+                try {
+                    const response = await fetch(`/admin/academic-cycles/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error al eliminar el ciclo académico');
+                    console.error(error);
+                }
+            }
+        }
+        
+        // Resetear modal al cerrar
+        document.getElementById('createCycleModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('cycleForm').reset();
+            document.getElementById('cycleId').value = '';
+            document.querySelector('#createCycleModal .modal-title').textContent = 'Nuevo Ciclo Académico';
+        });
+    </script>
+</body>
+</html>

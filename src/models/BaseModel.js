@@ -135,6 +135,16 @@ class BaseModel {
       throw new Error(`Error counting ${this.tableName}: ${error.message}`);
     }
   }
+
+  // Ejecutar consulta personalizada
+  async query(sql, params = []) {
+    try {
+      const [rows] = await this.db.execute(sql, params);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error executing query on ${this.tableName}: ${error.message}`);
+    }
+  }
 }
 
 module.exports = BaseModel;

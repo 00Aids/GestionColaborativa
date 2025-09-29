@@ -43,7 +43,7 @@ router.get('/student',
 );
 
 // Ruta para el dashboard Kanban
-router.get('/kanban', AuthMiddleware.requireAuth, dashboardController.kanbanDashboard.bind(dashboardController));
+router.get('/kanban', AuthMiddleware.requireAuth, loadUserAreas, dashboardController.kanbanDashboard.bind(dashboardController));
 
 // API endpoint para actualizar estado de tareas
 router.post('/api/tasks/update-status', AuthMiddleware.requireAuth, dashboardController.updateTaskStatus.bind(dashboardController));

@@ -126,6 +126,37 @@
             border-top: 1px solid #e5e7eb;
         }
 
+        .info-box {
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e5f5 100%);
+            border: 2px solid #81d4fa;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .info-box i {
+            color: #0277bd;
+            font-size: 24px;
+            margin-top: 2px;
+        }
+
+        .info-content h4 {
+            color: #1e293b;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-content p {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
         .alert {
             padding: 15px;
             border-radius: 12px;
@@ -143,6 +174,147 @@
             background: #fef2f2;
             color: #dc2626;
             border: 1px solid #fecaca;
+        }
+
+        /* Estilos para botones de agregar */
+        .form-label-with-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .btn-add-item {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-add-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Estilos para modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-modal-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-modal-secondary {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-modal-secondary:hover {
+            background: #f1f5f9;
         }
     </style>
 </head>
@@ -166,35 +338,24 @@
                 <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="estudiante_id">Estudiante *</label>
-                    <select class="form-control" id="estudiante_id" name="estudiante_id" required>
-                        <option value="">Seleccionar estudiante</option>
-                        <% if (estudiantes && estudiantes.length > 0) { %>
-                            <% estudiantes.forEach(estudiante => { %>
-                                <option value="<%= estudiante.id %>"><%= estudiante.nombres %> <%= estudiante.apellidos %></option>
-                            <% }); %>
-                        <% } %>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="director_id">Director *</label>
-                    <select class="form-control" id="director_id" name="director_id" required>
-                        <option value="">Seleccionar director</option>
-                        <% if (directores && directores.length > 0) { %>
-                            <% directores.forEach(director => { %>
-                                <option value="<%= director.id %>"><%= director.nombres %> <%= director.apellidos %></option>
-                            <% }); %>
-                        <% } %>
-                    </select>
+            <div class="form-group">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="info-content">
+                        <h4>Asignación de Participantes</h4>
+                        <p>Puedes crear el proyecto ahora y luego invitar a estudiantes y directores desde la página de detalles del proyecto.</p>
+                    </div>
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label" for="linea_investigacion_id">Línea de Investigación</label>
+                    <div class="form-label-with-action">
+                        <label class="form-label" for="linea_investigacion_id">Línea de Investigación</label>
+                        <button type="button" class="btn-add-item" onclick="openLineaModal()" title="Crear nueva línea de investigación">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                     <select class="form-control" id="linea_investigacion_id" name="linea_investigacion_id">
                         <option value="">Seleccionar línea</option>
                         <% if (typeof lineasInvestigacion !== 'undefined' && lineasInvestigacion) { %>
@@ -206,7 +367,12 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label" for="ciclo_academico_id">Ciclo Académico *</label>
+                    <div class="form-label-with-action">
+                        <label class="form-label" for="ciclo_academico_id">Ciclo Académico *</label>
+                        <button type="button" class="btn-add-item" onclick="openCicloModal()" title="Crear nuevo ciclo académico">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
                     <select class="form-control" id="ciclo_academico_id" name="ciclo_academico_id" required>
                         <option value="">Seleccionar ciclo</option>
                         <% if (typeof ciclosAcademicos !== 'undefined' && ciclosAcademicos) { %>
@@ -253,6 +419,73 @@
         </form>
     </div>
 
+    <!-- Modal para crear línea de investigación -->
+    <div id="lineaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-microscope"></i> Nueva Línea de Investigación</h3>
+                <button class="modal-close" onclick="closeLineaModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="lineaForm">
+                    <div class="form-group">
+                        <label class="form-label" for="linea_nombre">Nombre de la Línea *</label>
+                        <input type="text" class="form-control" id="linea_nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="linea_descripcion">Descripción</label>
+                        <textarea class="form-control" id="linea_descripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-modal btn-modal-secondary" onclick="closeLineaModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-modal btn-modal-primary">
+                            <i class="fas fa-save"></i> Crear Línea
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear ciclo académico -->
+    <div id="cicloModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-alt"></i> Nuevo Ciclo Académico</h3>
+                <button class="modal-close" onclick="closeCicloModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="cicloForm">
+                    <div class="form-group">
+                        <label class="form-label" for="ciclo_nombre">Nombre del Ciclo *</label>
+                        <input type="text" class="form-control" id="ciclo_nombre" name="nombre" required 
+                               placeholder="Ej: 2024-I, Semestre 1 2024">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="ciclo_fecha_inicio">Fecha de Inicio *</label>
+                            <input type="date" class="form-control" id="ciclo_fecha_inicio" name="fecha_inicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ciclo_fecha_fin">Fecha de Fin *</label>
+                            <input type="date" class="form-control" id="ciclo_fecha_fin" name="fecha_fin" required>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-modal btn-modal-secondary" onclick="closeCicloModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-modal btn-modal-primary">
+                            <i class="fas fa-save"></i> Crear Ciclo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function saveProject(event) {
             event.preventDefault();
@@ -272,8 +505,6 @@
             const projectData = {
                 titulo: formData.get('titulo'),
                 descripcion: formData.get('descripcion'),
-                estudiante_id: formData.get('estudiante_id'),
-                director_id: formData.get('director_id'),
                 linea_investigacion_id: formData.get('linea_investigacion_id'),
                 ciclo_academico_id: formData.get('ciclo_academico_id'),
                 fecha_inicio: formData.get('fecha_inicio'),
@@ -321,6 +552,147 @@
                 alertContainer.innerHTML = '';
             }, 5000);
         }
+
+        // Funciones para manejar modales
+        function openLineaModal() {
+            document.getElementById('lineaModal').style.display = 'block';
+            document.getElementById('linea_nombre').focus();
+        }
+
+        function closeLineaModal() {
+            document.getElementById('lineaModal').style.display = 'none';
+            document.getElementById('lineaForm').reset();
+        }
+
+        function openCicloModal() {
+            document.getElementById('cicloModal').style.display = 'block';
+            document.getElementById('ciclo_nombre').focus();
+        }
+
+        function closeCicloModal() {
+            document.getElementById('cicloModal').style.display = 'none';
+            document.getElementById('cicloForm').reset();
+        }
+
+        // Cerrar modales al hacer clic fuera de ellos
+        window.onclick = function(event) {
+            const lineaModal = document.getElementById('lineaModal');
+            const cicloModal = document.getElementById('cicloModal');
+            
+            if (event.target === lineaModal) {
+                closeLineaModal();
+            }
+            if (event.target === cicloModal) {
+                closeCicloModal();
+            }
+        }
+
+        // Manejar formulario de línea de investigación
+        document.getElementById('lineaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const lineaData = {
+                nombre: formData.get('nombre'),
+                descripcion: formData.get('descripcion')
+            };
+
+            try {
+                const response = await fetch('/admin/api/lineas-investigacion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(lineaData)
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    showAlert(errorResult.message || 'Error al crear la línea de investigación', 'error');
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('Respuesta del servidor (línea):', result);
+
+                if (result.success && result.linea) {
+                    // Agregar la nueva línea al select
+                    const select = document.getElementById('linea_investigacion_id');
+                    const option = new Option(result.linea.nombre, result.linea.id);
+                    select.add(option);
+                    select.value = result.linea.id;
+                    
+                    closeLineaModal();
+                    showAlert(result.message || 'Línea de investigación creada exitosamente', 'success');
+                } else {
+                    console.error('Respuesta inesperada (línea):', result);
+                    showAlert('Error: Respuesta inesperada del servidor', 'error');
+                }
+            } catch (error) {
+                console.error('Error completo (línea):', error);
+                showAlert('Error de red o parsing: ' + error.message, 'error');
+            }
+        });
+
+        // Manejar formulario de ciclo académico
+        document.getElementById('cicloForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const cicloData = {
+                nombre: formData.get('nombre'),
+                descripcion: formData.get('descripcion'),
+                fecha_inicio: formData.get('fecha_inicio'),
+                fecha_fin: formData.get('fecha_fin')
+            };
+
+            // Validar fechas si ambas están presentes
+            if (cicloData.fecha_inicio && cicloData.fecha_fin) {
+                const fechaInicio = new Date(cicloData.fecha_inicio);
+                const fechaFin = new Date(cicloData.fecha_fin);
+                
+                if (fechaFin <= fechaInicio) {
+                    showAlert('La fecha de fin debe ser posterior a la fecha de inicio', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch('/admin/api/ciclos-academicos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(cicloData)
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    showAlert(errorResult.message || 'Error al crear el ciclo académico', 'error');
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('Respuesta del servidor:', result);
+
+                if (result.success && result.ciclo) {
+                    // Agregar el nuevo ciclo al select
+                    const select = document.getElementById('ciclo_academico_id');
+                    const option = new Option(result.ciclo.nombre, result.ciclo.id);
+                    select.add(option);
+                    select.value = result.ciclo.id;
+                    
+                    closeCicloModal();
+                    showAlert(result.message || 'Ciclo académico creado exitosamente', 'success');
+                } else {
+                    console.error('Respuesta inesperada:', result);
+                    showAlert('Error: Respuesta inesperada del servidor', 'error');
+                }
+            } catch (error) {
+                console.error('Error completo:', error);
+                showAlert('Error de red o parsing: ' + error.message, 'error');
+            }
+        });
     </script>
 </body>
 </html>
