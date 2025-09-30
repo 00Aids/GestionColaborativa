@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .role-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .stat-card.total .stat-number { color: #667eea; }
+        .stat-card.pending .stat-number { color: #f39c12; }
+        .stat-card.completed .stat-number { color: #27ae60; }
+        .stat-card.overdue .stat-number { color: #e74c3c; }
+
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filters-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .filter-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .evaluations-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .evaluations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .evaluations-table th,
+        .evaluations-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .evaluations-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .evaluations-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ccc;
+        }
+
+        .navigation-links {
+            margin-bottom: 2rem;
+        }
+
+        .nav-link {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .filters-form {
+                grid-template-columns: 1fr;
+            }
+
+            .evaluations-table {
+                font-size: 0.875rem;
+            }
+
+            .evaluations-table th,
+            .evaluations-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">Sistema de Gestión de Proyectos</div>
+            <div class="user-info">
+                <span><%= user.nombres %> <%= user.apellidos %></span>
+                <span class="role-badge"><%= user.rol %></span>
+                <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Navigation Links -->
+        <div class="navigation-links">
+            <a href="/dashboard/evaluator" class="nav-link">🏠 Dashboard</a>
+            <a href="/evaluator/evaluations" class="nav-link">📋 Evaluaciones</a>
+            <a href="/evaluator/projects" class="nav-link">📁 Proyectos</a>
+            <a href="/evaluator/history" class="nav-link">📊 Historial</a>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Mis Evaluaciones</h1>
+            <div class="breadcrumb">
+                <a href="/dashboard/evaluator">Dashboard</a> / Evaluaciones
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-number"><%= stats.total %></div>
+                <div class="stat-label">Total Evaluaciones</div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-number"><%= stats.pendientes %></div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-number"><%= stats.completadas %></div>
+                <div class="stat-label">Completadas</div>
+            </div>
+            <div class="stat-card overdue">
+                <div class="stat-number"><%= stats.vencidas %></div>
+                <div class="stat-label">Vencidas</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <form class="filters-form" method="GET">
+                <div class="form-group">
+                    <label for="estado">Estado</label>
+                    <select name="estado" id="estado">
+                        <option value="">Todos los estados</option>
+                        <option value="pendiente" <%= filters.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                        <option value="completada" <%= filters.estado === 'completada' ? 'selected' : '' %>>Completada</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="proyecto">Proyecto</label>
+                    <select name="proyecto" id="proyecto">
+                        <option value="">Todos los proyectos</option>
+                        <% uniqueProjects.forEach(project => { %>
+                            <option value="<%= project %>" <%= filters.proyecto === project ? 'selected' : '' %>>
+                                <%= project %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="filter-btn">Filtrar</button>
+                </div>
+                <div class="form-group">
+                    <a href="/evaluator/evaluations" class="clear-btn">Limpiar</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Evaluations Table -->
+        <div class="evaluations-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    Evaluaciones Asignadas 
+                    <span style="color: #666; font-weight: normal; font-size: 1rem;">
+                        (<%= evaluations.length %> resultados)
+                    </span>
+                </h2>
+            </div>
+
+            <% if (evaluations.length > 0) { %>
+                <table class="evaluations-table">
+                    <thead>
+                        <tr>
+                            <th>Proyecto</th>
+                            <th>Estudiante</th>
+                            <th>Entregable</th>
+                            <th>Fecha Límite</th>
+                            <th>Estado</th>
+                            <th>Nota</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% evaluations.forEach(evaluation => { %>
+                            <% 
+                                const fechaLimite = new Date(evaluation.fecha_limite);
+                                const hoy = new Date();
+                                const isOverdue = evaluation.estado === 'pendiente' && fechaLimite < hoy;
+                                const statusClass = evaluation.estado === 'completada' ? 'status-completed' : 
+                                                  isOverdue ? 'status-overdue' : 'status-pending';
+                            %>
+                            <tr>
+                                <td>
+                                    <strong><%= evaluation.proyecto_titulo %></strong>
+                                </td>
+                                <td>
+                                    <%= evaluation.estudiante_nombres %> <%= evaluation.estudiante_apellidos %>
+                                </td>
+                                <td>
+                                    <%= evaluation.entregable_titulo || 'Sin título' %>
+                                </td>
+                                <td>
+                                    <%= fechaLimite.toLocaleDateString('es-ES') %>
+                                    <% if (isOverdue) { %>
+                                        <br><small style="color: #e74c3c;">Vencida</small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="status-badge <%= statusClass %>">
+                                        <%= evaluation.estado === 'pendiente' ? 'Pendiente' : 'Completada' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (evaluation.nota_final) { %>
+                                        <strong><%= evaluation.nota_final %></strong>
+                                        <% if (evaluation.estado_evaluacion) { %>
+                                            <br>
+                                            <small style="color: <%= evaluation.estado_evaluacion === 'aprobada' ? '#28a745' : 
+                                                                   evaluation.estado_evaluacion === 'rechazada' ? '#dc3545' : '#ffc107' %>">
+                                                <%= evaluation.estado_evaluacion === 'aprobada' ? 'Aprobada' : 
+                                                    evaluation.estado_evaluacion === 'rechazada' ? 'Rechazada' : 'Para Cambios' %>
+                                            </small>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span style="color: #666;">Sin calificar</span>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <% if (evaluation.estado === 'pendiente') { %>
+                                        <a href="/evaluator/evaluation/<%= evaluation.id %>" class="action-btn btn-primary">
+                                            Evaluar
+                                        </a>
+                                    <% } else { %>
+                                        <a href="/evaluator/evaluation/<%= evaluation.id %>" class="action-btn btn-success">
+                                            Ver Detalle
+                                        </a>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="empty-state">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                    <h3>No hay evaluaciones</h3>
+                    <p>No se encontraron evaluaciones con los filtros aplicados.</p>
+                    <% if (filters.estado || filters.proyecto) { %>
+                        <br>
+                        <a href="/evaluator/evaluations" class="action-btn btn-primary">Ver todas las evaluaciones</a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

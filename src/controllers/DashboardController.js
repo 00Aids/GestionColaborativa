@@ -554,21 +554,38 @@ class DashboardController {
         console.log('No se pudieron cargar proyectos para el evaluador:', projectError.message);
       }
       
-      // Estadísticas
+      // Estadísticas (usando estados correctos de la tabla: 'borrador' y 'finalizada')
       const stats = {
         totalEvaluations: assignedEvaluations.length,
-        completedEvaluations: assignedEvaluations.filter(e => e.estado === 'completada').length,
-        pendingEvaluations: assignedEvaluations.filter(e => e.estado === 'pendiente').length,
-        overdueEvaluations: assignedEvaluations.filter(e => 
-          e.estado === 'pendiente' && new Date(e.fecha_limite) < new Date()
-        ).length,
+        completedEvaluations: assignedEvaluations.filter(e => e.estado === 'finalizada').length,
+        pendingEvaluations: assignedEvaluations.filter(e => e.estado === 'borrador' || e.estado === null).length,
+        overdueEvaluations: assignedEvaluations.filter(e => {
+          // Para evaluaciones vencidas, consideramos las que están en borrador y tienen fecha_evaluacion null
+          // y fueron creadas hace más de 7 días (como ejemplo de criterio de vencimiento)
+          const createdDate = new Date(e.created_at);
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          return (e.estado === 'borrador' || e.estado === null) && 
+                 e.fecha_evaluacion === null && 
+                 createdDate < sevenDaysAgo;
+        }).length,
         totalProjects: userProjects.length
       };
 
+      // Filtrar evaluaciones pendientes para la vista (borrador o null)
+      const pendingEvaluations = assignedEvaluations.filter(e => e.estado === 'borrador' || e.estado === null).slice(0, 10);
+      
+      // Filtrar evaluaciones recientes completadas (finalizadas)
+      const recentEvaluations = assignedEvaluations
+        .filter(e => e.estado === 'finalizada')
+        .sort((a, b) => new Date(b.fecha_evaluacion || b.updated_at) - new Date(a.fecha_evaluacion || a.updated_at))
+        .slice(0, 5);
+      
       res.render('evaluator/dashboard', {
         user,
         stats,
         assignedEvaluations: assignedEvaluations.slice(0, 10),
+        pendingEvaluations: pendingEvaluations,
+        recentEvaluations: recentEvaluations,
         userProjects: userProjects.slice(0, 5), // Mostrar solo los primeros 5 proyectos
         success: req.flash('success'),
         error: req.flash('error')

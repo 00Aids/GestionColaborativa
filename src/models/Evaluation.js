@@ -56,12 +56,52 @@ class Evaluation extends BaseModel {
       
       // Parsear criterios de rúbrica y calificaciones
       return rows.map(row => {
+        // Parsear criterios de rúbrica con validación
         if (row.rubrica_criterios) {
-          row.rubrica_criterios = JSON.parse(row.rubrica_criterios);
+          try {
+            // Verificar si es un string válido para JSON
+            if (typeof row.rubrica_criterios === 'string' && row.rubrica_criterios !== '[object Object]') {
+              row.rubrica_criterios = JSON.parse(row.rubrica_criterios);
+            } else {
+              // Si no es un string válido, establecer como null o array vacío
+              row.rubrica_criterios = [];
+            }
+          } catch (e) {
+            console.warn(`Error parsing rubrica_criterios for evaluation ${row.id}:`, e.message);
+            row.rubrica_criterios = [];
+          }
         }
+        
+        // Parsear puntajes/calificaciones con validación
+        if (row.puntajes) {
+          try {
+            // Verificar si es un string válido para JSON
+            if (typeof row.puntajes === 'string' && row.puntajes !== '[object Object]') {
+              row.puntajes = JSON.parse(row.puntajes);
+            } else {
+              // Si no es un string válido, establecer como null o objeto vacío
+              row.puntajes = {};
+            }
+          } catch (e) {
+            console.warn(`Error parsing puntajes for evaluation ${row.id}:`, e.message);
+            row.puntajes = {};
+          }
+        }
+        
+        // También manejar el campo calificaciones si existe
         if (row.calificaciones) {
-          row.calificaciones = JSON.parse(row.calificaciones);
+          try {
+            if (typeof row.calificaciones === 'string' && row.calificaciones !== '[object Object]') {
+              row.calificaciones = JSON.parse(row.calificaciones);
+            } else {
+              row.calificaciones = {};
+            }
+          } catch (e) {
+            console.warn(`Error parsing calificaciones for evaluation ${row.id}:`, e.message);
+            row.calificaciones = {};
+          }
         }
+        
         return row;
       });
     } catch (error) {
@@ -113,11 +153,31 @@ class Evaluation extends BaseModel {
       return rows.map(row => {
         if (row.calificaciones) {
           try {
-            row.calificaciones = JSON.parse(row.calificaciones);
+            if (typeof row.calificaciones === 'string' && row.calificaciones !== '[object Object]') {
+              row.calificaciones = JSON.parse(row.calificaciones);
+            } else {
+              row.calificaciones = {};
+            }
           } catch (e) {
-            row.calificaciones = null;
+            console.warn(`Error parsing calificaciones for evaluation ${row.id}:`, e.message);
+            row.calificaciones = {};
           }
         }
+        
+        // También manejar puntajes si existe
+        if (row.puntajes) {
+          try {
+            if (typeof row.puntajes === 'string' && row.puntajes !== '[object Object]') {
+              row.puntajes = JSON.parse(row.puntajes);
+            } else {
+              row.puntajes = {};
+            }
+          } catch (e) {
+            console.warn(`Error parsing puntajes for evaluation ${row.id}:`, e.message);
+            row.puntajes = {};
+          }
+        }
+        
         return row;
       });
     } catch (error) {
