@@ -63,7 +63,8 @@ class AuthController {
         apellidos: user.apellidos,
         rol_id: user.rol_id,
         rol_nombre: role?.nombre || 'Sin rol',
-        permisos: role?.permisos || []
+        permisos: role?.permisos || [],
+        area_trabajo_id: user.area_trabajo_id
       };
 
       req.flash('success', `Bienvenido, ${user.nombres}`);

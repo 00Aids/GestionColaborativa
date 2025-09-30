@@ -19,11 +19,16 @@ const verifyAreaAccess = async (req, res, next) => {
     
     // Si no se especifica área de trabajo, usar el área por defecto del usuario
     if (!areaTrabajoId) {
-      // Obtener el área por defecto del usuario
-      const userAreas = await User.getUserAreas(req.user.id);
-      if (userAreas.length > 0) {
-        req.areaTrabajoId = userAreas[0].area_trabajo_id;
-        req.userAreas = userAreas;
+      // Usar el área de trabajo directamente del usuario autenticado
+      if (req.user && req.user.area_trabajo_id) {
+        req.areaTrabajoId = req.user.area_trabajo_id;
+        // También obtener las áreas adicionales si las hay
+        try {
+          req.userAreas = await User.getUserAreas(req.user.id);
+        } catch (error) {
+          // Si falla getUserAreas, continuar solo con el área principal
+          req.userAreas = [];
+        }
         return next();
       } else {
         return res.status(403).json({
@@ -78,7 +83,11 @@ const loadUserAreas = async (req, res, next) => {
       }
       
       // Establecer el área de trabajo principal del usuario para filtrado
-      if (req.userAreas.length > 0) {
+      // Usar el área de trabajo directamente del usuario autenticado
+      if (req.user && req.user.area_trabajo_id) {
+        req.areaTrabajoId = req.user.area_trabajo_id;
+      } else if (req.userAreas.length > 0) {
+        // Fallback a la primera área si no hay área principal
         req.areaTrabajoId = req.userAreas[0].area_trabajo_id;
       }
     }
