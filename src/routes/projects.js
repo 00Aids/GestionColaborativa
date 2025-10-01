@@ -23,12 +23,12 @@ router.post('/create',
 
 // Rutas para sistema de invitaciones
 router.get('/join', 
-  AuthMiddleware.requireRole(['Estudiante']),
+  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico']),
   projectController.showJoinForm.bind(projectController)
 );
 
 router.post('/join', 
-  AuthMiddleware.requireRole(['Estudiante']),
+  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico']),
   projectController.joinWithCode.bind(projectController)
 );
 

@@ -203,7 +203,6 @@ class Entregable extends BaseModel {
                 LEFT JOIN usuarios u ON p.estudiante_id = u.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
                 WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
-                AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios', 'pendiente', 'rechazado')
                 ORDER BY e.fecha_entrega DESC
             `;
             
@@ -414,19 +413,44 @@ class Entregable extends BaseModel {
             // Acciones específicas por estado
             switch (newStatus) {
                 case 'entregado':
-                    updateData.fecha_entrega_real = new Date();
+                    // Actualizar fecha_entrega cuando el estudiante entrega
+                    updateData.fecha_entrega = new Date();
                     break;
                 case 'en_revision':
-                    updateData.fecha_revision = new Date();
+                    // No necesitamos una columna específica para fecha_revision
+                    // Se puede usar updated_at para tracking
                     break;
                 case 'aceptado':
                 case 'completado':
-                    updateData.fecha_finalizacion = new Date();
+                    // Mantener la fecha_entrega original del estudiante
                     break;
             }
 
             // Actualizar entregable
             const result = await this.update(entregableId, updateData);
+
+            // Si hay observaciones y userId, guardarlas como comentario
+            if (observaciones && observaciones.trim() && userId) {
+                let comentarioTexto = '';
+                
+                // Agregar contexto según el estado
+                switch (newStatus) {
+                    case 'aceptado':
+                        comentarioTexto = `✅ **Entregable aprobado**\n\n${observaciones}`;
+                        break;
+                    case 'rechazado':
+                        comentarioTexto = `❌ **Entregable rechazado**\n\n${observaciones}`;
+                        break;
+                    case 'requiere_cambios':
+                        comentarioTexto = `🔄 **Se solicitan cambios**\n\n${observaciones}`;
+                        break;
+                    default:
+                        comentarioTexto = `📝 **Observaciones del cambio de estado**\n\n${observaciones}`;
+                        break;
+                }
+                
+                await this.addComment(entregableId, userId, comentarioTexto);
+            }
 
             return result;
         } catch (error) {
@@ -542,7 +566,8 @@ class Entregable extends BaseModel {
             }
 
             // Obtener el proyecto para conseguir el area_trabajo_id
-            const projectModel = require('./Project');
+            const Project = require('./Project');
+            const projectModel = new Project();
             const project = await projectModel.findById(entregable.proyecto_id);
             if (!project || !project.area_trabajo_id) {
                 return null; // Si no hay área de trabajo, no registrar historial

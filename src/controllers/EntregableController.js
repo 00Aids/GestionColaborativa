@@ -37,7 +37,8 @@ class EntregableController {
         entregado: deliverables.filter(d => d.estado === 'entregado'),
         en_revision: deliverables.filter(d => d.estado === 'en_revision'),
         requiere_cambios: deliverables.filter(d => d.estado === 'requiere_cambios'),
-        rechazado: deliverables.filter(d => d.estado === 'rechazado')
+        rechazado: deliverables.filter(d => d.estado === 'rechazado'),
+        aceptado: deliverables.filter(d => d.estado === 'aceptado')
       };
 
       res.render('coordinator/deliverable-review', {
@@ -89,6 +90,39 @@ class EntregableController {
         return res.status(403).json({
           success: false,
           message: 'No tienes permisos para revisar este entregable'
+        });
+      }
+
+      // VALIDACIÓN: Prevenir calificación de entregables no enviados
+      if (deliverable.estado === 'pendiente' && ['approve', 'reject', 'request_changes'].includes(action)) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se puede calificar un entregable que no ha sido enviado por el estudiante'
+        });
+      }
+
+      // VALIDACIÓN: Prevenir acciones en entregables ya finalizados
+      const finalStates = ['aceptado', 'rechazado', 'completado'];
+      if (finalStates.includes(deliverable.estado)) {
+        return res.status(400).json({
+          success: false,
+          message: `No se pueden realizar acciones en un entregable que ya está ${deliverable.estado}`
+        });
+      }
+
+      // VALIDACIÓN: Solo permitir iniciar revisión si el entregable está entregado o requiere cambios
+      if (action === 'start_review' && !['entregado', 'requiere_cambios'].includes(deliverable.estado)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Solo se puede iniciar la revisión de entregables que han sido enviados o que requieren cambios'
+        });
+      }
+
+      // VALIDACIÓN: Solo permitir aprobar/rechazar/solicitar cambios si está en revisión
+      if (['approve', 'reject', 'request_changes'].includes(action) && deliverable.estado !== 'en_revision') {
+        return res.status(400).json({
+          success: false,
+          message: 'Solo se pueden aprobar, rechazar o solicitar cambios a entregables que están en revisión'
         });
       }
 

@@ -405,7 +405,6 @@
                 <li><a href="/coordinator/projects">Proyectos</a></li>
                 <li><a href="/coordinator/students">Estudiantes</a></li>
                 <li><a href="/coordinator/deliverables" class="active">Entregables</a></li>
-                <li><a href="/coordinator/evaluations">Evaluaciones</a></li>
                 <li><a href="/coordinator/reports">Reportes</a></li>
                 <li><a href="/coordinator/calendar">Calendario</a></li>
             </ul>
@@ -461,6 +460,8 @@
                 <button class="filter-tab" data-status="entregado">Nuevos (<%= deliverablesByStatus.entregado.length %>)</button>
                 <button class="filter-tab" data-status="en_revision">En Revisión (<%= deliverablesByStatus.en_revision.length %>)</button>
                 <button class="filter-tab" data-status="requiere_cambios">Requieren Cambios (<%= deliverablesByStatus.requiere_cambios.length %>)</button>
+                <button class="filter-tab" data-status="rechazado">Rechazados (<%= deliverablesByStatus.rechazado ? deliverablesByStatus.rechazado.length : 0 %>)</button>
+                <button class="filter-tab" data-status="aceptado">Aprobados (<%= deliverablesByStatus.aceptado ? deliverablesByStatus.aceptado.length : 0 %>)</button>
             </div>
         </div>
 
@@ -510,7 +511,11 @@
                                 👁️ Ver Detalles
                             </button>
                             
-                            <% if (deliverable.estado === 'entregado') { %>
+                            <% if (deliverable.estado === 'pendiente') { %>
+                                <div style="color: #e53e3e; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                    ⏳ Esperando entrega del estudiante
+                                </div>
+                            <% } else if (deliverable.estado === 'entregado') { %>
                                 <button class="btn btn-primary" onclick="startReview('<%= deliverable.id %>')">
                                     🔍 Iniciar Revisión
                                 </button>
@@ -528,6 +533,22 @@
                                 <button class="btn btn-primary" onclick="startReview('<%= deliverable.id %>')">
                                     🔍 Revisar Cambios
                                 </button>
+                            <% } else if (deliverable.estado === 'aceptado') { %>
+                                <div style="color: #38a169; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                    ✅ Entregable aceptado - Proceso completado
+                                </div>
+                            <% } else if (deliverable.estado === 'rechazado') { %>
+                                <div style="color: #e53e3e; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                    ❌ Entregable rechazado - Requiere rehacer
+                                </div>
+                            <% } else if (deliverable.estado === 'completado') { %>
+                                <div style="color: #38a169; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                    🎯 Entregable completado - Proceso finalizado
+                                </div>
+                            <% } else if (deliverable.estado === 'en_progreso') { %>
+                                <div style="color: #3182ce; font-size: 14px; font-weight: 600; margin-top: 8px;">
+                                    🔄 Estudiante trabajando en el entregable
+                                </div>
                             <% } %>
                         </div>
                     </div>
@@ -592,8 +613,8 @@
         });
 
         function viewDeliverable(deliverableId) {
-            // Implement view deliverable details
-            window.open(`/coordinator/api/deliverables/${deliverableId}`, '_blank');
+            // Navigate to deliverable details view
+            window.location.href = `/coordinator/deliverables/${deliverableId}`;
         }
 
         function startReview(deliverableId) {

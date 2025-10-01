@@ -417,14 +417,6 @@
                     <%= deliverableStats?.pendientes || 0 %> pendientes • <%= deliverableStats?.vencidos || 0 %> vencidos
                 </div>
             </div>
-            <div class="stat-card evaluations">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-number"><%= evaluationStats?.total || 0 %></div>
-                <div class="stat-label">Evaluaciones</div>
-                <div class="stat-sublabel">
-                    Promedio: <%= evaluationStats?.promedio || 0 %> • <%= evaluationStats?.pendientes || 0 %> pendientes
-                </div>
-            </div>
             <div class="stat-card students">
                 <div class="stat-icon">👥</div>
                 <div class="stat-number"><%= students?.length || 0 %></div>
@@ -480,9 +472,6 @@
                         <a href="/coordinator/deliverables" class="action-btn">
                             📋 Revisar Entregables
                         </a>
-                        <a href="/coordinator/evaluations" class="action-btn">
-                            ⭐ Evaluaciones
-                        </a>
                         <a href="/coordinator/reports" class="action-btn">
                             📊 Reportes
                         </a>
@@ -528,30 +517,33 @@
                 </div>
             </div>
 
-            <!-- Códigos de Invitación -->
-            <div class="card">
-                <div class="card-header">
-                    🎫 Códigos de Invitación
+            <!-- Unirse a Proyecto con Código -->
+            <div class="card" style="border: 2px solid #5a67d8;">
+                <div class="card-header" style="background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%); color: white; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🔗</span>
+                    <span>Unirse a un Proyecto</span>
                 </div>
                 <div class="card-content">
-                    <% if (invitationCodes && invitationCodes.length > 0) { %>
-                        <% invitationCodes.forEach(code => { %>
-                            <div class="invitation-code">
-                                <div class="code-header">
-                                    <span class="code-value"><%= code.codigo %></span>
-                                    <span class="code-type"><%= code.tipo %></span>
-                                </div>
-                                <div class="code-usage">
-                                    <%= code.usos %>/<%= code.limite %> usos • Expira: <%= code.expira %>
-                                </div>
-                            </div>
-                        <% }) %>
-                    <% } else { %>
-                        <div class="empty-state">
-                            <div class="empty-state-icon">🎫</div>
-                            <p>No hay códigos activos</p>
-                        </div>
-                    <% } %>
+                    <div style="text-align: center; padding: 20px;">
+                        <h3 style="color: #2d3748; margin-bottom: 15px;">¿Tienes un código de invitación?</h3>
+                        <p style="color: #718096; margin-bottom: 25px; font-size: 14px;">
+                            Si tienes un código de invitación de un proyecto, úsalo aquí para unirte automáticamente.
+                        </p>
+                        <a href="/projects/join" 
+                           style="background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%); 
+                                  color: white; 
+                                  padding: 15px 30px; 
+                                  border-radius: 25px; 
+                                  text-decoration: none; 
+                                  font-weight: 600; 
+                                  display: inline-block; 
+                                  transition: transform 0.2s, box-shadow 0.2s;
+                                  box-shadow: 0 4px 15px rgba(90, 103, 216, 0.3);"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(90, 103, 216, 0.4)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(90, 103, 216, 0.3)'">
+                            📝 Ingresar Código de Invitación
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

@@ -62,11 +62,11 @@ class DeliverableNotificationService {
     // Notificar cuando el coordinador aprueba un entregable
     async notifyDeliverableApproved(deliverableId, deliverableData, coordinatorId) {
         try {
-            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo } = deliverableData;
 
             const notificationData = {
                 titulo: '✅ Entregable Aprobado',
-                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido aprobado`,
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" ha sido aprobado`,
                 tipo: 'success',
                 url_accion: `/student/deliverables?deliverable=${deliverableId}`
             };
@@ -81,11 +81,11 @@ class DeliverableNotificationService {
     // Notificar cuando el coordinador rechaza un entregable
     async notifyDeliverableRejected(deliverableId, deliverableData, coordinatorId, comentario = '') {
         try {
-            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo } = deliverableData;
 
             const mensaje = comentario 
-                ? `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido rechazado. Comentario: ${comentario}`
-                : `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha sido rechazado`;
+                ? `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" ha sido rechazado. Comentario: ${comentario}`
+                : `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" ha sido rechazado`;
 
             const notificationData = {
                 titulo: '❌ Entregable Rechazado',
@@ -104,11 +104,11 @@ class DeliverableNotificationService {
     // Notificar cuando se requieren cambios en un entregable
     async notifyDeliverableNeedsChanges(deliverableId, deliverableData, coordinatorId, comentario = '') {
         try {
-            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo } = deliverableData;
 
             const mensaje = comentario 
-                ? `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" requiere cambios. Comentario: ${comentario}`
-                : `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" requiere cambios`;
+                ? `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" requiere cambios. Comentario: ${comentario}`
+                : `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" requiere cambios`;
 
             const notificationData = {
                 titulo: '🔄 Entregable Requiere Cambios',
@@ -127,11 +127,11 @@ class DeliverableNotificationService {
     // Notificar cuando un entregable está próximo a vencer
     async notifyDeliverableDueSoon(deliverableId, deliverableData, daysUntilDue) {
         try {
-            const { estudiante_id, titulo, proyecto_nombre, fecha_limite } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo, fecha_limite } = deliverableData;
 
             const notificationData = {
                 titulo: '⏰ Entregable Próximo a Vencer',
-                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" vence en ${daysUntilDue} días (${fecha_limite})`,
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" vence en ${daysUntilDue} días (${fecha_limite})`,
                 tipo: 'warning',
                 url_accion: `/student/deliverables?deliverable=${deliverableId}`
             };
@@ -146,12 +146,12 @@ class DeliverableNotificationService {
     // Notificar cuando un entregable ha vencido
     async notifyDeliverableOverdue(deliverableId, deliverableData) {
         try {
-            const { estudiante_id, titulo, proyecto_nombre, coordinador_id } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo, coordinador_id } = deliverableData;
 
             // Notificar al estudiante
             const studentNotification = {
                 titulo: '🚨 Entregable Vencido',
-                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_nombre}" ha vencido`,
+                mensaje: `Tu entregable "${titulo}" del proyecto "${proyecto_titulo}" ha vencido`,
                 tipo: 'error',
                 url_accion: `/student/deliverables?deliverable=${deliverableId}`
             };
@@ -162,7 +162,7 @@ class DeliverableNotificationService {
             if (coordinador_id) {
                 const coordinatorNotification = {
                     titulo: '🚨 Entregable Vencido',
-                    mensaje: `El entregable "${titulo}" del proyecto "${proyecto_nombre}" ha vencido sin ser entregado`,
+                    mensaje: `El entregable "${titulo}" del proyecto "${proyecto_titulo}" ha vencido sin ser entregado`,
                     tipo: 'error',
                     url_accion: `/coordinator/deliverables?deliverable=${deliverableId}`
                 };
@@ -179,7 +179,7 @@ class DeliverableNotificationService {
     // Notificar cuando se agrega un comentario a un entregable
     async notifyDeliverableComment(deliverableId, deliverableData, commentData) {
         try {
-            const { estudiante_id, titulo, proyecto_nombre } = deliverableData;
+            const { estudiante_id, titulo, proyecto_titulo } = deliverableData;
             const { autor_nombre, comentario } = commentData;
 
             const notificationData = {

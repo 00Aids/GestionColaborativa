@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #4a5568;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .deliverable-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .deliverable-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            gap: 20px;
+        }
+
+        .deliverable-info {
+            flex: 1;
+        }
+
+        .deliverable-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .deliverable-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .meta-item i {
+            color: #667eea;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pendiente {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-en-revision {
+            background: #feebc8;
+            color: #dd6b20;
+        }
+
+        .status-aceptado {
+            background: #c6f6d5;
+            color: #38a169;
+        }
+
+        .status-rechazado {
+            background: #fed7d7;
+            color: #e53e3e;
+        }
+
+        .priority-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .priority-medium {
+            background: #feebc8;
+            color: #dd6b20;
+        }
+
+        .priority-low {
+            background: #c6f6d5;
+            color: #38a169;
+        }
+
+        .deliverable-description {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .deliverable-description h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .deliverable-description p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .project-info {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .project-info h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .project-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .project-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .project-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-detail-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .project-detail-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        /* ===== ACTIONS ===== */
+        .actions-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .actions-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-approve {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .btn-reject {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        .btn-request-changes {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-request-changes:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        /* ===== COMMENTS SECTION ===== */
+        .comments-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .comments-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .comment-item {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .comment-date {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .comment-text {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .no-comments {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+
+            .deliverable-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .deliverable-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .project-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <a href="/coordinator/deliverables" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a Entregables
+            </a>
+            <h1 class="header-title">Detalles del Entregable</h1>
+        </div>
+        <div class="user-info">
+            <span><i class="fas fa-user"></i> <%= user.nombres %> <%= user.apellidos %></span>
+            <span><i class="fas fa-briefcase"></i> Coordinador</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Alerts -->
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <%= success %>
+            </div>
+        <% } %>
+
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <%= error %>
+            </div>
+        <% } %>
+
+        <!-- Deliverable Details -->
+        <div class="deliverable-card">
+            <div class="deliverable-header">
+                <div class="deliverable-info">
+                    <h2 class="deliverable-title"><%= deliverable.titulo %></h2>
+                    <div class="deliverable-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Fecha límite: <%= new Date(deliverable.fecha_limite).toLocaleDateString('es-ES') %></span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-clock"></i>
+                            <span>
+                                <% if (deliverable.diasRestantes > 0) { %>
+                                    <%= deliverable.diasRestantes %> días restantes
+                                <% } else if (deliverable.diasRestantes === 0) { %>
+                                    Vence hoy
+                                <% } else { %>
+                                    Vencido hace <%= Math.abs(deliverable.diasRestantes) %> días
+                                <% } %>
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="fas fa-flag"></i>
+                            <span class="priority-badge priority-<%= deliverable.prioridad || 'medium' %>">
+                                <%= deliverable.prioridad || 'Medium' %>
+                            </span>
+                        </div>
+                    </div>
+                    <span class="status-badge status-<%= deliverable.estado %>">
+                        <%= deliverable.estado %>
+                    </span>
+                </div>
+            </div>
+
+            <% if (deliverable.descripcion) { %>
+                <div class="deliverable-description">
+                    <h4><i class="fas fa-file-text"></i> Descripción</h4>
+                    <p><%= deliverable.descripcion %></p>
+                </div>
+            <% } %>
+
+            <div class="project-info">
+                <h4><i class="fas fa-project-diagram"></i> Información del Proyecto</h4>
+                <div class="project-details">
+                    <div class="project-detail-item">
+                        <span class="project-detail-label">Proyecto:</span>
+                        <span class="project-detail-value"><%= deliverable.project.titulo %></span>
+                    </div>
+                    <div class="project-detail-item">
+                        <span class="project-detail-label">Estado del Proyecto:</span>
+                        <span class="project-detail-value"><%= deliverable.project.estado %></span>
+                    </div>
+                    <div class="project-detail-item">
+                        <span class="project-detail-label">Fecha de Inicio:</span>
+                        <span class="project-detail-value"><%= new Date(deliverable.project.fecha_inicio).toLocaleDateString('es-ES') %></span>
+                    </div>
+                    <div class="project-detail-item">
+                        <span class="project-detail-label">Fecha de Fin:</span>
+                        <span class="project-detail-value"><%= new Date(deliverable.project.fecha_fin).toLocaleDateString('es-ES') %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="actions-section">
+            <h3 class="actions-header">
+                <i class="fas fa-cogs"></i>
+                Acciones de Revisión
+            </h3>
+            
+            <% if (deliverable.estado === 'pendiente') { %>
+                <div style="color: #e53e3e; font-size: 16px; font-weight: 600; text-align: center; padding: 20px;">
+                    <i class="fas fa-clock"></i>
+                    ⏳ Esperando entrega del estudiante
+                </div>
+            <% } else if (deliverable.estado === 'entregado') { %>
+                <div class="action-buttons">
+                    <button class="action-btn btn-primary" onclick="updateStatus('start_review')">
+                        <i class="fas fa-search"></i>
+                        Iniciar Revisión
+                    </button>
+                </div>
+            <% } else if (deliverable.estado === 'en_revision') { %>
+                <div class="action-buttons">
+                    <button class="action-btn btn-approve" onclick="updateStatus('approve')">
+                        <i class="fas fa-check"></i>
+                        Aprobar
+                    </button>
+                    <button class="action-btn btn-request-changes" onclick="updateStatus('request_changes')">
+                        <i class="fas fa-edit"></i>
+                        Solicitar Cambios
+                    </button>
+                    <button class="action-btn btn-reject" onclick="updateStatus('reject')">
+                        <i class="fas fa-times"></i>
+                        Rechazar
+                    </button>
+                </div>
+            <% } else if (deliverable.estado === 'requiere_cambios') { %>
+                <div class="action-buttons">
+                    <button class="action-btn btn-primary" onclick="updateStatus('start_review')">
+                        <i class="fas fa-search"></i>
+                        Revisar Cambios
+                    </button>
+                </div>
+            <% } else if (deliverable.estado === 'aceptado') { %>
+                <div style="color: #38a169; font-size: 16px; font-weight: 600; text-align: center; padding: 20px;">
+                    <i class="fas fa-check-circle"></i>
+                    ✅ Entregable aceptado - Proceso completado
+                </div>
+            <% } else if (deliverable.estado === 'rechazado') { %>
+                <div style="color: #e53e3e; font-size: 16px; font-weight: 600; text-align: center; padding: 20px;">
+                    <i class="fas fa-times-circle"></i>
+                    ❌ Entregable rechazado - Requiere rehacer
+                </div>
+            <% } else if (deliverable.estado === 'completado') { %>
+                <div style="color: #38a169; font-size: 16px; font-weight: 600; text-align: center; padding: 20px;">
+                    <i class="fas fa-trophy"></i>
+                    🎯 Entregable completado - Proceso finalizado
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <h3 class="comments-header">
+                <i class="fas fa-comments"></i>
+                Comentarios (<%= deliverable.comments ? deliverable.comments.length : 0 %>)
+            </h3>
+            
+            <% if (deliverable.comments && deliverable.comments.length > 0) { %>
+                <% deliverable.comments.forEach(comment => { %>
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">
+                                <i class="fas fa-user"></i>
+                                <%= comment.nombres %> <%= comment.apellidos %>
+                            </span>
+                            <span class="comment-date">
+                                <%= new Date(comment.created_at).toLocaleDateString('es-ES') %>
+                            </span>
+                        </div>
+                        <div class="comment-text">
+                            <%= comment.comentario %>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-comments">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>No hay comentarios para este entregable</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Modal para cambio de estado -->
+    <div id="statusModal" class="status-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Cambiar Estado del Entregable</h3>
+                <span class="close-modal" onclick="closeStatusModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="status-info">
+                    <i id="statusIcon" class="fas fa-check"></i>
+                    <p id="statusMessage">¿Estás seguro de que deseas aprobar este entregable?</p>
+                </div>
+                <div class="form-group">
+                    <label for="observaciones">Observaciones:</label>
+                    <textarea id="observaciones" placeholder="Agrega tus comentarios aquí (opcional)..." rows="4"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeStatusModal()">Cancelar</button>
+                <button id="confirmBtn" class="btn btn-confirm" onclick="confirmStatusChange()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .status-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .status-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .status-info i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .status-info.approve i {
+            color: #28a745;
+        }
+
+        .status-info.reject i {
+            color: #dc3545;
+        }
+
+        .status-info.request-changes i {
+            color: #ffc107;
+        }
+
+        .status-info p {
+            font-size: 1.1rem;
+            color: #333;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e1e5e9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-confirm {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background-color: #218838;
+        }
+
+        .btn-confirm.reject {
+            background-color: #dc3545;
+        }
+
+        .btn-confirm.reject:hover {
+            background-color: #c82333;
+        }
+
+        .btn-confirm.request-changes {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-confirm.request-changes:hover {
+            background-color: #e0a800;
+        }
+    </style>
+
+    <script>
+        let currentAction = '';
+
+        function updateStatus(action) {
+            currentAction = action;
+            openStatusModal(action);
+        }
+
+        function openStatusModal(action) {
+            const modal = document.getElementById('statusModal');
+            const statusInfo = document.querySelector('.status-info');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusMessage = document.getElementById('statusMessage');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const observacionesTextarea = document.getElementById('observaciones');
+
+            // Limpiar textarea
+            observacionesTextarea.value = '';
+
+            // Configurar el modal según la acción
+            statusInfo.className = 'status-info';
+            confirmBtn.className = 'btn btn-confirm';
+
+            switch(action) {
+                case 'approve':
+                    statusInfo.classList.add('approve');
+                    statusIcon.className = 'fas fa-check';
+                    statusMessage.textContent = '¿Estás seguro de que deseas aprobar este entregable?';
+                    confirmBtn.textContent = 'Aprobar';
+                    break;
+                case 'reject':
+                    statusInfo.classList.add('reject');
+                    statusIcon.className = 'fas fa-times';
+                    statusMessage.textContent = '¿Estás seguro de que deseas rechazar este entregable?';
+                    confirmBtn.textContent = 'Rechazar';
+                    confirmBtn.classList.add('reject');
+                    break;
+                case 'request_changes':
+                    statusInfo.classList.add('request-changes');
+                    statusIcon.className = 'fas fa-edit';
+                    statusMessage.textContent = '¿Deseas solicitar cambios en este entregable?';
+                    confirmBtn.textContent = 'Solicitar Cambios';
+                    confirmBtn.classList.add('request-changes');
+                    break;
+            }
+
+            modal.style.display = 'block';
+            // Focus en el textarea
+            setTimeout(() => observacionesTextarea.focus(), 100);
+        }
+
+        function closeStatusModal() {
+            const modal = document.getElementById('statusModal');
+            modal.style.display = 'none';
+            currentAction = '';
+        }
+
+        function confirmStatusChange() {
+            const observaciones = document.getElementById('observaciones').value.trim();
+            
+            fetch(`/coordinator/api/deliverables/<%= deliverable.id %>/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: currentAction,
+                    observaciones: observaciones
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeStatusModal();
+                    // Mostrar mensaje de éxito más elegante
+                    showSuccessMessage('Estado actualizado exitosamente');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showErrorMessage('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorMessage('Error al actualizar el estado');
+            });
+        }
+
+        function showSuccessMessage(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1001;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 2000);
+        }
+
+        function showErrorMessage(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #dc3545;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 1001;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            toast.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeStatusModal();
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('statusModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeStatusModal();
+            }
+        });
+
+        // Agregar animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

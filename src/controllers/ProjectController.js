@@ -417,12 +417,7 @@ class ProjectController {
     try {
       const user = req.session.user;
       
-      // Solo estudiantes pueden unirse a proyectos
-      if (user.rol_nombre !== 'Estudiante') {
-        req.flash('error', 'Solo los estudiantes pueden unirse a proyectos usando códigos de invitación');
-        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
-      }
-      
+      // Cualquier usuario autenticado puede unirse a proyectos usando códigos
       res.render('projects/join', {
         title: 'Unirse a Proyecto',
         user
@@ -439,12 +434,6 @@ class ProjectController {
     try {
       const user = req.session.user;
       const { invitation_code } = req.body;
-      
-      // Solo estudiantes pueden unirse a proyectos
-      if (user.rol_nombre !== 'Estudiante') {
-        req.flash('error', 'Solo los estudiantes pueden unirse a proyectos');
-        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
-      }
       
       if (!invitation_code || invitation_code.trim().length === 0) {
         req.flash('error', 'El código de invitación es obligatorio');
@@ -1529,18 +1518,7 @@ class ProjectController {
   
   async getProjectsByCoordinator(coordinatorId) {
     try {
-      // Primero obtenemos el área de trabajo del coordinador
-      const [coordinatorData] = await pool.execute(
-        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
-        [coordinatorId]
-      );
-      
-      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
-        return [];
-      }
-      
-      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
-      
+      // Obtener proyectos donde el coordinador está asignado directamente
       const query = `
         SELECT 
           p.*,
@@ -1554,16 +1532,17 @@ class ProjectController {
           COUNT(d.id) as total_entregables,
           COUNT(CASE WHEN d.estado = 'completado' THEN 1 END) as entregables_completados
         FROM proyectos p
+        LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN usuarios director ON p.director_id = director.id
         LEFT JOIN usuarios evaluador ON p.evaluador_id = evaluador.id
         LEFT JOIN entregables d ON p.id = d.proyecto_id
-        WHERE p.area_trabajo_id = ?
+        WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
         GROUP BY p.id
         ORDER BY p.created_at DESC
       `;
       
-      const [projects] = await pool.execute(query, [areaTrabajoId]);
+      const [projects] = await pool.execute(query, [coordinatorId]);
       
       // Calcular progreso para cada proyecto
       for (let project of projects) {

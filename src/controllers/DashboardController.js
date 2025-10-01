@@ -307,18 +307,24 @@ class DashboardController {
       // Obtener datos actualizados del usuario desde la base de datos
       const userDetails = await this.userModel.findById(user.id);
       
-      // Filtrar por área de trabajo del coordinador si tiene una asignada
-      const areaFilter = userDetails.area_trabajo_id ? { area_trabajo_id: userDetails.area_trabajo_id } : {};
+      // Obtener proyectos donde el coordinador está específicamente asignado
+      const projectController = new (require('./ProjectController'))();
+      const coordinatorProjects = await projectController.getProjectsByCoordinator(user.id);
       
-      // Obtener estadísticas del área o globales
-      const [projectStatsRaw, allProjects] = await Promise.all([
-        userDetails.area_trabajo_id 
-          ? this.projectModel.getStatisticsByArea(userDetails.area_trabajo_id)
-          : this.projectModel.getStatistics(),
-        userDetails.area_trabajo_id 
-          ? this.projectModel.findByArea(userDetails.area_trabajo_id)
-          : this.projectModel.findWithDetails()
-      ]);
+      // Solo mostrar proyectos donde el coordinador está directamente asignado
+      // NO usar fallback por área para evitar mostrar entregables de proyectos no asignados
+      let allProjects = coordinatorProjects;
+      
+      // Calcular estadísticas basadas en los proyectos del coordinador
+      const projectStatsRaw = allProjects.reduce((stats, project) => {
+        const existingStat = stats.find(s => s.estado === project.estado);
+        if (existingStat) {
+          existingStat.cantidad++;
+        } else {
+          stats.push({ estado: project.estado, cantidad: 1 });
+        }
+        return stats;
+      }, []);
 
       // Procesar estadísticas de proyectos
       const projectStats = {
@@ -332,10 +338,18 @@ class DashboardController {
         byStatus: projectStatsRaw
       };
 
-      // Obtener entregables del área
-      const allDeliverables = userDetails.area_trabajo_id 
-        ? await this.entregableModel.findWithProject(areaFilter)
-        : await this.entregableModel.findWithProject();
+      // Obtener entregables solo de proyectos asignados al coordinador
+      let allDeliverables = [];
+      if (allProjects.length > 0) {
+        const projectIds = allProjects.map(p => p.id);
+        // Obtener entregables de todos los proyectos asignados
+        for (const projectId of projectIds) {
+          const projectDeliverables = await this.entregableModel.findByProject(projectId);
+          if (projectDeliverables && projectDeliverables.length > 0) {
+            allDeliverables.push(...projectDeliverables);
+          }
+        }
+      }
 
       // Estadísticas de entregables
       const deliverableStats = {
@@ -350,10 +364,18 @@ class DashboardController {
         }).length
       };
 
-      // Obtener evaluaciones del área
-      const allEvaluations = userDetails.area_trabajo_id 
-        ? await this.evaluationModel.findByArea(userDetails.area_trabajo_id)
-        : await this.evaluationModel.findAll();
+      // Obtener evaluaciones solo de proyectos asignados al coordinador
+      let allEvaluations = [];
+      if (allProjects.length > 0) {
+        const projectIds = allProjects.map(p => p.id);
+        // Obtener evaluaciones de todos los proyectos asignados
+        for (const projectId of projectIds) {
+          const projectEvaluations = await this.evaluationModel.findByProject(projectId);
+          if (projectEvaluations && projectEvaluations.length > 0) {
+            allEvaluations.push(...projectEvaluations);
+          }
+        }
+      }
 
       const evaluationStats = {
         total: allEvaluations.length,
@@ -364,16 +386,27 @@ class DashboardController {
           : 0
       };
 
-      // Obtener estudiantes del área
-      const students = userDetails.area_trabajo_id 
-        ? await this.userModel.findByAreaAndRole(userDetails.area_trabajo_id, 'Estudiante')
-        : await this.userModel.findByRole('Estudiante');
+      // Obtener estudiantes solo de proyectos asignados al coordinador
+      const students = [];
+      if (allProjects.length > 0) {
+        const studentIds = new Set();
+        allProjects.forEach(project => {
+          if (project.estudiante_id) {
+            studentIds.add(project.estudiante_id);
+          }
+        });
+        
+        // Obtener detalles de los estudiantes únicos
+        for (const studentId of studentIds) {
+          const student = await this.userModel.findById(studentId);
+          if (student) {
+            students.push(student);
+          }
+        }
+      }
 
-      // Proyectos bajo supervisión directa (donde el coordinador es supervisor)
-      const myProjects = allProjects.filter(p => 
-        p.supervisor_id === user.id || 
-        (userDetails.area_trabajo_id && p.area_trabajo_id === userDetails.area_trabajo_id)
-      ).slice(0, 10);
+      // Proyectos bajo supervisión directa (proyectos asignados al coordinador)
+      const myProjects = allProjects.slice(0, 10);
 
       // Entregables próximos a vencer (próximos 7 días)
       const nextWeek = new Date();
@@ -413,25 +446,7 @@ class DashboardController {
         }))
       ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 8);
 
-      // Códigos de invitación activos (simulado por ahora)
-      const invitationCodes = [
-        {
-          codigo: 'COORD2024A',
-          tipo: 'Estudiante',
-          usos: 5,
-          limite: 10,
-          expira: '2024-12-31',
-          activo: true
-        },
-        {
-          codigo: 'EVAL2024B',
-          tipo: 'Evaluador',
-          usos: 2,
-          limite: 5,
-          expira: '2024-12-31',
-          activo: true
-        }
-      ];
+      // Los códigos de invitación se manejan a través del sistema de unirse a proyecto
 
       // Notificaciones recientes
       const notifications = await this.notificationModel.findByUser(user.id, { limit: 5 });
@@ -447,7 +462,7 @@ class DashboardController {
         overdueDeliverables: overdueDeliverables || [],
         recentProjects: recentProjects || [],
         recentActivity: recentActivity || [],
-        invitationCodes: invitationCodes || [],
+
         notifications: notifications || [],
         areaInfo: userDetails.area_trabajo_id ? {
           id: userDetails.area_trabajo_id,
@@ -1562,23 +1577,7 @@ class DashboardController {
     try {
       const user = req.session.user;
       
-      // Primero obtenemos el área de trabajo del coordinador
-      const [coordinatorData] = await pool.execute(
-        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
-        [user.id]
-      );
-      
-      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
-        return res.render('coordinator/students', {
-          title: 'Estudiantes Asignados',
-          user: user,
-          students: []
-        });
-      }
-      
-      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
-      
-      // Obtener estudiantes de proyectos del área de trabajo
+      // Obtener estudiantes de proyectos asignados directamente al coordinador
       const query = `
         SELECT DISTINCT 
           u.id,
@@ -1592,11 +1591,12 @@ class DashboardController {
           p.estado as proyecto_estado
         FROM usuarios u
         INNER JOIN proyectos p ON u.id = p.estudiante_id
-        WHERE p.area_trabajo_id = ?
+        INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
+        WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
         ORDER BY u.apellidos, u.nombres
       `;
       
-      const [students] = await pool.execute(query, [areaTrabajoId]);
+      const [students] = await pool.execute(query, [user.id]);
       
       res.render('coordinator/students', {
         title: 'Estudiantes Asignados',
@@ -1616,23 +1616,7 @@ class DashboardController {
     try {
       const user = req.session.user;
       
-      // Primero obtenemos el área de trabajo del coordinador
-      const [coordinatorData] = await pool.execute(
-        'SELECT area_trabajo_id FROM usuarios WHERE id = ?',
-        [user.id]
-      );
-      
-      if (!coordinatorData.length || !coordinatorData[0].area_trabajo_id) {
-        return res.render('coordinator/evaluations', {
-          title: 'Evaluaciones de Proyectos',
-          user: user,
-          evaluations: []
-        });
-      }
-      
-      const areaTrabajoId = coordinatorData[0].area_trabajo_id;
-      
-      // Obtener evaluaciones de proyectos del área de trabajo
+      // Obtener evaluaciones de proyectos asignados directamente al coordinador
       const query = `
         SELECT 
           e.*,
@@ -1642,13 +1626,14 @@ class DashboardController {
           d.titulo as entregable_titulo
         FROM evaluaciones e
         INNER JOIN proyectos p ON e.proyecto_id = p.id
+        INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
         INNER JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN entregables d ON e.entregable_id = d.id
-        WHERE p.area_trabajo_id = ?
+        WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
         ORDER BY e.fecha_evaluacion DESC
       `;
       
-      const [evaluations] = await pool.execute(query, [areaTrabajoId]);
+      const [evaluations] = await pool.execute(query, [user.id]);
       
       res.render('coordinator/evaluations', {
         title: 'Evaluaciones de Proyectos',

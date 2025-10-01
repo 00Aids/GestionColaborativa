@@ -111,21 +111,22 @@ class Task extends BaseModel {
                 INSERT INTO entregables (
                     proyecto_id, fase_id, titulo, descripcion, 
                     fecha_limite, prioridad, asignado_a, estado, 
-                    estado_workflow, observaciones, archivos_adjuntos
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?)
+                    estado_workflow, observaciones
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)
             `;
             
-            // Crear objeto de observaciones con todos los datos adicionales
+            // Crear objeto de observaciones con todos los datos adicionales incluyendo archivos
             const observaciones = {
                 tipo_enfoque,
                 estimacion_horas,
-                etiquetas
+                etiquetas,
+                archivos_adjuntos
             };
             
             const [result] = await this.db.execute(query, [
                 proyecto_id, fase_id, titulo, descripcion, 
                 fecha_limite, finalPriority, asignado_a, estado_workflow,
-                JSON.stringify(observaciones), JSON.stringify(archivos_adjuntos)
+                JSON.stringify(observaciones)
             ]);
             
             return result.insertId;
@@ -502,7 +503,6 @@ class Task extends BaseModel {
             const query = `
                 SELECT 
                     e.*,
-                    e.archivos_adjuntos,
                     p.titulo as proyecto_titulo,
                     fp.nombre as fase_nombre,
                     ua.nombres as asignado_nombres,
@@ -514,7 +514,11 @@ class Task extends BaseModel {
                 LEFT JOIN usuarios ua ON (
                     ua.id = COALESCE(
                         e.asignado_a, 
-                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                        CASE 
+                            WHEN JSON_VALID(e.observaciones) = 1 
+                            THEN JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                            ELSE NULL 
+                        END
                     )
                 )
                 WHERE e.id = ?
@@ -525,23 +529,9 @@ class Task extends BaseModel {
             if (rows.length > 0) {
                 const task = rows[0];
                 
-                // Parsear archivos adjuntos si existen
-                if (task.archivos_adjuntos) {
-                    try {
-                        // Si ya es un objeto/array, usarlo directamente
-                        if (typeof task.archivos_adjuntos === 'object') {
-                            // Ya es un objeto, no necesita parsing
-                            task.archivos_adjuntos = task.archivos_adjuntos;
-                        } else {
-                            // Es una cadena, necesita parsing
-                            task.archivos_adjuntos = JSON.parse(task.archivos_adjuntos);
-                        }
-                    } catch (e) {
-                        task.archivos_adjuntos = [];
-                    }
-                } else {
-                    task.archivos_adjuntos = [];
-                }
+                // Inicializar archivos adjuntos como array vacío ya que no existe la columna
+                // En el futuro, si se necesita esta funcionalidad, se puede agregar la columna
+                task.archivos_adjuntos = [];
                 
                 return task;
             }
@@ -565,7 +555,11 @@ class Task extends BaseModel {
                     ua.foto_perfil as asignado_foto,
                     COALESCE(
                         e.asignado_a, 
-                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                        CASE 
+                            WHEN JSON_VALID(e.observaciones) = 1 
+                            THEN JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                            ELSE NULL 
+                        END
                     ) as usuario_asignado_id
                 FROM entregables e
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
@@ -573,7 +567,11 @@ class Task extends BaseModel {
                 LEFT JOIN usuarios ua ON (
                     ua.id = COALESCE(
                         e.asignado_a, 
-                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                        CASE 
+                            WHEN JSON_VALID(e.observaciones) = 1 
+                            THEN JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                            ELSE NULL 
+                        END
                     )
                 )
                 WHERE e.proyecto_id = ?

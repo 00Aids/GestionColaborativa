@@ -583,12 +583,13 @@ class Deliverable extends BaseModel {
         LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
         LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
         WHERE e.area_trabajo_id = ? 
-          AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios')
+          AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios', 'rechazado')
         ORDER BY 
           CASE e.estado
             WHEN 'entregado' THEN 1
             WHEN 'en_revision' THEN 2
             WHEN 'requiere_cambios' THEN 3
+            WHEN 'rechazado' THEN 4
           END,
           e.fecha_entrega ASC
       `;

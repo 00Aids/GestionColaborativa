@@ -44,18 +44,6 @@ router.get('/students', async (req, res) => {
   }
 });
 
-// ===== RUTAS DE EVALUACIONES =====
-router.get('/evaluations', async (req, res) => {
-  try {
-    // Usar el método coordinatorEvaluations del DashboardController
-    await dashboardController.coordinatorEvaluations(req, res);
-  } catch (error) {
-    console.error('Error loading coordinator evaluations:', error);
-    req.flash('error', 'Error al cargar las evaluaciones');
-    res.redirect('/dashboard/coordinator');
-  }
-});
-
 // ===== RUTAS DE REPORTES =====
 router.get('/reports', async (req, res) => {
   try {
@@ -88,6 +76,17 @@ router.get('/deliverables', async (req, res) => {
     console.error('Error loading coordinator deliverable review:', error);
     req.flash('error', 'Error al cargar la revisión de entregables');
     res.redirect('/dashboard/coordinator');
+  }
+});
+
+// Ruta para mostrar detalles del entregable (vista HTML)
+router.get('/deliverables/:deliverableId', async (req, res) => {
+  try {
+    await entregableController.showDeliverableDetails(req, res);
+  } catch (error) {
+    console.error('Error loading deliverable details:', error);
+    req.flash('error', 'Error al cargar los detalles del entregable');
+    res.redirect('/coordinator/deliverables');
   }
 });
 
