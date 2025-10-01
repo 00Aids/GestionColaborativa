@@ -18,7 +18,7 @@ class EntregableController {
     try {
       const user = req.session.user;
       
-      // Obtener el área de trabajo del coordinador
+      // Obtener el área de trabajo del coordinador para las estadísticas
       const userAreas = await this.userModel.getUserAreas(user.id);
       if (!userAreas || userAreas.length === 0) {
         req.flash('error', 'No tienes un área de trabajo asignada');
@@ -27,8 +27,8 @@ class EntregableController {
 
       const areaTrabajoId = userAreas[0].area_trabajo_id;
       
-      // Obtener entregables que requieren revisión en el área del coordinador
-      const deliverables = await this.entregableModel.findByAreaForReview(areaTrabajoId);
+      // Obtener entregables de proyectos asignados al coordinador
+      const deliverables = await this.entregableModel.findByCoordinatorForReview(user.id);
       
       const areaStats = await this.entregableModel.getWorkflowSummary(areaTrabajoId);
       
@@ -36,7 +36,8 @@ class EntregableController {
       const deliverablesByStatus = {
         entregado: deliverables.filter(d => d.estado === 'entregado'),
         en_revision: deliverables.filter(d => d.estado === 'en_revision'),
-        requiere_cambios: deliverables.filter(d => d.estado === 'requiere_cambios')
+        requiere_cambios: deliverables.filter(d => d.estado === 'requiere_cambios'),
+        rechazado: deliverables.filter(d => d.estado === 'rechazado')
       };
 
       res.render('coordinator/deliverable-review', {
@@ -71,9 +72,18 @@ class EntregableController {
         });
       }
 
-      // Verificar que el coordinador tiene acceso al área del entregable
+      // Obtener información del proyecto para verificar permisos
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          message: 'Proyecto no encontrado'
+        });
+      }
+
+      // Verificar que el coordinador tiene acceso al área del proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -182,9 +192,18 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso
+      // Obtener información del proyecto primero para verificar permisos
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          message: 'Proyecto no encontrado'
+        });
+      }
+
+      // Verificar acceso usando el area_trabajo_id del proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -194,7 +213,6 @@ class EntregableController {
       }
 
       // Obtener información adicional
-      const project = await this.projectModel.findById(deliverable.proyecto_id);
       const comments = await this.entregableModel.getComments(deliverableId);
       
       // Calcular días restantes
@@ -238,9 +256,18 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso
+      // Verificar acceso usando el area_trabajo_id del proyecto
+      // Primero obtenemos el proyecto para verificar permisos
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          message: 'Proyecto no encontrado'
+        });
+      }
+
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -279,9 +306,18 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso
+      // Obtener información del proyecto para verificar permisos
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      if (!project) {
+        return res.status(404).json({
+          success: false,
+          message: 'Proyecto no encontrado'
+        });
+      }
+
+      // Verificar acceso usando el area_trabajo_id del proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -385,6 +421,67 @@ class EntregableController {
         success: false,
         message: 'Error interno del servidor'
       });
+    }
+  }
+
+  // Mostrar detalles del entregable en vista HTML (para coordinadores)
+  async showDeliverableDetails(req, res) {
+    try {
+      const { deliverableId } = req.params;
+      const user = req.session.user;
+
+      // Obtener entregable con detalles
+      const deliverable = await this.entregableModel.findById(deliverableId);
+      if (!deliverable) {
+        req.flash('error', 'Entregable no encontrado');
+        return res.redirect('/coordinator/deliverables');
+      }
+
+      // Obtener información del proyecto primero para verificar permisos
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
+      if (!project) {
+        req.flash('error', 'Proyecto no encontrado');
+        return res.redirect('/coordinator/deliverables');
+      }
+
+      // Verificar acceso usando el area_trabajo_id del proyecto
+      const userAreas = await this.userModel.getUserAreas(user.id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
+      
+      if (!hasAccess) {
+        req.flash('error', 'No tienes permisos para ver este entregable');
+        return res.redirect('/coordinator/deliverables');
+      }
+
+      // Obtener información adicional
+      const comments = await this.entregableModel.getComments(deliverableId);
+      
+      // Calcular días restantes
+      const today = new Date();
+      const dueDate = new Date(deliverable.fecha_limite);
+      const diffTime = dueDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      const deliverableWithDetails = {
+        ...deliverable,
+        project,
+        comments,
+        diasRestantes: diffDays,
+        isOverdue: diffDays < 0 && deliverable.estado === 'pendiente'
+      };
+
+      res.render('coordinator/deliverable-detail', {
+        title: `Entregable: ${deliverable.titulo}`,
+        user,
+        deliverable: deliverableWithDetails,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+
+    } catch (error) {
+      console.error('Error showing deliverable details:', error);
+      req.flash('error', 'Error al cargar los detalles del entregable');
+      res.redirect('/coordinator/deliverables');
     }
   }
 }

@@ -186,8 +186,8 @@ class Entregable extends BaseModel {
         }
     }
 
-    // Obtener entregables por área de trabajo para revisión
-    async findByAreaForReview(areaTrabajoId) {
+    // Obtener entregables de proyectos asignados al coordinador para revisión
+    async findByCoordinatorForReview(coordinatorId) {
         try {
             const query = `
                 SELECT 
@@ -199,17 +199,18 @@ class Entregable extends BaseModel {
                     fp.nombre as fase_nombre
                 FROM entregables e
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
+                LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
                 LEFT JOIN usuarios u ON p.estudiante_id = u.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
-                WHERE e.area_trabajo_id = ? 
-                AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios')
+                WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
+                AND e.estado IN ('entregado', 'en_revision', 'requiere_cambios', 'pendiente', 'rechazado')
                 ORDER BY e.fecha_entrega DESC
             `;
             
-            const [rows] = await this.db.execute(query, [areaTrabajoId]);
+            const [rows] = await this.db.execute(query, [coordinatorId]);
             return rows;
         } catch (error) {
-            throw new Error(`Error finding entregables by area for review: ${error.message}`);
+            throw new Error(`Error finding entregables by coordinator for review: ${error.message}`);
         }
     }
 
@@ -474,16 +475,15 @@ class Entregable extends BaseModel {
     async addComment(entregableId, userId, comment, attachments = []) {
         try {
             const query = `
-                INSERT INTO comentarios_entregables (
-                    entregable_id, usuario_id, comentario, archivos_adjuntos, created_at
-                ) VALUES (?, ?, ?, ?, NOW())
+                INSERT INTO entregable_comentarios (
+                    entregable_id, usuario_id, comentario, tipo, es_publico, created_at
+                ) VALUES (?, ?, ?, 'feedback', 1, NOW())
             `;
             
             const [result] = await this.db.execute(query, [
                 entregableId, 
                 userId, 
-                comment, 
-                JSON.stringify(attachments)
+                comment
             ]);
             
             if (result.insertId) {
@@ -519,7 +519,7 @@ class Entregable extends BaseModel {
                     u.nombres,
                     u.apellidos,
                     u.foto_perfil
-                FROM comentarios_entregables c
+                FROM entregable_comentarios c
                 LEFT JOIN usuarios u ON c.usuario_id = u.id
                 WHERE c.entregable_id = ?
                 ORDER BY c.created_at ASC
@@ -535,22 +535,40 @@ class Entregable extends BaseModel {
     // Agregar al historial
     async addToHistory(entregableId, userId, accion, detalles = {}) {
         try {
+            // Obtener el entregable para conseguir el area_trabajo_id del proyecto
+            const entregable = await this.findById(entregableId);
+            if (!entregable) {
+                return null; // Si no existe el entregable, no registrar historial
+            }
+
+            // Obtener el proyecto para conseguir el area_trabajo_id
+            const projectModel = require('./Project');
+            const project = await projectModel.findById(entregable.proyecto_id);
+            if (!project || !project.area_trabajo_id) {
+                return null; // Si no hay área de trabajo, no registrar historial
+            }
+
             const query = `
-                INSERT INTO historial_entregables (
-                    entregable_id, usuario_id, accion, detalles, created_at
-                ) VALUES (?, ?, ?, ?, NOW())
+                INSERT INTO historial_area_trabajo (
+                    area_trabajo_id, usuario_id, accion, entidad_tipo, entidad_id, 
+                    descripcion, datos_nuevos, created_at
+                ) VALUES (?, ?, ?, 'entregable', ?, ?, ?, NOW())
             `;
             
             const [result] = await this.db.execute(query, [
-                entregableId, 
+                project.area_trabajo_id,
                 userId, 
-                accion, 
+                accion,
+                entregableId,
+                detalles.descripcion || `Acción: ${accion}`,
                 JSON.stringify(detalles)
             ]);
             
             return result.insertId;
         } catch (error) {
-            throw new Error(`Error adding to history: ${error.message}`);
+            // No lanzar error para evitar que falle el proceso principal
+            console.error(`Error adding to history: ${error.message}`);
+            return null;
         }
     }
 
@@ -562,16 +580,17 @@ class Entregable extends BaseModel {
                     h.*,
                     u.nombres,
                     u.apellidos
-                FROM historial_entregables h
+                FROM historial_area_trabajo h
                 LEFT JOIN usuarios u ON h.usuario_id = u.id
-                WHERE h.entregable_id = ?
+                WHERE h.entidad_tipo = 'entregable' AND h.entidad_id = ?
                 ORDER BY h.created_at DESC
             `;
             
             const [rows] = await this.db.execute(query, [entregableId]);
             return rows;
         } catch (error) {
-            throw new Error(`Error getting history: ${error.message}`);
+            console.error(`Error getting history: ${error.message}`);
+            return []; // Retornar array vacío en lugar de lanzar error
         }
     }
 
