@@ -1960,12 +1960,16 @@ class AdminController {
       // Obtener miembros del proyecto para asignación
       const members = await this.projectModel.getProjectMembers(projectId);
       
+      // Obtener fases del proyecto
+      const fases = await new BaseModel('fases_proyecto').findAll();
+      
       res.render('admin/task-kanban', {
         title: `Tareas - ${project.titulo}`,
         user,
         project,
         tasksGrouped,
         members,
+        fases,
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -2900,6 +2904,142 @@ class AdminController {
       res.status(500).json({ 
         success: false, 
         message: 'Error interno del servidor al crear el ciclo académico.' 
+      });
+    }
+  }
+
+  // =============================================
+  // API PARA CREACIÓN RÁPIDA DE TAREAS DESDE KANBAN
+  // =============================================
+
+  // API para crear tarea rápida desde el tablero Kanban
+  async createQuickTask(req, res) {
+    try {
+      const { projectId } = req.params;
+      
+      // Debug: Log de los datos recibidos
+      console.log('=== DEBUG createQuickTask ===');
+      console.log('req.body:', req.body);
+      console.log('req.params:', req.params);
+      console.log('========================');
+      
+      const { 
+        titulo, 
+        descripcion, 
+        asignado_a, 
+        fase_id, 
+        fecha_limite, 
+        estimacion_horas, 
+        estado_workflow, 
+        etiquetas 
+      } = req.body;
+      const user = req.session.user;
+      
+      if (!user) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'No autorizado' 
+        });
+      }
+
+      // Validaciones básicas
+      if (!titulo || titulo.trim() === '') {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'El título es requerido.' 
+        });
+      }
+
+      // Verificar que el proyecto existe
+      const projects = await this.projectModel.findWithDetails({ id: projectId });
+      if (!projects || projects.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Proyecto no encontrado.' 
+        });
+      }
+
+      // Validar asignado_a si se proporciona
+      let assignedUserId = null;
+      if (asignado_a && asignado_a.trim() !== '') {
+        const assignedUser = await this.userModel.findById(parseInt(asignado_a));
+        if (assignedUser) {
+          assignedUserId = parseInt(asignado_a);
+        }
+      }
+
+      // Validar fase_id si se proporciona
+      let phaseId = 1; // Fase por defecto
+      if (fase_id && fase_id.trim() !== '') {
+        phaseId = parseInt(fase_id);
+      }
+
+      // Calcular prioridad automáticamente basada en la fecha límite
+      let priority = 'medium'; // Prioridad por defecto
+      if (fecha_limite) {
+        const deadline = new Date(fecha_limite);
+        const today = new Date();
+        const diffTime = deadline.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 3) {
+          priority = 'high';
+        } else if (diffDays <= 7) {
+          priority = 'medium';
+        } else {
+          priority = 'low';
+        }
+      }
+
+      // Validar estimación de horas
+      let estimationHours = null;
+      if (estimacion_horas && estimacion_horas.trim() !== '') {
+        const hours = parseFloat(estimacion_horas);
+        if (!isNaN(hours) && hours > 0) {
+          estimationHours = hours;
+        }
+      }
+
+      const taskData = {
+        proyecto_id: parseInt(projectId),
+        fase_id: phaseId,
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : '',
+        fecha_limite: fecha_limite || null,
+        prioridad: priority,
+        asignado_a: assignedUserId,
+        estimacion_horas: estimationHours,
+        etiquetas: etiquetas ? etiquetas.trim() : null,
+        estado_workflow: estado_workflow || 'todo'
+      };
+
+      const taskId = await this.taskModel.createTask(taskData);
+      
+      if (taskId) {
+        // Registrar en historial
+        await this.taskModel.addToHistory(taskId, user.id, 'tarea_creada', {
+          descripcion: 'Tarea creada desde Kanban'
+        });
+
+        // Obtener la tarea creada con todos sus detalles
+        const newTask = await this.taskModel.findById(taskId);
+        
+        res.json({ 
+          success: true, 
+          message: 'Tarea creada exitosamente.',
+          task: newTask
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          message: 'Error al crear la tarea.' 
+        });
+      }
+    } catch (error) {
+      console.error('Error in createQuickTask:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error interno del servidor al crear la tarea.' 
       });
     }
   }

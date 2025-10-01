@@ -6,7 +6,7 @@
     <title><%= title %> - Sistema Académico</title>
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -145,6 +145,17 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
+        .user-info h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-info span {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
         /* ===== KANBAN BOARD ===== */
         .kanban-container {
             padding: 30px;
@@ -159,27 +170,39 @@
             margin-bottom: 30px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            padding: 20px 25px;
-            border-radius: 15px;
+            padding: 25px 30px;
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .kanban-title {
             color: white;
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .kanban-title i {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 20px;
         }
 
         .kanban-actions {
             display: flex;
             gap: 15px;
+            align-items: center;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
@@ -187,18 +210,36 @@
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
@@ -209,121 +250,168 @@
 
         .btn-secondary:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-quick-create {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+            font-weight: 700;
+        }
+
+        .btn-quick-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
         }
 
         .kanban-board {
             display: flex;
-            gap: 20px;
-            height: calc(100% - 120px);
+            gap: 25px;
+            height: calc(100% - 140px);
             overflow-x: auto;
             padding-bottom: 20px;
         }
 
         .kanban-column {
             flex: 1;
-            min-width: 300px;
+            min-width: 350px;
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             flex-direction: column;
             max-height: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .kanban-column:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
 
         .column-header {
-            padding: 20px 25px;
+            padding: 25px 30px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px 20px 0 0;
         }
 
         .column-title {
             color: white;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+        }
+
+        .column-title i {
+            font-size: 12px;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .column-count {
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
         }
 
         .column-body {
             flex: 1;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .task-card {
             background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
         .task-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .task-title {
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             color: #1e293b;
             margin: 0;
             line-height: 1.4;
+            flex: 1;
+            margin-right: 10px;
         }
 
         .task-priority {
-            padding: 4px 8px;
-            border-radius: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .priority-alta {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #dc2626;
         }
 
         .priority-media {
-            background: #fef3c7;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #d97706;
         }
 
         .priority-baja {
-            background: #dcfce7;
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
             color: #16a34a;
         }
 
         .task-description {
             color: #64748b;
             font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -336,44 +424,103 @@
             align-items: center;
             font-size: 12px;
             color: #64748b;
+            margin-bottom: 15px;
         }
 
         .task-assignee {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .assignee-avatar {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 10px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            border: 2px solid rgba(102, 126, 234, 0.2);
         }
 
         .task-due-date {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
+            padding: 4px 8px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            color: #667eea;
+            font-weight: 600;
         }
 
         .task-due-date.overdue {
+            background: rgba(220, 38, 38, 0.1);
             color: #dc2626;
         }
 
+        .task-indicators {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #64748b;
+        }
 
+        .task-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .task-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .task-status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .status-done {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            color: #16a34a;
+        }
 
         .empty-column {
             text-align: center;
             color: rgba(255, 255, 255, 0.6);
             font-style: italic;
-            padding: 40px 20px;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .empty-column i {
+            font-size: 48px;
+            opacity: 0.3;
+        }
+
+        .empty-column p {
+            font-size: 16px;
+            font-weight: 500;
         }
 
         /* ===== MODAL STYLES ===== */
@@ -393,46 +540,135 @@
             background: white;
             margin: 2% auto;
             padding: 0;
-            border-radius: 15px;
+            border-radius: 20px;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             max-height: 90vh;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .modal-header {
-            padding: 25px 30px;
+            padding: 30px 35px;
             border-bottom: 1px solid #f1f5f9;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         }
 
         .modal-title {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 800;
             color: #1e293b;
             margin: 0;
         }
 
         .close {
             color: #64748b;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            padding: 5px;
+            border-radius: 50%;
         }
 
         .close:hover {
             color: #1e293b;
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .modal-body {
-            padding: 30px;
+            padding: 35px;
             max-height: calc(90vh - 140px);
             overflow-y: auto;
+        }
+
+        /* ===== QUICK CREATE FORM ===== */
+        .quick-create-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 3000;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .quick-create-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2999;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -453,6 +689,58 @@
             .kanban-column {
                 min-width: auto;
             }
+
+            .kanban-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .kanban-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ===== LOADING ANIMATION ===== */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== NOTIFICATION ===== */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            z-index: 4000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
     </style>
 </head>
@@ -524,9 +812,9 @@
                     Tablero de Tareas - <%= project.titulo %>
                 </h1>
                 <div class="kanban-actions">
-                    <a href="/admin/projects/<%= project.id %>/tasks/new" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Nueva Tarea
-                    </a>
+                    <button class="btn btn-quick-create" onclick="openQuickCreateForm()">
+                        <i class="fas fa-plus-circle"></i> Nueva Tarea
+                    </button>
                     <button class="btn btn-secondary" onclick="refreshBoard()">
                         <i class="fas fa-sync-alt"></i> Actualizar
                     </button>
@@ -547,7 +835,7 @@
                     <div class="column-body" id="todo-column">
                         <% if (tasksGrouped.todo.length === 0) { %>
                             <div class="empty-column">
-                                <i class="fas fa-inbox fa-2x" style="margin-bottom: 10px; opacity: 0.5;"></i>
+                                <i class="fas fa-inbox"></i>
                                 <p>No hay tareas pendientes</p>
                             </div>
                         <% } else { %>
@@ -570,7 +858,7 @@
                     <div class="column-body" id="in_progress-column">
                         <% if (tasksGrouped.in_progress.length === 0) { %>
                             <div class="empty-column">
-                                <i class="fas fa-clock fa-2x" style="margin-bottom: 10px; opacity: 0.5;"></i>
+                                <i class="fas fa-clock"></i>
                                 <p>No hay tareas en progreso</p>
                             </div>
                         <% } else { %>
@@ -593,7 +881,7 @@
                     <div class="column-body" id="done-column">
                         <% if (tasksGrouped.done.length === 0) { %>
                             <div class="empty-column">
-                                <i class="fas fa-check-circle fa-2x" style="margin-bottom: 10px; opacity: 0.5;"></i>
+                                <i class="fas fa-check-circle"></i>
                                 <p>No hay tareas completadas</p>
                             </div>
                         <% } else { %>
@@ -605,6 +893,98 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Complete Create Form -->
+    <div class="quick-create-overlay" onclick="closeQuickCreateForm()"></div>
+    <div class="quick-create-form" style="max-height: 90vh; overflow-y: auto;">
+        <h3 style="margin-bottom: 25px; color: #1e293b; font-weight: 700; font-size: 20px;">
+            <i class="fas fa-plus-circle" style="color: #667eea; margin-right: 10px;"></i>
+            Nueva Tarea
+        </h3>
+        <form id="quickCreateTaskForm" enctype="multipart/form-data">
+            <!-- Información Básica -->
+            <div class="form-group">
+                <label class="form-label">Título de la tarea <span style="color: #ef4444;">*</span></label>
+                <input type="text" id="quickTaskTitle" class="form-input" placeholder="Ingresa el título de la tarea" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Descripción</label>
+                <textarea id="quickTaskDescription" class="form-input form-textarea" placeholder="Describe los detalles de la tarea"></textarea>
+            </div>
+
+            <!-- Configuración de Tarea -->
+            <div class="form-group">
+                <label class="form-label">Fase del Proyecto</label>
+                <select id="quickTaskPhase" class="form-select">
+                    <option value="">Sin fase específica</option>
+                    <% if (fases && fases.length > 0) { %>
+                        <% fases.forEach(fase => { %>
+                            <option value="<%= fase.id %>"><%= fase.nombre %></option>
+                        <% }) %>
+                    <% } %>
+                </select>
+            </div>
+
+            <!-- Asignación y Fechas -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Asignar a</label>
+                    <select id="quickTaskAssignee" class="form-select">
+                        <option value="">Sin asignar</option>
+                        <% if (members && members.length > 0) { %>
+                            <% members.forEach(member => { %>
+                                <option value="<%= member.id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
+                            <% }) %>
+                        <% } %>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Fecha Límite</label>
+                    <input type="date" id="quickTaskDeadline" class="form-input">
+                </div>
+            </div>
+
+            <!-- Estimación de Tiempo -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label">Estimación (horas)</label>
+                    <input type="number" id="quickTaskEstimation" class="form-input" min="0" step="0.5" placeholder="Ej: 8">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Estado Inicial</label>
+                    <select id="quickTaskStatus" class="form-select">
+                        <option value="todo" selected>Por Hacer</option>
+                        <option value="in_progress">En Progreso</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Etiquetas -->
+            <div class="form-group">
+                <label class="form-label">Etiquetas</label>
+                <input type="text" id="quickTaskTags" class="form-input" placeholder="frontend, backend, diseño (separadas por comas)">
+            </div>
+
+            <!-- Archivos Adjuntos -->
+            <div class="form-group">
+                <label class="form-label">Archivos Adjuntos</label>
+                <input type="file" id="quickTaskFiles" class="form-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif">
+                <div style="font-size: 12px; color: #64748b; margin-top: 5px;">Puedes adjuntar múltiples archivos relacionados con la tarea</div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeQuickCreateForm()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Crear Tarea
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Task Detail Modal -->
@@ -625,6 +1005,116 @@
         const projectId = '<%= project.id %>';
         let currentTask = null;
 
+        // Quick Create Form Functions
+        function openQuickCreateForm() {
+            document.querySelector('.quick-create-overlay').style.display = 'block';
+            document.querySelector('.quick-create-form').style.display = 'block';
+            document.getElementById('quickTaskTitle').focus();
+        }
+
+        function closeQuickCreateForm() {
+            document.querySelector('.quick-create-overlay').style.display = 'none';
+            document.querySelector('.quick-create-form').style.display = 'none';
+            document.getElementById('quickCreateTaskForm').reset();
+        }
+
+        // Handle complete create form submission
+        document.getElementById('quickCreateTaskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('quickTaskTitle').value.trim();
+            const description = document.getElementById('quickTaskDescription').value.trim();
+            const assigneeId = document.getElementById('quickTaskAssignee').value;
+            const phaseId = document.getElementById('quickTaskPhase').value;
+            const deadline = document.getElementById('quickTaskDeadline').value;
+            const estimation = document.getElementById('quickTaskEstimation').value;
+            const status = document.getElementById('quickTaskStatus').value;
+            const tags = document.getElementById('quickTaskTags').value.trim();
+            const files = document.getElementById('quickTaskFiles').files;
+            
+            if (!title) {
+                showNotification('Por favor ingresa un título para la tarea', 'error');
+                return;
+            }
+            
+            // Validar fecha límite no sea en el pasado
+            if (deadline) {
+                const fechaSeleccionada = new Date(deadline);
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fechaSeleccionada < hoy) {
+                    showNotification('La fecha límite no puede ser en el pasado', 'error');
+                    return;
+                }
+            }
+            
+            // Crear FormData para manejar archivos
+            const formData = new FormData();
+            formData.append('titulo', title);
+            formData.append('descripcion', description || '');
+            formData.append('proyecto_id', projectId);
+            formData.append('estado_workflow', status);
+            
+            if (assigneeId) formData.append('asignado_a', assigneeId);
+            if (phaseId) formData.append('fase_id', phaseId);
+            if (deadline) formData.append('fecha_limite', deadline);
+            if (estimation) formData.append('estimacion_horas', estimation);
+            if (tags) formData.append('etiquetas', tags);
+            
+            // Agregar archivos
+            for (let i = 0; i < files.length; i++) {
+                formData.append('archivos', files[i]);
+            }
+            
+            try {
+                const submitBtn = document.querySelector('#quickCreateTaskForm button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<div class="loading"></div> Creando...';
+                submitBtn.disabled = true;
+                
+                const response = await fetch(`/admin/api/projects/${projectId}/tasks/quick`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showNotification('Tarea creada exitosamente', 'success');
+                    closeQuickCreateForm();
+                    refreshBoard();
+                } else {
+                    const errorText = await response.text();
+                    showNotification('Error al crear la tarea: ' + errorText, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+                showNotification('Error al crear la tarea', 'error');
+            } finally {
+                const submitBtn = document.querySelector('#quickCreateTaskForm button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Crear Tarea';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
         // Función para abrir modal de tarea
         function openTaskModal(taskId) {
             fetch(`/admin/api/tasks/${taskId}/details`)
@@ -639,12 +1129,12 @@
                         });
                         document.getElementById('taskModal').style.display = 'block';
                     } else {
-                        alert('Error al cargar los detalles de la tarea');
+                        showNotification('Error al cargar los detalles de la tarea', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Error al cargar los detalles de la tarea');
+                    showNotification('Error al cargar los detalles de la tarea', 'error');
                 });
         }
 
@@ -658,8 +1148,6 @@
         function renderTaskModal(data) {
             const { task, comments, history } = data;
             const modalBody = document.getElementById('taskModalBody');
-            
-
             
             modalBody.innerHTML = `
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
@@ -683,8 +1171,6 @@
                             </div>
                         ` : ''}
                         
-
-                        
                         <!-- Comentarios -->
                         <div>
                             <h4 style="color: #1e293b; margin-bottom: 15px; font-weight: 600;">Comentarios</h4>
@@ -695,47 +1181,9 @@
                                             <strong style="color: #1e293b;">${comment.nombres} ${comment.apellidos}</strong>
                                             <span style="font-size: 12px; color: #64748b;">${new Date(comment.created_at).toLocaleString()}</span>
                                         </div>
-                                        <p style="color: #64748b; margin: 0; margin-bottom: ${comment.archivo_adjunto ? '10px' : '0'};">${comment.comentario}</p>
-                                        ${comment.archivo_adjunto ? `
-                                            <div style="margin-top: 8px; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
-                                                <a href="/uploads/comments/${JSON.parse(comment.archivo_adjunto).nombre_archivo}" 
-                                                   target="_blank" 
-                                                   style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #667eea;">
-                                                    <i class="fas ${getFileIcon(JSON.parse(comment.archivo_adjunto).tipo_mime)}"></i>
-                                                    <span style="font-size: 13px;">${JSON.parse(comment.archivo_adjunto).nombre_original}</span>
-                                                    <span style="font-size: 11px; color: #64748b; margin-left: auto;">${formatFileSize(JSON.parse(comment.archivo_adjunto).tamaño)}</span>
-                                                </a>
-                                            </div>
-                                        ` : ''}
+                                        <p style="color: #64748b; margin: 0;">${comment.comentario}</p>
                                     </div>
                                 `).join('') : '<p style="color: #64748b; font-style: italic;">No hay comentarios aún</p>'}
-                            </div>
-                            
-                            <!-- Agregar comentario -->
-                            <div style="margin-top: 20px;">
-                                <form id="commentForm" enctype="multipart/form-data">
-                                    <textarea id="newComment" name="comentario" placeholder="Agregar un comentario..." 
-                                             style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical; min-height: 80px;"></textarea>
-                                    
-                                    <!-- Sección de archivo adjunto -->
-                                    <div style="margin-top: 10px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e0;">
-                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                            <i class="fas fa-paperclip" style="color: #64748b;"></i>
-                                            <span style="font-size: 14px; color: #64748b;">Adjuntar archivo (opcional)</span>
-                                        </div>
-                                        <input type="file" id="commentFile" name="archivo" 
-                                               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.txt,.zip,.rar"
-                                               style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; background: white;">
-                                        <div style="font-size: 12px; color: #64748b; margin-top: 5px;">
-                                            Tipos permitidos: PDF, Word, Excel, PowerPoint, imágenes, texto, archivos comprimidos. Máximo 10MB.
-                                        </div>
-                                        <div id="filePreview" style="margin-top: 8px; display: none;"></div>
-                                    </div>
-                                    
-                                    <button type="button" onclick="addComment()" class="btn btn-primary" style="margin-top: 10px;">
-                                        <i class="fas fa-comment"></i> Agregar Comentario
-                                    </button>
-                                </form>
                             </div>
                         </div>
                     </div>
@@ -777,33 +1225,6 @@
                                 ` : ''}
                             </div>
                         </div>
-                        
-                        <!-- Tiempo -->
-                        ${task.estimacion_horas || task.horas_trabajadas ? `
-                            <div style="margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 10px;">
-                                <h4 style="color: #1e293b; margin-bottom: 15px; font-weight: 600;">Tiempo</h4>
-                                <div style="font-size: 14px; color: #64748b;">
-                                    ${task.estimacion_horas ? `<p><strong>Estimado:</strong> ${task.estimacion_horas}h</p>` : ''}
-                                    ${task.horas_trabajadas ? `<p><strong>Trabajadas:</strong> ${task.horas_trabajadas}h</p>` : ''}
-                                </div>
-                            </div>
-                        ` : ''}
-                        
-                        <!-- Archivos -->
-                        ${task.archivos_adjuntos && task.archivos_adjuntos.length > 0 ? `
-                            <div style="margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 10px;">
-                                <h4 style="color: #1e293b; margin-bottom: 15px; font-weight: 600;">Archivos Adjuntos</h4>
-                                <div style="display: flex; flex-direction: column; gap: 8px;">
-                                    ${task.archivos_adjuntos.map(file => `
-                                        <a href="/uploads/${file.nombre_archivo}" target="_blank" 
-                                           style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px; text-decoration: none; color: #667eea;">
-                                            <i class="fas fa-file"></i>
-                                            <span style="font-size: 14px;">${file.nombre_original}</span>
-                                        </a>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -823,107 +1244,18 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    showNotification('Estado actualizado correctamente', 'success');
                     refreshBoard();
                     closeTaskModal();
                 } else {
-                    alert('Error al actualizar el estado: ' + data.error);
+                    showNotification('Error al actualizar el estado: ' + data.error, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error al actualizar el estado');
+                showNotification('Error al actualizar el estado', 'error');
             });
         }
-
-
-
-        // Funciones auxiliares para archivos
-        function getFileIcon(mimeType) {
-            if (!mimeType) return 'fa-file';
-            
-            if (mimeType.includes('pdf')) return 'fa-file-pdf';
-            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
-            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
-            if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
-            if (mimeType.includes('image')) return 'fa-file-image';
-            if (mimeType.includes('text')) return 'fa-file-alt';
-            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('compressed')) return 'fa-file-archive';
-            
-            return 'fa-file';
-        }
-
-        function formatFileSize(bytes) {
-            if (!bytes) return '0 B';
-            
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-
-        // Función para agregar comentario
-        function addComment() {
-            const commentText = document.getElementById('newComment').value.trim();
-            const fileInput = document.getElementById('commentFile');
-            
-            if (!commentText && !fileInput.files[0]) {
-                alert('Por favor ingresa un comentario o adjunta un archivo');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('comentario', commentText);
-            
-            if (fileInput.files[0]) {
-                formData.append('archivo', fileInput.files[0]);
-            }
-            
-            fetch(`/admin/api/tasks/${currentTask.id}/comments`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('newComment').value = '';
-                    fileInput.value = '';
-                    document.getElementById('filePreview').style.display = 'none';
-                    // Recargar detalles de la tarea
-                    openTaskModal(currentTask.id);
-                } else {
-                    alert('Error al agregar el comentario: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al agregar el comentario');
-            });
-        }
-
-        // Preview de archivo seleccionado
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('commentFile');
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    const preview = document.getElementById('filePreview');
-                    
-                    if (file) {
-                        preview.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
-                                <i class="fas ${getFileIcon(file.type)}" style="color: #667eea;"></i>
-                                <span style="font-size: 13px; color: #1e293b;">${file.name}</span>
-                                <span style="font-size: 11px; color: #64748b; margin-left: auto;">${formatFileSize(file.size)}</span>
-                            </div>
-                        `;
-                        preview.style.display = 'block';
-                    } else {
-                        preview.style.display = 'none';
-                    }
-                });
-            }
-        });
 
         // Función para refrescar el tablero
         function refreshBoard() {
@@ -938,34 +1270,23 @@
             }
         }
 
-        // Función para obtener el icono del archivo según su tipo
-        function getFileIcon(mimeType) {
-            if (!mimeType) return 'fa-file';
-            
-            if (mimeType.includes('image/')) return 'fa-file-image';
-            if (mimeType.includes('pdf')) return 'fa-file-pdf';
-            if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
-            if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
-            if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
-            if (mimeType.includes('text/')) return 'fa-file-alt';
-            if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('compressed')) return 'fa-file-archive';
-            
-            return 'fa-file';
-        }
+        // Cerrar quick create form con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeQuickCreateForm();
+                closeTaskModal();
+            }
+        });
 
-        // Función para formatear el tamaño del archivo
-        function formatFileSize(bytes) {
-            if (!bytes) return '0 B';
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Kanban board loaded successfully');
             
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-
-        // Drag and drop functionality (opcional para futuras mejoras)
-        // Se puede implementar más adelante
+            // Configurar fecha mínima para fecha límite
+            const fechaLimiteInput = document.getElementById('quickTaskDeadline');
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaLimiteInput.min = hoy;
+        });
     </script>
 </body>
 </html>

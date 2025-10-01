@@ -177,7 +177,7 @@
             </div>
             <% if (user) { %>
                 <div class="user-info">
-                    <span>Hola, <%= user.nombre %></span>
+                    <span>Hola, <%= user.nombres %> <%= user.apellidos || '' %></span>
                     <span class="role-badge"><%= user.rol_nombre %></span>
                     <a href="/auth/logout" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>

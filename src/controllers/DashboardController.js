@@ -72,10 +72,42 @@ class DashboardController {
   async showGenericDashboard(req, res) {
     try {
       const user = req.session.user;
+      const areaTrabajoId = req.areaTrabajoId;
+      
+      // Obtener proyectos básicos para el formulario
+      let projects = [];
+      try {
+        const areaFilter = {};
+        if (areaTrabajoId !== undefined && areaTrabajoId !== null) {
+          areaFilter.area_trabajo_id = areaTrabajoId;
+        }
+        
+        switch (user.rol_nombre) {
+          case 'Estudiante':
+            projects = await this.projectModel.findByStudent(user.id, areaFilter);
+            break;
+          case 'Director':
+            projects = await this.projectModel.findByDirector(user.id, areaFilter);
+            break;
+          case 'Administrador':
+          case 'Administrador General':
+          case 'Coordinador':
+            projects = await this.projectModel.findWithDetails(areaFilter);
+            break;
+          case 'Evaluador':
+            projects = await this.projectModel.findWithDetails(areaFilter);
+            break;
+          default:
+            projects = [];
+        }
+      } catch (projectError) {
+        console.error('Error loading projects for generic dashboard:', projectError);
+        projects = [];
+      }
       
       // Obtener estadísticas básicas
       const stats = {
-        totalProjects: 0,
+        totalProjects: projects.length,
         totalDeliverables: 0,
         completedEvaluations: 0,
         pendingEvaluations: 0
@@ -84,6 +116,9 @@ class DashboardController {
       res.render('common/kanban', {
         user,
         stats,
+        projects, // Agregar projects para el formulario
+        kanbanData: { por_hacer: [], en_progreso: [], completado: [] }, // Datos vacíos por defecto
+        userProjects: projects, // Para compatibilidad
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -454,9 +489,15 @@ class DashboardController {
         }
       }
 
+      // Filtrar entregables pendientes (no completados)
+      const pendingDeliverables = myDeliverables.filter(d => 
+        d.estado !== 'completado' && d.estado !== 'aprobado'
+      );
+
       const stats = {
         totalProjects: myProjects.length,
         totalDeliverables: myDeliverables.length,
+        pendingDeliverables: pendingDeliverables.length,
         completedEvaluations: myEvaluations.filter(e => e.estado === 'completada').length,
         pendingEvaluations: myEvaluations.filter(e => e.estado === 'pendiente').length
       };
@@ -465,7 +506,7 @@ class DashboardController {
         user,
         stats,
         myProjects: myProjects.slice(0, 5), // Últimos 5
-        myDeliverables: myDeliverables.slice(0, 5), // Últimos 5
+        myDeliverables: pendingDeliverables.slice(0, 5), // Solo entregables pendientes
         myEvaluations: myEvaluations.slice(0, 5), // Últimas 5
         success: req.flash('success'),
         error: req.flash('error')
@@ -745,24 +786,40 @@ class DashboardController {
   // Crear nueva tarea
   async createTask(req, res) {
     try {
-      const { titulo, descripcion, proyecto_id, fase_id, fecha_limite, estado } = req.body;
+      console.log('=== CREATE TASK DEBUG ===');
+      console.log('Request body:', req.body);
+      console.log('User session:', req.session.user);
+      
+      const { titulo, descripcion, proyecto_id, fase_id, fecha_limite, estado, prioridad } = req.body;
       const user = req.session.user;
       
       // Validar campos requeridos
       if (!titulo || !fecha_limite) {
-        return res.status(400).json({ success: false, message: 'Campos requeridos faltantes' });
+        console.log('Validation failed: missing required fields');
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Título y fecha límite son campos requeridos' 
+        });
       }
       
+      // Preparar datos de la tarea (solo campos que existen en la tabla entregables)
       const taskData = {
-        titulo,
-        descripcion: descripcion || '',
-        proyecto_id: proyecto_id ? parseInt(proyecto_id) : null,
-        fase_id: fase_id ? parseInt(fase_id) : 1, // Valor por defecto
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : '',
+        proyecto_id: proyecto_id && proyecto_id !== '' ? parseInt(proyecto_id) : null,
+        fase_id: fase_id && fase_id !== '' ? parseInt(fase_id) : 1,
         fecha_limite,
-        estado: estado || 'pendiente'
+        estado: estado || 'pendiente',
+        prioridad: prioridad || 'medium',
+        area_trabajo_id: req.areaTrabajoId || null
+        // Nota: usuario_asignado_id no existe en la tabla entregables
+        // created_at y updated_at se manejan automáticamente por la base de datos
       };
       
+      console.log('Task data to create:', taskData);
+      
       const newTask = await this.taskModel.create(taskData);
+      console.log('Task created successfully:', newTask);
       
       // Generar código basado en el ID después de la creación
       const taskWithCode = {
@@ -770,11 +827,21 @@ class DashboardController {
         codigo: `TASK-${String(newTask.id).padStart(4, '0')}`
       };
       
-      res.json({ success: true, task: taskWithCode });
+      console.log('=== CREATE TASK SUCCESS ===');
+      res.json({ 
+        success: true, 
+        task: taskWithCode,
+        message: 'Tarea creada exitosamente'
+      });
       
     } catch (error) {
+      console.error('=== CREATE TASK ERROR ===');
       console.error('Error creating task:', error);
-      res.status(500).json({ success: false, message: 'Error al crear la tarea' });
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error al crear la tarea: ' + error.message 
+      });
     }
   }
 

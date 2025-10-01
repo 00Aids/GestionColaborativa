@@ -101,6 +101,16 @@
             </div>
         </div>
 
+        <!-- Botón de Creación Rápida -->
+        <div class="quick-actions" style="margin-bottom: 20px; text-align: center;">
+            <button id="quickCreateBtn" class="btn btn-primary" style="background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-right: 10px;">
+                ➕ Crear Tarea Rápida
+            </button>
+            <button onclick="openTaskModal()" class="btn btn-secondary" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                📝 Crear Tarea Completa
+            </button>
+        </div>
+
         <!-- Kanban Board para Tareas -->
         <div class="kanban-board">
             <!-- Columna Por Hacer -->
@@ -416,6 +426,15 @@
             </div>
             
             <div class="form-group">
+                <label for="prioridad">Prioridad:</label>
+                <select id="prioridad" name="prioridad">
+                    <option value="low">Baja</option>
+                    <option value="medium" selected>Media</option>
+                    <option value="high">Alta</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
                 <label for="estado">Estado:</label>
                 <select id="estado" name="estado">
                     <option value="pendiente">Pendiente</option>
@@ -459,6 +478,7 @@ function editTask(taskId) {
                 document.getElementById('proyecto_id').value = task.proyecto_id;
                 document.getElementById('fase_id').value = task.fase_id;
                 document.getElementById('fecha_limite').value = task.fecha_limite.split('T')[0];
+                document.getElementById('prioridad').value = task.prioridad || 'medium';
                 document.getElementById('estado').value = task.estado;
                 document.getElementById('taskModal').style.display = 'block';
             } else {
@@ -519,21 +539,34 @@ function hideLoading(button, originalText) {
 
 // Event listener para el formulario
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 [KANBAN DEBUG] DOM cargado, buscando formulario...');
+    
     var taskForm = document.getElementById('taskForm');
     if (taskForm) {
+        console.log('✅ [KANBAN DEBUG] Formulario encontrado:', taskForm);
+        
         taskForm.addEventListener('submit', function(e) {
+            console.log('📝 [KANBAN DEBUG] Formulario enviado, iniciando proceso...');
             e.preventDefault();
             
             var submitBtn = this.querySelector('button[type="submit"]');
             var originalText = submitBtn.innerHTML;
+            console.log('🔘 [KANBAN DEBUG] Botón encontrado:', submitBtn);
             showLoading(submitBtn);
             
             var formData = new FormData(this);
             var taskData = Object.fromEntries(formData);
             var taskId = taskData.taskId;
             
-            var url = taskId ? '/api/tasks/' + taskId : '/api/tasks';
+            console.log('📊 [KANBAN DEBUG] Datos del formulario:', taskData);
+            console.log('🆔 [KANBAN DEBUG] Task ID:', taskId);
+            
+            var url = taskId ? '/dashboard/api/tasks/' + taskId : '/dashboard/api/tasks';
             var method = taskId ? 'PUT' : 'POST';
+            
+            console.log('🌐 [KANBAN DEBUG] URL:', url);
+            console.log('📤 [KANBAN DEBUG] Método:', method);
+            console.log('📦 [KANBAN DEBUG] Datos a enviar:', JSON.stringify(taskData));
             
             fetch(url, {
                 method: method,
@@ -543,28 +576,111 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(taskData)
             })
             .then(function(response) {
+                console.log('📥 [KANBAN DEBUG] Respuesta recibida:', response.status, response.statusText);
                 return response.json();
             })
             .then(function(data) {
+                console.log('✨ [KANBAN DEBUG] Datos de respuesta:', data);
                 hideLoading(submitBtn, originalText);
                 if (data.success) {
+                    console.log('🎉 [KANBAN DEBUG] Éxito! Mostrando notificación...');
                     showNotification(taskId ? 'Tarea actualizada correctamente' : 'Tarea creada correctamente', 'success');
                     closeTaskModal();
                     setTimeout(function() {
+                        console.log('🔄 [KANBAN DEBUG] Recargando página...');
                         location.reload();
                     }, 1000);
                 } else {
-                    showNotification('Error al guardar la tarea', 'error');
+                    console.error('❌ [KANBAN DEBUG] Error en respuesta:', data);
+                    showNotification('Error al guardar la tarea: ' + (data.message || 'Error desconocido'), 'error');
                 }
             })
             .catch(function(error) {
+                console.error('💥 [KANBAN DEBUG] Error de fetch:', error);
                 hideLoading(submitBtn, originalText);
-                console.error('Error:', error);
-                showNotification('Error de conexion', 'error');
+                showNotification('Error de conexion: ' + error.message, 'error');
             });
         });
-    }
-});
+    } else {
+         console.error('❌ [KANBAN DEBUG] No se encontró el formulario taskForm');
+     }
+
+     // Funcionalidad del botón de creación rápida
+     var quickCreateBtn = document.getElementById('quickCreateBtn');
+     if (quickCreateBtn) {
+         console.log('✅ [KANBAN DEBUG] Botón de creación rápida encontrado');
+         
+         quickCreateBtn.addEventListener('click', function() {
+             console.log('🚀 [KANBAN DEBUG] Creación rápida iniciada');
+             
+             var titulo = prompt('Título de la tarea:');
+             if (!titulo || titulo.trim() === '') {
+                 console.log('❌ [KANBAN DEBUG] Título vacío, cancelando');
+                 return;
+             }
+             
+             var descripcion = prompt('Descripción de la tarea (opcional):') || 'Tarea creada rápidamente';
+             
+             // Datos básicos para la tarea rápida
+             var quickTaskData = {
+                 titulo: titulo.trim(),
+                 descripcion: descripcion.trim(),
+                 proyecto_id: 29, // Usar el proyecto de prueba existente
+                 fase_id: 1,
+                 fecha_limite: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 días desde hoy
+                 estado: 'pendiente',
+                 prioridad: 'medium'
+             };
+             
+             console.log('📦 [KANBAN DEBUG] Datos de tarea rápida:', quickTaskData);
+             
+             // Deshabilitar botón durante la creación
+             quickCreateBtn.disabled = true;
+             quickCreateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+             
+             fetch('/dashboard/api/tasks', {
+                 method: 'POST',
+                 headers: {
+                     'Content-Type': 'application/json',
+                 },
+                 body: JSON.stringify(quickTaskData)
+             })
+             .then(function(response) {
+                 console.log('📥 [KANBAN DEBUG] Respuesta de creación rápida:', response.status);
+                 return response.json();
+             })
+             .then(function(data) {
+                 console.log('✨ [KANBAN DEBUG] Resultado de creación rápida:', data);
+                 
+                 // Restaurar botón
+                 quickCreateBtn.disabled = false;
+                 quickCreateBtn.innerHTML = '➕ Crear Tarea Rápida';
+                 
+                 if (data.success) {
+                     console.log('🎉 [KANBAN DEBUG] Tarea rápida creada exitosamente');
+                     showNotification('Tarea "' + titulo + '" creada exitosamente', 'success');
+                     setTimeout(function() {
+                         location.reload();
+                     }, 1000);
+                 } else {
+                     console.error('❌ [KANBAN DEBUG] Error en creación rápida:', data);
+                     showNotification('Error al crear la tarea: ' + (data.message || 'Error desconocido'), 'error');
+                 }
+             })
+             .catch(function(error) {
+                 console.error('💥 [KANBAN DEBUG] Error de fetch en creación rápida:', error);
+                 
+                 // Restaurar botón
+                 quickCreateBtn.disabled = false;
+                 quickCreateBtn.innerHTML = '➕ Crear Tarea Rápida';
+                 
+                 showNotification('Error de conexión: ' + error.message, 'error');
+             });
+         });
+     } else {
+         console.error('❌ [KANBAN DEBUG] No se encontró el botón de creación rápida');
+     }
+ });
 </script>
 </body>
 </html>

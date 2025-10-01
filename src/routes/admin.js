@@ -227,6 +227,9 @@ router.put('/api/tasks/:taskId', adminController.updateTask.bind(adminController
 // Eliminar tarea
 router.delete('/api/tasks/:taskId', adminController.deleteTask.bind(adminController));
 
+// API para crear tarea rápida desde Kanban
+router.post('/api/projects/:projectId/tasks/quick', uploadMiddleware.array('archivos', 10), adminController.createQuickTask.bind(adminController));
+
 // =============================================
 // API ENDPOINTS PARA CREACIÓN RÁPIDA
 // =============================================
