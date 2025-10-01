@@ -471,14 +471,8 @@ class DashboardController {
       // Obtener proyectos donde el estudiante es miembro
       const myProjects = await this.projectModel.findStudentProjects(user.id);
       
-      // Entregables pendientes del estudiante
-      const myDeliverables = [];
-      for (const project of myProjects) {
-        const deliverables = await this.entregableModel.findByProject(project.id);
-        if (deliverables && deliverables.length > 0) {
-          myDeliverables.push(...deliverables);
-        }
-      }
+      // Entregables del estudiante (solo los asignados a él)
+      const myDeliverables = await this.entregableModel.findByStudent(user.id);
 
       // Evaluaciones del estudiante
       const myEvaluations = [];
@@ -1162,6 +1156,55 @@ class DashboardController {
       console.error('Error in studentDeliverables:', error);
       req.flash('error', 'Error al cargar los entregables');
       res.redirect('/dashboard/student');
+    }
+  }
+
+  // Vista detallada de un entregable específico del estudiante
+  async studentDeliverableDetail(req, res) {
+    try {
+      const user = req.session.user;
+      const deliverableId = req.params.id;
+      
+      // Obtener detalles del entregable
+      const deliverable = await this.entregableModel.findByIdWithDetails(deliverableId);
+      
+      if (!deliverable) {
+        req.flash('error', 'Entregable no encontrado');
+        return res.redirect('/student/deliverables');
+      }
+      
+      // Verificar que el entregable pertenece al estudiante
+      const userProjects = await this.projectModel.findByStudent(user.id);
+      const hasAccess = userProjects.some(project => project.id === deliverable.proyecto_id);
+      
+      if (!hasAccess) {
+        req.flash('error', 'No tienes permisos para ver este entregable');
+        return res.redirect('/student/deliverables');
+      }
+      
+      // Calcular días restantes
+      const today = new Date();
+      const dueDate = new Date(deliverable.fecha_limite);
+      const diffTime = dueDate - today;
+      const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const deliverableWithDetails = {
+        ...deliverable,
+        diasRestantes,
+        isOverdue: diasRestantes < 0
+      };
+      
+      res.render('student/deliverable-detail', {
+        title: `Entregable: ${deliverable.titulo}`,
+        user,
+        deliverable: deliverableWithDetails,
+        success: req.flash('success'),
+        error: req.flash('error')
+      });
+    } catch (error) {
+      console.error('Error in studentDeliverableDetail:', error);
+      req.flash('error', 'Error al cargar los detalles del entregable');
+      res.redirect('/student/deliverables');
     }
   }
 
