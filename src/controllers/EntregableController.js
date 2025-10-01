@@ -1,12 +1,12 @@
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const Project = require('../models/Project');
 const User = require('../models/User');
 const AreaTrabajo = require('../models/AreaTrabajo');
 const DeliverableNotificationService = require('../services/DeliverableNotificationService');
 
-class DeliverableController {
+class EntregableController {
   constructor() {
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.projectModel = new Project();
     this.userModel = new User();
     this.areaTrabajoModel = new AreaTrabajo();
@@ -28,10 +28,9 @@ class DeliverableController {
       const areaTrabajoId = userAreas[0].area_trabajo_id;
       
       // Obtener entregables que requieren revisión en el área del coordinador
-      const deliverables = await this.deliverableModel.findByAreaForReview(areaTrabajoId);
+      const deliverables = await this.entregableModel.findByAreaForReview(areaTrabajoId);
       
-      // Obtener estadísticas del área
-      const areaStats = await this.deliverableModel.getWorkflowSummary(areaTrabajoId);
+      const areaStats = await this.entregableModel.getWorkflowSummary(areaTrabajoId);
       
       // Organizar entregables por estado
       const deliverablesByStatus = {
@@ -64,7 +63,7 @@ class DeliverableController {
       const user = req.session.user;
 
       // Verificar que el entregable existe
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       if (!deliverable) {
         return res.status(404).json({
           success: false,
@@ -112,7 +111,7 @@ class DeliverableController {
       }
 
       // Actualizar el estado usando el workflow
-      await this.deliverableModel.updateStatusWithWorkflow(
+      await this.entregableModel.updateStatusWithWorkflow(
         deliverableId, 
         newStatus, 
         observaciones, 
@@ -121,7 +120,7 @@ class DeliverableController {
 
       // Enviar notificaciones automáticas
       try {
-        const deliverableDetails = await this.deliverableModel.findByIdWithDetails(deliverableId);
+        const deliverableDetails = await this.entregableModel.findByIdWithDetails(deliverableId);
         
         switch (action) {
           case 'approve':
@@ -175,7 +174,7 @@ class DeliverableController {
       const user = req.session.user;
 
       // Obtener entregable con detalles
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       if (!deliverable) {
         return res.status(404).json({
           success: false,
@@ -196,7 +195,7 @@ class DeliverableController {
 
       // Obtener información adicional
       const project = await this.projectModel.findById(deliverable.proyecto_id);
-      const comments = await this.deliverableModel.getComments(deliverableId);
+      const comments = await this.entregableModel.getComments(deliverableId);
       
       // Calcular días restantes
       const today = new Date();
@@ -224,6 +223,96 @@ class DeliverableController {
     }
   }
 
+  // Obtener entregable por ID (método usado en rutas)
+  async getDeliverableById(req, res) {
+    try {
+      const { deliverableId } = req.params;
+      const user = req.session.user;
+
+      // Obtener entregable con detalles
+      const deliverable = await this.entregableModel.findByIdWithDetails(deliverableId);
+      if (!deliverable) {
+        return res.status(404).json({
+          success: false,
+          message: 'Entregable no encontrado'
+        });
+      }
+
+      // Verificar acceso
+      const userAreas = await this.userModel.getUserAreas(user.id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para ver este entregable'
+        });
+      }
+
+      res.json({
+        success: true,
+        deliverable
+      });
+
+    } catch (error) {
+      console.error('Error getting deliverable by ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Actualizar estado de entregable (método simple)
+  async updateStatus(req, res) {
+    try {
+      const { deliverableId } = req.params;
+      const { estado, observaciones } = req.body;
+      const user = req.session.user;
+
+      // Verificar que el entregable existe
+      const deliverable = await this.entregableModel.findById(deliverableId);
+      if (!deliverable) {
+        return res.status(404).json({
+          success: false,
+          message: 'Entregable no encontrado'
+        });
+      }
+
+      // Verificar acceso
+      const userAreas = await this.userModel.getUserAreas(user.id);
+      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para actualizar este entregable'
+        });
+      }
+
+      // Actualizar el estado usando el workflow
+      await this.entregableModel.updateStatusWithWorkflow(
+        deliverableId, 
+        estado, 
+        observaciones, 
+        user.id
+      );
+
+      res.json({
+        success: true,
+        message: 'Estado actualizado exitosamente',
+        newStatus: estado
+      });
+
+    } catch (error) {
+      console.error('Error updating status:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
   // Agregar comentario a un entregable
   async addComment(req, res) {
     try {
@@ -239,7 +328,7 @@ class DeliverableController {
       }
 
       // Verificar que el entregable existe y el usuario tiene acceso
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       if (!deliverable) {
         return res.status(404).json({
           success: false,
@@ -259,7 +348,7 @@ class DeliverableController {
       }
 
       // Agregar el comentario
-      const commentId = await this.deliverableModel.addComment(
+      const commentId = await this.entregableModel.addComment(
         deliverableId,
         user.id,
         comentario.trim(),
@@ -268,7 +357,7 @@ class DeliverableController {
 
       // Enviar notificación automática
       try {
-        const deliverableDetails = await this.deliverableModel.findByIdWithDetails(deliverableId);
+        const deliverableDetails = await this.entregableModel.findByIdWithDetails(deliverableId);
         const commentData = {
           autor_nombre: `${user.nombre} ${user.apellido}`,
           comentario: comentario.trim()
@@ -300,4 +389,4 @@ class DeliverableController {
   }
 }
 
-module.exports = DeliverableController;
+module.exports = EntregableController;

@@ -1,13 +1,13 @@
 const Evaluation = require('../models/Evaluation');
 const Project = require('../models/Project');
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const User = require('../models/User');
 
 class EvaluatorController {
   constructor() {
     this.evaluationModel = new Evaluation();
     this.projectModel = new Project();
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.userModel = new User();
   }
 
@@ -90,7 +90,7 @@ class EvaluatorController {
 
       // Obtener información del proyecto y entregable
       const project = await this.projectModel.findById(evaluation.proyecto_id);
-      const deliverable = await this.deliverableModel.findById(evaluation.entregable_id);
+      const deliverable = await this.entregableModel.findById(evaluation.entregable_id);
 
       // Parsear calificaciones si existen
       let calificaciones = {};
@@ -173,12 +173,12 @@ class EvaluatorController {
       // Si la evaluación es rechazada o para cambios, actualizar el entregable
       const evaluation = evaluations[0];
       if (estado_evaluacion === 'rechazada' || estado_evaluacion === 'para_cambios') {
-        await this.deliverableModel.update(evaluation.entregable_id, {
+        await this.entregableModel.update(evaluation.entregable_id, {
           estado: 'pendiente',
           observaciones_evaluacion: observaciones
         });
       } else if (estado_evaluacion === 'aprobada') {
-        await this.deliverableModel.update(evaluation.entregable_id, {
+        await this.entregableModel.update(evaluation.entregable_id, {
           estado: 'aprobado',
           observaciones_evaluacion: observaciones
         });

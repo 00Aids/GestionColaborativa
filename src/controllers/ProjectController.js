@@ -1,6 +1,6 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const Evaluation = require('../models/Evaluation');
 const Invitation = require('../models/Invitation');
 const { pool } = require('../config/database');
@@ -11,7 +11,7 @@ class ProjectController {
   constructor() {
     this.projectModel = new Project();
     this.userModel = new User();
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.evaluationModel = new Evaluation();
     this.db = pool; // Inicializar la conexión a la base de datos
   }
@@ -363,7 +363,7 @@ class ProjectController {
       }
       
       // Obtener entregables y evaluaciones
-      const deliverables = await this.deliverableModel.findByProject(projectId);
+      const deliverables = await this.entregableModel.findByProject(projectId);
       const evaluations = await this.evaluationModel.findByProject(projectId);
       
       // Obtener datos adicionales para las nuevas pestañas
@@ -1097,7 +1097,7 @@ class ProjectController {
       }
 
       // Obtener entregables del proyecto
-      const deliverables = await this.deliverableModel.findByProject(projectId);
+      const deliverables = await this.entregableModel.findByProject(projectId);
 
       // Calcular información adicional para cada entregable
       const deliverablesWithDetails = deliverables.map(deliverable => {
@@ -1165,7 +1165,7 @@ class ProjectController {
         created_by: user.id
       };
 
-      const newDeliverable = await this.deliverableModel.create(deliverableData);
+      const newDeliverable = await this.entregableModel.create(deliverableData);
 
       res.json({
         success: true,
@@ -1194,7 +1194,7 @@ class ProjectController {
       }
 
       // Verificar que el entregable existe y pertenece al proyecto
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       if (!deliverable || deliverable.proyecto_id != projectId) {
         return res.status(404).json({ error: 'Entregable no encontrado' });
       }
@@ -1225,7 +1225,7 @@ class ProjectController {
       }
 
       // Actualizar el entregable
-      await this.deliverableModel.update(deliverableId, updateData);
+      await this.entregableModel.update(deliverableId, updateData);
 
       res.json({
         success: true,
@@ -1257,7 +1257,7 @@ class ProjectController {
       }
 
       // Verificar que el entregable existe y pertenece al proyecto
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       if (!deliverable || deliverable.proyecto_id != projectId) {
         return res.status(404).json({ error: 'Entregable no encontrado' });
       }
@@ -1270,7 +1270,7 @@ class ProjectController {
       }
 
       // Eliminar el entregable
-      await this.deliverableModel.delete(deliverableId);
+      await this.entregableModel.delete(deliverableId);
 
       res.json({
         success: true,
@@ -1287,7 +1287,7 @@ class ProjectController {
   async calculateProjectProgress(projectId) {
     try {
       // Obtener entregables del proyecto
-      const deliverables = await this.deliverableModel.findByProject(projectId);
+      const deliverables = await this.entregableModel.findByProject(projectId);
       
       if (deliverables.length === 0) {
         return 0;
@@ -1448,7 +1448,7 @@ class ProjectController {
        }
 
        // Verificar que el entregable existe y el usuario tiene acceso
-       const deliverable = await this.deliverableModel.findById(deliverableId);
+       const deliverable = await this.entregableModel.findById(deliverableId);
        if (!deliverable) {
          return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
        }
@@ -1459,7 +1459,7 @@ class ProjectController {
          return res.status(403).json({ success: false, message: 'No tienes acceso a este entregable' });
        }
 
-       const comments = await this.deliverableModel.getComments(deliverableId);
+       const comments = await this.entregableModel.getComments(deliverableId);
        res.json({ success: true, data: comments });
      } catch (error) {
        console.error('Error getting deliverable comments:', error);
@@ -1483,7 +1483,7 @@ class ProjectController {
        }
 
        // Verificar que el entregable existe y el usuario tiene acceso
-       const deliverable = await this.deliverableModel.findById(deliverableId);
+       const deliverable = await this.entregableModel.findById(deliverableId);
        if (!deliverable) {
          return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
        }
@@ -1506,7 +1506,7 @@ class ProjectController {
          };
        }
 
-       const commentId = await this.deliverableModel.addComment(
+       const commentId = await this.entregableModel.addComment(
          deliverableId,
          user.id,
          comentario.trim(),

@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Role = require('../models/Role');
 const Project = require('../models/Project');
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const BaseModel = require('../models/BaseModel');
 const Task = require('../models/Task');
 const DashboardHelper = require('../helpers/dashboardHelper');
@@ -11,7 +11,7 @@ class AdminController {
     this.userModel = new User();
     this.roleModel = new Role();
     this.projectModel = new Project();
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.lineasInvestigacionModel = new BaseModel('lineas_investigacion');
     this.ciclosAcademicosModel = new BaseModel('ciclos_academicos');
     this.taskModel = new Task();
@@ -941,7 +941,7 @@ class AdminController {
       }
 
       // Verificar que el proyecto no tenga entregables asociados
-      const deliverables = await this.deliverableModel.findByProject(projectId); // Cambiar método
+      const deliverables = await this.entregableModel.findByProject(projectId); // Cambiar método
       if (deliverables && deliverables.length > 0) {
         return res.status(400).json({ 
           success: false, 
@@ -1008,7 +1008,7 @@ class AdminController {
       });
 
       // Obtener estadísticas de entregables
-      const allDeliverables = await this.deliverableModel.findWithProject();
+      const allDeliverables = await this.entregableModel.findWithProject();
       const deliverableStats = {
         total: allDeliverables.length,
         pending: allDeliverables.filter(d => d.estado === 'Pendiente').length,
@@ -1621,7 +1621,7 @@ class AdminController {
       const invitations = await this.projectModel.getProjectInvitations(projectId);
       const tasksGrouped = await this.taskModel.getProjectTasksWithWorkflow(projectId);
       const tasks = [...tasksGrouped.todo, ...tasksGrouped.in_progress, ...tasksGrouped.done];
-      const deliverables = await this.deliverableModel.findByProject(projectId);
+      const deliverables = await this.entregableModel.findByProject(projectId);
       
       res.render('admin/project-detail', {
         title: `Admin: ${project.titulo}`,
@@ -1712,20 +1712,20 @@ class AdminController {
       }
       
       if (filter === 'overdue') {
-        deliverables = await this.deliverableModel.findOverdue();
+        deliverables = await this.entregableModel.findOverdue();
         // Filtrar por área si es necesario
         if (conditions.area_trabajo_id) {
           deliverables = deliverables.filter(d => d.area_trabajo_id === conditions.area_trabajo_id);
         }
       } else if (filter === 'pending') {
-        deliverables = await this.deliverableModel.findPending();
+        deliverables = await this.entregableModel.findPending();
         // Filtrar por área si es necesario
         if (conditions.area_trabajo_id) {
           deliverables = deliverables.filter(d => d.area_trabajo_id === conditions.area_trabajo_id);
         }
       } else {
         // Obtener todos los entregables con información del proyecto
-        deliverables = await this.deliverableModel.findWithProject(conditions);
+        deliverables = await this.entregableModel.findWithProject(conditions);
       }
       
       // Calcular días vencidos para entregables vencidos
@@ -1763,7 +1763,7 @@ class AdminController {
       const deliverableId = req.params.deliverableId;
       
       // Obtener detalles del entregable
-      const deliverable = await this.deliverableModel.findById(deliverableId);
+      const deliverable = await this.entregableModel.findById(deliverableId);
       
       if (!deliverable) {
         req.flash('error', 'Entregable no encontrado');
@@ -1805,7 +1805,7 @@ class AdminController {
       const deliverableId = req.params.deliverableId;
       const { estado, comentarios } = req.body;
       
-      const result = await this.deliverableModel.update(deliverableId, {
+      const result = await this.entregableModel.update(deliverableId, {
         estado,
         comentarios,
         fecha_actualizacion: new Date()

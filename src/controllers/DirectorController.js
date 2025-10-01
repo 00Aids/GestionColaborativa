@@ -1,6 +1,6 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const Evaluation = require('../models/Evaluation');
 const pool = require('../config/database');
 
@@ -8,7 +8,7 @@ class DirectorController {
   constructor() {
     this.projectModel = new Project();
     this.userModel = new User();
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.evaluationModel = new Evaluation();
   }
 
@@ -112,7 +112,7 @@ class DirectorController {
       // Obtener entregables de todos los proyectos dirigidos
       let allDeliverables = [];
       for (const project of directedProjects) {
-        const deliverables = await this.deliverableModel.findByProject(project.id);
+        const deliverables = await this.entregableModel.findByProject(project.id);
         if (deliverables && deliverables.length > 0) {
           // Agregar información del proyecto a cada entregable
           const deliverablesWithProject = deliverables.map(deliverable => ({
@@ -279,7 +279,7 @@ class DirectorController {
   // Obtener entregables por proyecto
   async getDeliverablesByProject(projectId) {
     try {
-      return await this.deliverableModel.findByProject(projectId);
+      return await this.entregableModel.findByProject(projectId);
     } catch (error) {
       console.error('Error getting deliverables by project:', error);
       throw error;

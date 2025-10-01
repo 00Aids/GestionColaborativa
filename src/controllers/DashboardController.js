@@ -1,19 +1,21 @@
 const User = require('../models/User');
 const Project = require('../models/Project');
-const Deliverable = require('../models/Deliverable');
+const Entregable = require('../models/Entregable');
 const Evaluation = require('../models/Evaluation');
 const Task = require('../models/Task');
 const Notification = require('../models/Notification');
+const DeliverableNotificationService = require('../services/DeliverableNotificationService');
 const { pool } = require('../config/database');
 
 class DashboardController {
   constructor() {
     this.userModel = new User();
     this.projectModel = new Project();
-    this.deliverableModel = new Deliverable();
+    this.entregableModel = new Entregable();
     this.evaluationModel = new Evaluation();
     this.taskModel = new Task();
     this.notificationModel = new Notification();
+    this.deliverableNotificationService = new DeliverableNotificationService();
   }
 
   // Dashboard principal
@@ -133,8 +135,8 @@ class DashboardController {
 
       // Obtener entregables del área
       const allDeliverables = areaTrabajoId 
-        ? await this.deliverableModel.findWithProject(areaFilter)
-        : await this.deliverableModel.findWithProject();
+        ? await this.entregableModel.findWithProject(areaFilter)
+        : await this.entregableModel.findWithProject();
 
       // Estadísticas de entregables
       const deliverableStats = {
@@ -297,8 +299,8 @@ class DashboardController {
 
       // Obtener entregables del área
       const allDeliverables = userDetails.area_trabajo_id 
-        ? await this.deliverableModel.findWithProject(areaFilter)
-        : await this.deliverableModel.findWithProject();
+        ? await this.entregableModel.findWithProject(areaFilter)
+        : await this.entregableModel.findWithProject();
 
       // Estadísticas de entregables
       const deliverableStats = {
@@ -437,7 +439,7 @@ class DashboardController {
       // Entregables pendientes del estudiante
       const myDeliverables = [];
       for (const project of myProjects) {
-        const deliverables = await this.deliverableModel.findByProject(project.id);
+        const deliverables = await this.entregableModel.findByProject(project.id);
         if (deliverables && deliverables.length > 0) {
           myDeliverables.push(...deliverables);
         }
@@ -485,7 +487,7 @@ class DashboardController {
       // Entregables de proyectos dirigidos
       const directedDeliverables = [];
       for (const project of directedProjects) {
-        const deliverables = await this.deliverableModel.findByProject(project.id);
+        const deliverables = await this.entregableModel.findByProject(project.id);
         if (deliverables && deliverables.length > 0) {
           directedDeliverables.push(...deliverables);
         }
@@ -1081,7 +1083,7 @@ class DashboardController {
       const user = req.session.user;
       
       // Obtener entregables del estudiante
-      const myDeliverables = await this.deliverableModel.findByStudent(user.id);
+      const myDeliverables = await this.entregableModel.findByStudent(user.id);
       
       res.render('student/deliverables', {
         user,
@@ -1167,7 +1169,7 @@ class DashboardController {
         });
       }
 
-      const deliverable = await this.deliverableModel.findById(deliverable_id);
+      const deliverable = await this.entregableModel.findById(deliverable_id);
       if (!deliverable) {
         return res.status(404).json({
           success: false,
@@ -1195,9 +1197,24 @@ class DashboardController {
       }
 
       // Actualizar en la base de datos
-      await this.deliverableModel.update(deliverable_id, updateData);
+      await this.entregableModel.update(deliverable_id, updateData);
       
       console.log('✅ Deliverable updated successfully');
+
+      // Enviar notificaciones al director y evaluador
+      try {
+        const studentName = `${user.nombres} ${user.apellidos}`;
+        await this.deliverableNotificationService.notifyDeliverableSubmitted(
+          deliverable.proyecto_id,
+          deliverable_id,
+          studentName,
+          deliverable.titulo
+        );
+        console.log('✅ Notifications sent successfully');
+      } catch (notificationError) {
+        console.error('⚠️ Error sending notifications:', notificationError);
+        // No fallar la operación principal por errores de notificación
+      }
       
       res.json({
         success: true,

@@ -4,7 +4,7 @@ const AuthMiddleware = require('../middlewares/auth');
 const DirectorController = require('../controllers/DirectorController');
 const ProjectController = require('../controllers/ProjectController');
 const DashboardController = require('../controllers/DashboardController');
-const DeliverableController = require('../controllers/DeliverableController');
+const EntregableController = require('../controllers/EntregableController');
 
 // Middleware para verificar que el usuario sea director
 router.use(AuthMiddleware.requireAuth);
@@ -14,7 +14,7 @@ router.use(AuthMiddleware.requireRole('Director de Proyecto'));
 const directorController = new DirectorController();
 const projectController = new ProjectController();
 const dashboardController = new DashboardController();
-const deliverableController = new DeliverableController();
+const entregableController = new EntregableController();
 
 // ===== RUTAS PRINCIPALES =====
 
@@ -104,7 +104,7 @@ router.post('/api/deliverables/:deliverableId/comments', async (req, res) => {
     const user = req.session.user;
     
     // Verificar que el entregable pertenezca a un proyecto dirigido por este director
-    const deliverable = await deliverableController.getDeliverableById(deliverableId);
+    const deliverable = await entregableController.getDeliverableById(deliverableId);
     if (!deliverable) {
       return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
     }
@@ -115,7 +115,7 @@ router.post('/api/deliverables/:deliverableId/comments', async (req, res) => {
     }
     
     // Agregar comentario
-    await deliverableController.addComment(deliverableId, user.id, comentario);
+    await entregableController.addComment(deliverableId, user.id, comentario);
     
     res.json({ success: true, message: 'Comentario agregado exitosamente' });
   } catch (error) {
@@ -132,7 +132,7 @@ router.post('/api/deliverables/:deliverableId/review', async (req, res) => {
     const user = req.session.user;
     
     // Verificar que el entregable pertenezca a un proyecto dirigido por este director
-    const deliverable = await deliverableController.getDeliverableById(deliverableId);
+    const deliverable = await entregableController.getDeliverableById(deliverableId);
     if (!deliverable) {
       return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
     }
@@ -144,7 +144,7 @@ router.post('/api/deliverables/:deliverableId/review', async (req, res) => {
     
     // Actualizar estado del entregable
     const nuevoEstado = accion === 'aprobar' ? 'aprobado' : 'rechazado';
-    await deliverableController.updateStatus(deliverableId, nuevoEstado, comentario, user.id);
+    await entregableController.updateStatus(deliverableId, nuevoEstado, comentario, user.id);
     
     res.json({ 
       success: true, 

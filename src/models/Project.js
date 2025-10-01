@@ -841,6 +841,47 @@ class Project extends BaseModel {
       throw new Error(`Error counting project comments: ${error.message}`);
     }
   }
+
+  // Buscar proyecto por ID con detalles completos
+  async findByIdWithDetails(projectId) {
+    try {
+      const query = `
+        SELECT 
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          u.id as estudiante_id,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          d.email as director_email,
+          d.id as director_id,
+          CONCAT(e.nombres, ' ', e.apellidos) as evaluador_nombre,
+          e.nombres as evaluador_nombres,
+          e.apellidos as evaluador_apellidos,
+          e.email as evaluador_email,
+          e.id as evaluador_id,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN usuarios e ON p.evaluador_id = e.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        WHERE p.id = ?
+      `;
+      
+      const [rows] = await this.db.execute(query, [projectId]);
+      return rows[0] || null;
+    } catch (error) {
+      throw new Error(`Error finding project by ID with details: ${error.message}`);
+    }
+  }
 }
 
 module.exports = Project;

@@ -30,6 +30,30 @@ class DeliverableNotificationService {
 
             await this.notificationModel.createForUser(projectInfo.coordinador_id, notificationData);
             console.log(`✅ Notificación enviada al coordinador ${projectInfo.coordinador_id} por entregable ${deliverableId}`);
+
+            // Crear notificación para el director si existe
+            if (projectInfo.director_id) {
+                const directorNotification = {
+                    titulo: '📋 Nuevo Entregable para Evaluar',
+                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.nombre}"`,
+                    tipo: 'info',
+                    url_accion: `/director/deliverables?deliverable=${deliverableId}`
+                };
+                await this.notificationModel.createForUser(projectInfo.director_id, directorNotification);
+                console.log(`✅ Notificación enviada al director ${projectInfo.director_id} por entregable ${deliverableId}`);
+            }
+
+            // Crear notificación para el evaluador si existe
+            if (projectInfo.evaluador_id) {
+                const evaluadorNotification = {
+                    titulo: '📋 Nuevo Entregable para Evaluar',
+                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.nombre}"`,
+                    tipo: 'info',
+                    url_accion: `/evaluator/deliverables?deliverable=${deliverableId}`
+                };
+                await this.notificationModel.createForUser(projectInfo.evaluador_id, evaluadorNotification);
+                console.log(`✅ Notificación enviada al evaluador ${projectInfo.evaluador_id} por entregable ${deliverableId}`);
+            }
         } catch (error) {
             console.error('Error notifying deliverable submission:', error);
         }

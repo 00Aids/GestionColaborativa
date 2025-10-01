@@ -3,7 +3,7 @@ const router = express.Router();
 const AuthMiddleware = require('../middlewares/auth');
 const ProjectController = require('../controllers/ProjectController');
 const DashboardController = require('../controllers/DashboardController');
-const DeliverableController = require('../controllers/DeliverableController');
+const EntregableController = require('../controllers/EntregableController');
 
 // Middleware para verificar que el usuario sea coordinador
 router.use(AuthMiddleware.requireAuth);
@@ -11,7 +11,7 @@ router.use(AuthMiddleware.requireRole('Coordinador Académico'));
 
 const projectController = new ProjectController();
 const dashboardController = new DashboardController();
-const deliverableController = new DeliverableController();
+const entregableController = new EntregableController();
 
 // ===== RUTAS DE PROYECTOS =====
 router.get('/projects', async (req, res) => {
@@ -83,7 +83,7 @@ router.get('/calendar', async (req, res) => {
 // ===== RUTAS DE REVISIÓN DE ENTREGABLES =====
 router.get('/deliverables', async (req, res) => {
   try {
-    await deliverableController.coordinatorReview(req, res);
+    await entregableController.coordinatorReview(req, res);
   } catch (error) {
     console.error('Error loading coordinator deliverable review:', error);
     req.flash('error', 'Error al cargar la revisión de entregables');
@@ -107,7 +107,7 @@ router.get('/api/projects', async (req, res) => {
 // API para actualizar estado de entregable
 router.post('/api/deliverables/:deliverableId/status', async (req, res) => {
   try {
-    await deliverableController.updateDeliverableStatus(req, res);
+    await entregableController.updateDeliverableStatus(req, res);
   } catch (error) {
     console.error('Error updating deliverable status:', error);
     res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -117,7 +117,7 @@ router.post('/api/deliverables/:deliverableId/status', async (req, res) => {
 // API para obtener detalles de entregable
 router.get('/api/deliverables/:deliverableId', async (req, res) => {
   try {
-    await deliverableController.getDeliverableDetails(req, res);
+    await entregableController.getDeliverableDetails(req, res);
   } catch (error) {
     console.error('Error getting deliverable details:', error);
     res.status(500).json({ success: false, error: 'Error interno del servidor' });
@@ -127,7 +127,7 @@ router.get('/api/deliverables/:deliverableId', async (req, res) => {
 // API para agregar comentario a entregable
 router.post('/api/deliverables/:deliverableId/comments', async (req, res) => {
   try {
-    await deliverableController.addComment(req, res);
+    await entregableController.addComment(req, res);
   } catch (error) {
     console.error('Error adding deliverable comment:', error);
     res.status(500).json({ success: false, error: 'Error interno del servidor' });
