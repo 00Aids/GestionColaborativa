@@ -190,7 +190,7 @@ router.post('/deliverables/:deliverableId/status', adminController.updateDeliver
 router.get('/projects/:projectId/tasks/new', adminController.showNewTask.bind(adminController));
 
 // Crear nueva tarea
-router.post('/projects/:projectId/tasks', adminController.createTask.bind(adminController));
+router.post('/projects/:projectId/tasks', uploadMiddleware.array('archivos', 10), adminController.createTask.bind(adminController));
 
 // Obtener vista Kanban de tareas de un proyecto
 router.get('/projects/:projectId/tasks/kanban', adminController.showTaskKanban.bind(adminController));

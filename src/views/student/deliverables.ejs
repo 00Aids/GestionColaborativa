@@ -762,7 +762,7 @@
                                     <p>Completa tu entregable con texto y/o archivos adjuntos</p>
                                 </div>
 
-                                <form class="upload-form" action="/student/deliverable/upload" method="POST" enctype="multipart/form-data">
+                                <form class="upload-form" action="/student/deliverables/upload" method="POST" enctype="multipart/form-data">
                                     <input type="hidden" name="deliverable_id" value="<%= deliverable.id %>">
                                     
                                     <!-- Text Content Section -->
@@ -770,7 +770,7 @@
                                         <label class="form-label">
                                             <i class="fas fa-align-left"></i>
                                             Contenido del Entregable *
-                                        </label>
++                                        </label>
                                         <textarea name="content" id="content-<%= deliverable.id %>" class="form-textarea" 
                                                   placeholder="Escribe aquí el contenido de tu entregable. Puedes incluir explicaciones, análisis, conclusiones, etc."
                                                   rows="8"></textarea>
@@ -800,8 +800,9 @@
                                                 Seleccionar Archivo
                                             </button>
                                         </div>
-                                        <input type="file" id="file-<%= deliverable.id %>" class="file-input" 
+                                        <input type="file" id="file-<%= deliverable.id %>" name="files" class="file-input" 
                                                accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar,.jpg,.jpeg,.png" 
+                                               multiple
                                                onchange="handleFileSelect(this, <%= deliverable.id %>)">
                                         <div class="file-list" id="files-<%= deliverable.id %>"></div>
                                     </div>
@@ -827,7 +828,7 @@
                                     Entregar
                                 </button>
                             <% } %>
-                            <a href="/deliverables/<%= deliverable.id %>" class="btn btn-outline">
+                            <a href="/student/deliverables/<%= deliverable.id %>" class="btn btn-outline">
                                 <i class="fas fa-eye"></i>
                                 Ver Detalles
                             </a>

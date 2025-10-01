@@ -193,6 +193,46 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
+        /* Back Navigation Styles */
+        .title-content-with-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .back-navigation {
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .back-arrow:hover {
+            background: rgba(255, 255, 255, 1);
+            color: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
+            border-color: rgba(118, 75, 162, 0.4);
+            text-decoration: none;
+        }
+        
+        .back-arrow i {
+            font-size: 16px;
+        }
+
         .user-profile {
             display: flex;
             align-items: center;
@@ -1552,12 +1592,20 @@
             
             <div class="page-title-section">
                 <div class="title-and-actions">
-                    <div class="title-content">
-                        <h1 class="page-main-title">
-                            <i class="fas fa-project-diagram"></i>
-                            Gestión de Proyectos
-                        </h1>
-                        <p class="page-subtitle">Administra todos los proyectos del sistema académico</p>
+                    <div class="title-content-with-nav">
+                        <!-- Navegación de retroceso -->
+                        <nav class="back-navigation">
+                            <a href="/dashboard/admin" class="back-arrow" title="Volver al dashboard">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        </nav>
+                        <div class="title-content">
+                            <h1 class="page-main-title">
+                                <i class="fas fa-project-diagram"></i>
+                                Gestión de Proyectos
+                            </h1>
+                            <p class="page-subtitle">Administra todos los proyectos del sistema académico</p>
+                        </div>
                     </div>
                     <button class="btn btn-primary btn-new-project" onclick="openCreateModal()">
                         <i class="fas fa-plus"></i> Nuevo Proyecto

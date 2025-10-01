@@ -544,6 +544,70 @@
                         <p>No hay información del proyecto disponible.</p>
                     <% } %>
                 </div>
+                
+                <!-- Sección de archivos adjuntos del entregable -->
+                <div class="detail-section">
+                    <h3><i class="fas fa-paperclip"></i> Archivos del Entregable</h3>
+                    <% if (deliverable.archivo_url && deliverable.archivo_url.trim()) { %>
+                        <div class="files-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <% 
+                            const files = deliverable.archivo_url.split(',').filter(file => file.trim());
+                            files.forEach(file => {
+                                const fileName = file.split('/').pop();
+                                const fileExtension = fileName.split('.').pop().toLowerCase();
+                                let fileIcon = 'fas fa-file';
+                                let fileColor = '#6c757d';
+                                
+                                // Determinar el icono y color según la extensión
+                                if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-image';
+                                    fileColor = '#28a745';
+                                } else if (['pdf'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-pdf';
+                                    fileColor = '#dc3545';
+                                } else if (['doc', 'docx'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-word';
+                                    fileColor = '#007bff';
+                                } else if (['xls', 'xlsx'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-excel';
+                                    fileColor = '#28a745';
+                                } else if (['ppt', 'pptx'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-powerpoint';
+                                    fileColor = '#fd7e14';
+                                } else if (['zip', 'rar', '7z'].includes(fileExtension)) {
+                                    fileIcon = 'fas fa-file-archive';
+                                    fileColor = '#6f42c1';
+                                }
+                            %>
+                                <div class="file-item" style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center; transition: all 0.3s ease; cursor: pointer;" 
+                                     onclick="window.open('<%= file %>', '_blank')"
+                                     onmouseover="this.style.borderColor='<%= fileColor %>'; this.style.background='#f0f8ff'; this.style.transform='translateY(-2px)'"
+                                     onmouseout="this.style.borderColor='#e9ecef'; this.style.background='#f8f9fa'; this.style.transform='translateY(0)'">
+                                    <div class="file-icon" style="font-size: 2.5rem; margin-bottom: 10px; color: <%= fileColor %>;">
+                                        <i class="<%= fileIcon %>"></i>
+                                    </div>
+                                    <div class="file-name" style="font-weight: 600; color: #333; margin-bottom: 5px; word-break: break-word;"><%= fileName %></div>
+                                    <div class="file-action" style="font-size: 0.8rem; color: #666;">
+                                        <i class="fas fa-download"></i> Descargar
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <div class="no-files" style="text-align: center; padding: 40px; color: #666;">
+                            <i class="fas fa-folder-open" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                            <p>No hay archivos adjuntos en este entregable</p>
+                        </div>
+                    <% } %>
+                    
+                    <!-- Mostrar contenido del entregable si existe -->
+                    <% if (deliverable.contenido) { %>
+                        <div style="margin-top: 30px;">
+                            <h4><i class="fas fa-align-left"></i> Contenido del Entregable</h4>
+                            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-top: 15px; line-height: 1.6; white-space: pre-wrap;"><%= deliverable.contenido %></div>
+                        </div>
+                    <% } %>
+                </div>
             </div>
             
             <!-- Nueva sección de comentarios -->

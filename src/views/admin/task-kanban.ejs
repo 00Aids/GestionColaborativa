@@ -107,22 +107,25 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .breadcrumb {
+        .back-navigation {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: white;
-            font-size: 14px;
         }
 
-        .breadcrumb a {
+        .back-arrow {
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            transition: color 0.3s ease;
+            font-size: 18px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .breadcrumb a:hover {
+        .back-arrow:hover {
             color: white;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-2px);
         }
 
         .user-profile {
@@ -785,12 +788,10 @@
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="breadcrumb">
-                <a href="/admin/projects"><i class="fas fa-project-diagram"></i> Proyectos</a>
-                <i class="fas fa-chevron-right"></i>
-                <a href="/admin/projects/<%= project.id %>"><%= project.titulo %></a>
-                <i class="fas fa-chevron-right"></i>
-                <span>Tareas</span>
+            <div class="back-navigation">
+                <a href="/admin/projects/<%= project.id %>/details" class="back-arrow" title="Volver al proyecto">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
             </div>
             <div class="user-profile">
                 <div class="user-avatar">
@@ -935,7 +936,7 @@
                         <option value="">Sin asignar</option>
                         <% if (members && members.length > 0) { %>
                             <% members.forEach(member => { %>
-                                <option value="<%= member.id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
+                                <option value="<%= member.usuario_id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
                             <% }) %>
                         <% } %>
                     </select>
@@ -1120,6 +1121,8 @@
             fetch(`/admin/api/tasks/${taskId}/details`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Datos recibidos para el modal:', data); // <-- DEBUG
+                    console.log('Archivos adjuntos específicamente:', data.task.archivos_adjuntos); // <-- DEBUG ARCHIVOS
                     if (data.success) {
                         currentTask = data.task;
                         renderTaskModal({
@@ -1148,6 +1151,14 @@
         function renderTaskModal(data) {
             const { task, comments, history } = data;
             const modalBody = document.getElementById('taskModalBody');
+            
+            // Construir el nombre del asignado correctamente
+            let taskAssignee = 'Sin asignar';
+            if (task.asignado_nombres && task.asignado_apellidos) {
+                taskAssignee = `${task.asignado_nombres} ${task.asignado_apellidos}`;
+            } else if (task.asignado_nombres) {
+                taskAssignee = task.asignado_nombres;
+            }
             
             modalBody.innerHTML = `
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
@@ -1186,6 +1197,46 @@
                                 `).join('') : '<p style="color: #64748b; font-style: italic;">No hay comentarios aún</p>'}
                             </div>
                         </div>
+                        
+                        <!-- Archivos Adjuntos -->
+                        <div style="margin-top: 25px;">
+                            <h4 style="color: #1e293b; margin-bottom: 15px; font-weight: 600;">
+                                <i class="fas fa-paperclip" style="margin-right: 8px; color: #667eea;"></i>
+                                Archivos Adjuntos
+                            </h4>
+                            <div id="attachmentsContainer">
+                                ${task.archivos_adjuntos && task.archivos_adjuntos.length > 0 ? 
+                                    task.archivos_adjuntos.map(archivo => `
+                                        <div style="margin-bottom: 10px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <i class="fas fa-file" style="color: #667eea; font-size: 16px;"></i>
+                                                    <div>
+                                                        <div style="font-weight: 500; color: #1e293b; font-size: 14px;">${archivo.nombre_original}</div>
+                                                        <div style="font-size: 12px; color: #64748b;">
+                                                            ${archivo.tipo_mime} • ${(archivo.tamaño / 1024 / 1024).toFixed(2)} MB
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style="display: flex; gap: 8px;">
+                                                    <a href="/uploads/comments/${archivo.nombre_archivo}" 
+                                                       target="_blank" 
+                                                       style="padding: 6px 12px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-eye"></i> Ver
+                                                    </a>
+                                                    <a href="/uploads/comments/${archivo.nombre_archivo}" 
+                                                       download="${archivo.nombre_original}"
+                                                       style="padding: 6px 12px; background: #10b981; color: white; text-decoration: none; border-radius: 6px; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                                                        <i class="fas fa-download"></i> Descargar
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('') 
+                                    : '<p style="color: #64748b; font-style: italic; padding: 15px; background: #f8fafc; border-radius: 8px; text-align: center;">No hay archivos adjuntos</p>'
+                                }
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Panel Lateral -->
@@ -1204,10 +1255,10 @@
                         <!-- Asignación -->
                         <div style="margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 10px;">
                             <h4 style="color: #1e293b; margin-bottom: 15px; font-weight: 600;">Asignado a</h4>
-                            ${task.asignado_nombres ? `
+                            ${taskAssignee !== 'Sin asignar' ? `
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <div class="assignee-avatar">${task.asignado_nombres.charAt(0)}${task.asignado_apellidos.charAt(0)}</div>
-                                    <span>${task.asignado_nombres} ${task.asignado_apellidos}</span>
+                                    <div class="assignee-avatar">${task.asignado_nombres ? task.asignado_nombres.charAt(0) : ''}${task.asignado_apellidos ? task.asignado_apellidos.charAt(0) : ''}</div>
+                                    <span>${taskAssignee}</span>
                                 </div>
                             ` : '<p style="color: #64748b; font-style: italic;">Sin asignar</p>'}
                         </div>

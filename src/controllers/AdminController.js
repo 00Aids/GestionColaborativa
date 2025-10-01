@@ -1899,6 +1899,18 @@ class AdminController {
         return res.redirect(`/admin/projects/${projectId}/tasks/new`);
       }
 
+      // Manejar archivos adjuntos si existen
+      let archivos_adjuntos = [];
+      if (req.files && req.files.length > 0) {
+        archivos_adjuntos = req.files.map(file => ({
+          nombre_original: file.originalname,
+          nombre_archivo: file.filename,
+          ruta: file.path,
+          tipo_mime: file.mimetype,
+          tamaño: file.size
+        }));
+      }
+
       const taskData = {
         proyecto_id: parseInt(projectId),
         fase_id: fase_id ? parseInt(fase_id) : 1,
@@ -1909,7 +1921,8 @@ class AdminController {
         asignado_a: asignado_a || null,
         estimacion_horas: estimacion_horas ? parseFloat(estimacion_horas) : null,
         etiquetas: etiquetas || null,
-        estado_workflow: estado_workflow || 'todo'
+        estado_workflow: estado_workflow || 'todo',
+        archivos_adjuntos: archivos_adjuntos
       };
 
       const taskId = await this.taskModel.createTask(taskData);
@@ -2965,6 +2978,11 @@ class AdminController {
         const assignedUser = await this.userModel.findById(parseInt(asignado_a));
         if (assignedUser) {
           assignedUserId = parseInt(asignado_a);
+        } else {
+          return res.status(400).json({ 
+            success: false, 
+            message: `El usuario con ID ${asignado_a} no existe o no está disponible.` 
+          });
         }
       }
 
@@ -2982,9 +3000,9 @@ class AdminController {
         const diffTime = deadline.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        if (diffDays <= 3) {
+        if (diffDays <= 7) {
           priority = 'high';
-        } else if (diffDays <= 7) {
+        } else if (diffDays <= 14) {
           priority = 'medium';
         } else {
           priority = 'low';
@@ -3000,6 +3018,18 @@ class AdminController {
         }
       }
 
+      // Manejar archivos adjuntos si existen
+      let archivos_adjuntos = [];
+      if (req.files && req.files.length > 0) {
+        archivos_adjuntos = req.files.map(file => ({
+          nombre_original: file.originalname,
+          nombre_archivo: file.filename,
+          ruta: file.path,
+          tipo_mime: file.mimetype,
+          tamaño: file.size
+        }));
+      }
+
       const taskData = {
         proyecto_id: parseInt(projectId),
         fase_id: phaseId,
@@ -3010,26 +3040,37 @@ class AdminController {
         asignado_a: assignedUserId,
         estimacion_horas: estimationHours,
         etiquetas: etiquetas ? etiquetas.trim() : null,
-        estado_workflow: estado_workflow || 'todo'
+        estado_workflow: estado_workflow || 'todo',
+        archivos_adjuntos: archivos_adjuntos
       };
 
+      console.log('=== Antes de crear tarea ===');
+      console.log('taskData:', taskData);
+      
       const taskId = await this.taskModel.createTask(taskData);
       
+      console.log('=== Después de crear tarea ===');
+      console.log('taskId:', taskId);
+      
       if (taskId) {
+        console.log('=== Tarea creada exitosamente, agregando historial ===');
         // Registrar en historial
         await this.taskModel.addToHistory(taskId, user.id, 'tarea_creada', {
           descripcion: 'Tarea creada desde Kanban'
         });
 
+        console.log('=== Obteniendo detalles de la tarea ===');
         // Obtener la tarea creada con todos sus detalles
         const newTask = await this.taskModel.findById(taskId);
         
+        console.log('=== Enviando respuesta exitosa ===');
         res.json({ 
           success: true, 
           message: 'Tarea creada exitosamente.',
           task: newTask
         });
       } else {
+        console.log('=== Error: taskId es null o undefined ===');
         res.status(500).json({ 
           success: false, 
           message: 'Error al crear la tarea.' 

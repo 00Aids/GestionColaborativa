@@ -16,6 +16,7 @@ router.use(loadUserAreas); // Cargar áreas de trabajo del usuario
 // Rutas de estudiante
 router.get('/projects', dashboardController.studentProjects.bind(dashboardController));
 router.get('/deliverables', dashboardController.studentDeliverables.bind(dashboardController));
+router.get('/deliverables/:id', dashboardController.studentDeliverableDetail.bind(dashboardController));
 router.get('/evaluations', dashboardController.studentEvaluations.bind(dashboardController));
 router.get('/profile', dashboardController.studentProfile.bind(dashboardController));
 

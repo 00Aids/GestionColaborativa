@@ -70,6 +70,22 @@ class Task extends BaseModel {
         }
     }
 
+    // Calcular prioridad automáticamente basándose en la fecha límite
+    static calculateAutomaticPriority(fechaLimite) {
+        const today = new Date();
+        const dueDate = new Date(fechaLimite);
+        const diffTime = dueDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 7) {
+            return 'high';  // 1 semana o menos = prioridad alta
+        } else if (diffDays <= 14) {
+            return 'medium'; // Entre 1 y 2 semanas = prioridad media
+        } else {
+            return 'low';    // Más de 2 semanas = prioridad baja
+        }
+    }
+
     // Crear nueva tarea
     async createTask(taskData) {
         try {
@@ -79,20 +95,24 @@ class Task extends BaseModel {
                 titulo,
                 descripcion,
                 fecha_limite,
-                prioridad = 'medium',
+                prioridad, // Ya no tiene valor por defecto aquí
                 asignado_a = null,
                 estimacion_horas = null,
                 etiquetas = null,
                 estado_workflow = 'todo',
-                tipo_enfoque = 'feature'
+                tipo_enfoque = 'feature',
+                archivos_adjuntos = []
             } = taskData;
+
+            // Calcular prioridad automáticamente si no se especifica
+            const finalPriority = prioridad || this.constructor.calculateAutomaticPriority(fecha_limite);
 
             const query = `
                 INSERT INTO entregables (
                     proyecto_id, fase_id, titulo, descripcion, 
                     fecha_limite, prioridad, asignado_a, estado, 
-                    estado_workflow, observaciones
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)
+                    estado_workflow, observaciones, archivos_adjuntos
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?, ?)
             `;
             
             // Crear objeto de observaciones con todos los datos adicionales
@@ -104,8 +124,8 @@ class Task extends BaseModel {
             
             const [result] = await this.db.execute(query, [
                 proyecto_id, fase_id, titulo, descripcion, 
-                fecha_limite, prioridad, asignado_a, estado_workflow,
-                JSON.stringify(observaciones)
+                fecha_limite, finalPriority, asignado_a, estado_workflow,
+                JSON.stringify(observaciones), JSON.stringify(archivos_adjuntos)
             ]);
             
             return result.insertId;
@@ -203,7 +223,10 @@ class Task extends BaseModel {
                 FROM entregables e
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
-                WHERE JSON_EXTRACT(e.observaciones, '$.asignado_a') = ?
+                WHERE (
+                    e.asignado_a = ? OR 
+                    JSON_EXTRACT(e.observaciones, '$.asignado_a') = ?
+                )
                 ORDER BY 
                     CASE e.prioridad 
                         WHEN 'high' THEN 1 
@@ -215,7 +238,7 @@ class Task extends BaseModel {
                     e.fecha_limite ASC
             `;
             
-            const [rows] = await this.db.execute(query, [userId]);
+            const [rows] = await this.db.execute(query, [userId, userId]);
             return rows;
         } catch (error) {
             throw new Error(`Error getting assigned tasks: ${error.message}`);
@@ -479,6 +502,7 @@ class Task extends BaseModel {
             const query = `
                 SELECT 
                     e.*,
+                    e.archivos_adjuntos,
                     p.titulo as proyecto_titulo,
                     fp.nombre as fase_nombre,
                     ua.nombres as asignado_nombres,
@@ -487,7 +511,12 @@ class Task extends BaseModel {
                 FROM entregables e
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
-                LEFT JOIN usuarios ua ON e.asignado_a = ua.id
+                LEFT JOIN usuarios ua ON (
+                    ua.id = COALESCE(
+                        e.asignado_a, 
+                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                    )
+                )
                 WHERE e.id = ?
             `;
             
@@ -499,10 +528,19 @@ class Task extends BaseModel {
                 // Parsear archivos adjuntos si existen
                 if (task.archivos_adjuntos) {
                     try {
-                        task.archivos_adjuntos = JSON.parse(task.archivos_adjuntos);
+                        // Si ya es un objeto/array, usarlo directamente
+                        if (typeof task.archivos_adjuntos === 'object') {
+                            // Ya es un objeto, no necesita parsing
+                            task.archivos_adjuntos = task.archivos_adjuntos;
+                        } else {
+                            // Es una cadena, necesita parsing
+                            task.archivos_adjuntos = JSON.parse(task.archivos_adjuntos);
+                        }
                     } catch (e) {
                         task.archivos_adjuntos = [];
                     }
+                } else {
+                    task.archivos_adjuntos = [];
                 }
                 
                 return task;
@@ -524,11 +562,20 @@ class Task extends BaseModel {
                     fp.nombre as fase_nombre,
                     ua.nombres as asignado_nombres,
                     ua.apellidos as asignado_apellidos,
-                    ua.foto_perfil as asignado_foto
+                    ua.foto_perfil as asignado_foto,
+                    COALESCE(
+                        e.asignado_a, 
+                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                    ) as usuario_asignado_id
                 FROM entregables e
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
-                LEFT JOIN usuarios ua ON e.asignado_a = ua.id
+                LEFT JOIN usuarios ua ON (
+                    ua.id = COALESCE(
+                        e.asignado_a, 
+                        JSON_UNQUOTE(JSON_EXTRACT(e.observaciones, '$.asignado_a'))
+                    )
+                )
                 WHERE e.proyecto_id = ?
                 ORDER BY e.created_at DESC
             `;

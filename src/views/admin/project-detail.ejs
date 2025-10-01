@@ -156,51 +156,31 @@
             min-width: 0;
         }
 
-        /* Breadcrumb integrado */
-        .header-breadcrumb {
+        /* Navegación de retroceso */
+        .back-navigation {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 18px;
-            border-radius: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .breadcrumb-link {
+        .back-arrow {
             color: #667eea;
             text-decoration: none;
-            font-weight: 500;
-            padding: 6px 12px;
+            font-size: 18px;
+            padding: 10px 14px;
             border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .breadcrumb-link:hover {
-            background: rgba(102, 126, 234, 0.15);
-            color: #764ba2;
-            transform: translateY(-1px);
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.3);
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
         }
 
-        .breadcrumb-separator {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .breadcrumb-current {
-            color: #2c3e50;
-            font-weight: 700;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.25);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        .back-arrow:hover {
+            color: #764ba2;
+            background: white;
+            transform: translateX(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border-color: #764ba2;
         }
 
         /* Acciones rápidas */
@@ -1652,11 +1632,11 @@
                     <i class="fas fa-project-diagram"></i>
                     Admin Panel
                 </div>
-                <!-- Breadcrumb integrado en el header -->
-                <nav class="header-breadcrumb">
-                    <span class="breadcrumb-current">
-                        <%= project.nombre %>
-                    </span>
+                <!-- Navegación de retroceso -->
+                <nav class="back-navigation">
+                    <a href="/admin/projects" class="back-arrow" title="Volver a proyectos">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
                 </nav>
             </div>
             <div class="header-right">
@@ -1993,7 +1973,7 @@
                                         <%= member.rol_nombre %>
                                     </span>
                                 </td>
-                                <td><%= new Date(member.fecha_union).toLocaleDateString('es-ES') %></td>
+                                <td><%= member.fecha_asignacion ? new Date(member.fecha_asignacion).toLocaleDateString('es-ES') : 'No disponible' %></td>
                                 <td>
                                     <span class="status-badge status-active">Activo</span>
                                 </td>
@@ -3992,7 +3972,9 @@
             const taskDescription = task.descripcion || task.description || 'Sin descripción';
             const taskPriority = task.prioridad || task.priority || 'No definida';
             const taskStatus = task.estado || task.estado_workflow || task.status || 'No definido';
-            const taskAssignee = task.asignado_a || task.assignee || task.assigned_to || 'Sin asignar';
+            const taskAssignee = (task.asignado_nombres && task.asignado_apellidos) ? 
+                `${task.asignado_nombres} ${task.asignado_apellidos}` : 
+                (task.asignado_nombres || 'Sin asignar');
             const taskDueDate = task.fecha_vencimiento || task.due_date || task.fecha_limite;
             const taskCreatedDate = task.fecha_creacion || task.created_at || task.fecha_inicio;
 
@@ -4051,10 +4033,7 @@
                                     <div>
                                         <strong style="color: #495057;">Asignado a:</strong><br>
                                         <span style="color: #6c757d;">
-                                            ${task.asignado_nombres ? 
-                                                `${safeString(task.asignado_nombres)} ${safeString(task.asignado_apellidos || '')}` : 
-                                                safeString(taskAssignee)
-                                            }
+                                            ${safeString(taskAssignee)}
                                         </span>
                                     </div>
                                     <div>

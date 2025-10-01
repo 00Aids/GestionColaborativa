@@ -480,7 +480,51 @@
     </div>
 
     <script>
+        // Función para calcular prioridad automáticamente basándose en la fecha límite
+        function calculateAutomaticPriority(fechaLimite) {
+            if (!fechaLimite) return 'medium'; // Valor por defecto si no hay fecha
+            
+            const today = new Date();
+            const dueDate = new Date(fechaLimite);
+            const diffTime = dueDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
+            if (diffDays <= 7) {
+                return 'high';   // 1 semana o menos = prioridad alta
+            } else if (diffDays <= 14) {
+                return 'medium'; // Entre 1 y 2 semanas = prioridad media
+            } else {
+                return 'low';    // Más de 2 semanas = prioridad baja
+            }
+        }
+
+        // Actualizar prioridad cuando cambie la fecha límite
+        function updatePriorityBasedOnDate() {
+            const fechaLimiteInput = document.getElementById('fecha_limite');
+            const prioridadSelect = document.getElementById('prioridad');
+            
+            if (fechaLimiteInput.value) {
+                const calculatedPriority = calculateAutomaticPriority(fechaLimiteInput.value);
+                prioridadSelect.value = calculatedPriority;
+                
+                // Mostrar indicador visual de que la prioridad fue calculada automáticamente
+                const priorityLabel = document.querySelector('label[for="prioridad"]');
+                if (!priorityLabel.querySelector('.auto-calculated')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'auto-calculated';
+                    indicator.style.cssText = 'color: #667eea; font-size: 12px; margin-left: 5px;';
+                    indicator.textContent = '(calculada automáticamente)';
+                    priorityLabel.appendChild(indicator);
+                }
+            } else {
+                // Remover indicador si no hay fecha
+                const indicator = document.querySelector('.auto-calculated');
+                if (indicator) {
+                    indicator.remove();
+                }
+                prioridadSelect.value = 'medium'; // Valor por defecto
+            }
+        }
 
         // Validación del formulario
         document.querySelector('form').addEventListener('submit', function(e) {
@@ -517,11 +561,19 @@
             }
         });
 
-        // Configurar fecha mínima para fecha límite
+        // Configurar fecha mínima para fecha límite y event listeners
         document.addEventListener('DOMContentLoaded', function() {
             const fechaLimiteInput = document.getElementById('fecha_limite');
             const hoy = new Date().toISOString().split('T')[0];
             fechaLimiteInput.min = hoy;
+            
+            // Agregar event listener para calcular prioridad automáticamente
+            fechaLimiteInput.addEventListener('change', updatePriorityBasedOnDate);
+            
+            // También calcular al cargar la página si ya hay una fecha seleccionada
+            if (fechaLimiteInput.value) {
+                updatePriorityBasedOnDate();
+            }
         });
     </script>
 </body>
