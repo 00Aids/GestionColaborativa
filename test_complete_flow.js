@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 const fs = require('fs');
 const path = require('path');
 
@@ -243,3 +244,187 @@ if (require.main === module) {
 }
 
 module.exports = testCompleteFlow;
+=======
+const http = require('http');
+const querystring = require('querystring');
+
+// Función para hacer peticiones HTTP con cookies
+function makeRequest(options, postData = null) {
+    return new Promise((resolve, reject) => {
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            
+            res.on('end', () => {
+                resolve({
+                    statusCode: res.statusCode,
+                    headers: res.headers,
+                    data: data
+                });
+            });
+        });
+        
+        req.on('error', (err) => {
+            reject(err);
+        });
+        
+        if (postData) {
+            req.write(postData);
+        }
+        req.end();
+    });
+}
+
+// Función para extraer cookies de la respuesta
+function extractCookies(headers) {
+    const cookies = headers['set-cookie'];
+    if (!cookies) return '';
+    
+    return cookies.map(cookie => cookie.split(';')[0]).join('; ');
+}
+
+async function testCompleteFlow() {
+    console.log('🧪 Testing Complete Login + Task Creation Flow...\n');
+    
+    let sessionCookie = '';
+    
+    try {
+        // PASO 1: Hacer login
+        console.log('🔐 STEP 1: Login');
+        const loginData = querystring.stringify({
+            email: 'nuevoadmin@test.com',
+            password: 'admin123'
+        });
+        
+        const loginOptions = {
+            hostname: 'localhost',
+            port: 3000,
+            path: '/auth/login',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(loginData)
+            }
+        };
+        
+        const loginResponse = await makeRequest(loginOptions, loginData);
+        console.log(`   Status: ${loginResponse.statusCode}`);
+        console.log(`   Redirect: ${loginResponse.headers.location || 'None'}`);
+        
+        // Extraer cookies de sesión
+        sessionCookie = extractCookies(loginResponse.headers);
+        console.log(`   Session Cookie: ${sessionCookie ? 'Obtained' : 'Not found'}`);
+        
+        if (loginResponse.statusCode !== 302) {
+            console.log('❌ Login failed - unexpected status code');
+            return;
+        }
+        
+        // PASO 2: Verificar acceso a la página de creación de tareas
+        console.log('\n📄 STEP 2: Access Task Creation Page');
+        const pageOptions = {
+            hostname: 'localhost',
+            port: 3000,
+            path: '/admin/projects/35/tasks/new',
+            method: 'GET',
+            headers: {
+                'Cookie': sessionCookie
+            }
+        };
+        
+        const pageResponse = await makeRequest(pageOptions);
+        console.log(`   Status: ${pageResponse.statusCode}`);
+        console.log(`   Redirect: ${pageResponse.headers.location || 'None'}`);
+        
+        if (pageResponse.statusCode === 302 && pageResponse.headers.location === '/auth/login') {
+            console.log('❌ Still redirecting to login - session not working');
+            return;
+        } else if (pageResponse.statusCode === 200) {
+            console.log('✅ Successfully accessed task creation page');
+        }
+        
+        // PASO 3: Enviar formulario de creación de tarea
+        console.log('\n📝 STEP 3: Submit Task Creation Form');
+        const taskData = querystring.stringify({
+            titulo: 'Tarea de Prueba - Flujo Completo',
+            descripcion: 'Esta tarea fue creada usando el flujo completo de login + creación',
+            prioridad: 'high',
+            fase_id: '1',
+            fecha_limite: '2024-12-31',
+            asignado_a: '',
+            estimacion_horas: '3',
+            etiquetas: 'prueba,flujo-completo',
+            estado_workflow: 'todo'
+        });
+        
+        const taskOptions = {
+            hostname: 'localhost',
+            port: 3000,
+            path: '/admin/projects/35/tasks',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(taskData),
+                'Cookie': sessionCookie
+            }
+        };
+        
+        const taskResponse = await makeRequest(taskOptions, taskData);
+        console.log(`   Status: ${taskResponse.statusCode}`);
+        console.log(`   Redirect: ${taskResponse.headers.location || 'None'}`);
+        
+        if (taskResponse.statusCode === 302) {
+            if (taskResponse.headers.location && taskResponse.headers.location.includes('kanban')) {
+                console.log('✅ SUCCESS: Task created and redirected to Kanban!');
+            } else if (taskResponse.headers.location === '/auth/login') {
+                console.log('❌ FAILURE: Still redirecting to login');
+            } else {
+                console.log(`⚠️  Redirected to: ${taskResponse.headers.location}`);
+            }
+        } else {
+            console.log(`❌ Unexpected status: ${taskResponse.statusCode}`);
+        }
+        
+        // PASO 4: Verificar en la base de datos
+        console.log('\n🔍 STEP 4: Verify in Database');
+        await checkTaskInDatabase();
+        
+    } catch (error) {
+        console.error('❌ Error in flow:', error.message);
+    }
+}
+
+// Función para verificar la tarea en la base de datos
+async function checkTaskInDatabase() {
+    const mysql = require('mysql2/promise');
+    
+    try {
+        const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: 'root',
+            database: 'gestion_academica'
+        });
+        
+        const [rows] = await connection.execute(
+            'SELECT * FROM entregables WHERE proyecto_id = ? ORDER BY created_at DESC LIMIT 3',
+            [35]
+        );
+        
+        console.log(`   Found ${rows.length} recent tasks for project 35:`);
+        rows.forEach((task, index) => {
+            console.log(`   ${index + 1}. ID: ${task.id}, Title: "${task.titulo}", Status: ${task.estado_workflow}`);
+        });
+        
+        await connection.end();
+        
+    } catch (error) {
+        console.error('   Database Error:', error.message);
+    }
+}
+
+// Ejecutar el flujo completo
+testCompleteFlow();
+>>>>>>> Stashed changes

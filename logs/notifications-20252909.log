@@ -1,0 +1,36 @@
+[lun 29/09/2025 23:51:48,10] ==================== INICIO NOTIFICACIONES ==================== 
+[lun 29/09/2025 23:51:48,10] Iniciando verificación de notificaciones de entregables... 
+🚀 Iniciando verificación de notificaciones de entregables...
+📅 Fecha: 29/9/2025, 11:51:48 p. m.
+🔍 Verificando entregables próximos a vencer...
+✅ Procesados 0 entregables próximos a vencer
+🔍 Verificando entregables vencidos...
+✅ Notificaciones de vencimiento enviadas para entregable 7
+✅ Notificaciones de vencimiento enviadas para entregable 8
+✅ Notificaciones de vencimiento enviadas para entregable 10
+✅ Notificaciones de vencimiento enviadas para entregable 11
+✅ Notificaciones de vencimiento enviadas para entregable 12
+✅ Notificaciones de vencimiento enviadas para entregable 17
+✅ Procesados 6 entregables vencidos
+🔍 Verificando entregables pendientes de revisión...
+Error notifying deliverable submission: TypeError: this.projectModel.findByIdWithDetails is not a function
+    at DeliverableNotificationService.notifyDeliverableSubmitted (C:\Users\josti\Desktop\GestionColaborativa\src\services\DeliverableNotificationService.js:18:57)
+    at DeliverableNotificationScript.checkPendingReviews (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:144:52)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DeliverableNotificationScript.runAllChecks (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:164:9)
+Error notifying deliverable submission: TypeError: this.projectModel.findByIdWithDetails is not a function
+    at DeliverableNotificationService.notifyDeliverableSubmitted (C:\Users\josti\Desktop\GestionColaborativa\src\services\DeliverableNotificationService.js:18:57)
+    at DeliverableNotificationScript.checkPendingReviews (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:144:52)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DeliverableNotificationScript.runAllChecks (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:164:9)
+Error notifying deliverable submission: TypeError: this.projectModel.findByIdWithDetails is not a function
+    at DeliverableNotificationService.notifyDeliverableSubmitted (C:\Users\josti\Desktop\GestionColaborativa\src\services\DeliverableNotificationService.js:18:57)
+    at DeliverableNotificationScript.checkPendingReviews (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:144:52)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DeliverableNotificationScript.runAllChecks (C:\Users\josti\Desktop\GestionColaborativa\src\scripts\deliverable-notifications.js:164:9)
+✅ Procesados 3 entregables pendientes de revisión
+✅ Verificación de notificaciones completada
+🎉 Script ejecutado exitosamente
+[lun 29/09/2025 23:51:48,47] Notificaciones procesadas exitosamente 
+[lun 29/09/2025 23:51:48,47] ==================== FIN NOTIFICACIONES ==================== 
+ 

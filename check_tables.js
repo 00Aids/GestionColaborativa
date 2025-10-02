@@ -1,10 +1,11 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 // Configuración de la base de datos
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: '',
+  password: 'root',
   database: 'gestion_academica'
 };
 

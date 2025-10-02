@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - Sistema de Gestión</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/student.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .deliverable-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .detail-header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .detail-title {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-pendiente { background: #fff3cd; color: #856404; }
+        .status-en-progreso { background: #d1ecf1; color: #0c5460; }
+        .status-entregado { background: #d4edda; color: #155724; }
+        .status-aprobado { background: #d4edda; color: #155724; }
+        .status-rechazado { background: #f8d7da; color: #721c24; }
+        
+        .overdue-badge {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .detail-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .detail-item {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .files-section {
+            grid-column: 1 / -1;
+        }
+        
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .file-item {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-item:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+        
+        .file-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        
+        .file-size {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .no-files {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .back-button {
+            background: #6c757d;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .content-section {
+            grid-column: 1 / -1;
+        }
+        
+        .content-text {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .deliverable-detail-container {
+                padding: 15px;
+            }
+            
+            .detail-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="deliverable-detail-container">
+        <!-- Mensajes -->
+        <% if (success && success.length > 0) { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <%= success %>
+            </div>
+        <% } %>
+        
+        <% if (error && error.length > 0) { %>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> <%= error %>
+            </div>
+        <% } %>
+        
+        <!-- Header del entregable -->
+        <div class="detail-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <h1 class="detail-title">
+                    <i class="fas fa-file-alt"></i>
+                    <%= deliverable.titulo %>
+                </h1>
+                <a href="/student/deliverables" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Entregables
+                </a>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="status-badge status-<%= deliverable.estado.toLowerCase().replace(' ', '-') %>">
+                    <%= deliverable.estado %>
+                </span>
+                <% if (deliverable.isOverdue) { %>
+                    <span class="overdue-badge">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Vencido hace <%= Math.abs(deliverable.diasRestantes) %> día<%= Math.abs(deliverable.diasRestantes) !== 1 ? 's' : '' %>
+                    </span>
+                <% } else if (deliverable.diasRestantes >= 0) { %>
+                    <span style="color: #28a745; font-weight: 600;">
+                        <i class="fas fa-clock"></i>
+                        <%= deliverable.diasRestantes %> día<%= deliverable.diasRestantes !== 1 ? 's' : '' %> restante<%= deliverable.diasRestantes !== 1 ? 's' : '' %>
+                    </span>
+                <% } %>
+            </div>
+        </div>
+        
+        <!-- Grid de información -->
+        <div class="detail-grid">
+            <!-- Información General -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Información General
+                </h3>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Descripción:</span>
+                    <span class="detail-value"><%= deliverable.descripcion || 'Sin descripción' %></span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Fecha límite:</span>
+                    <span class="detail-value">
+                        <%= new Date(deliverable.fecha_limite).toLocaleDateString('es-ES', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %>
+                    </span>
+                </div>
+                
+                <% if (deliverable.fecha_entrega) { %>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha de entrega:</span>
+                        <span class="detail-value">
+                            <%= new Date(deliverable.fecha_entrega).toLocaleDateString('es-ES', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) %>
+                        </span>
+                    </div>
+                <% } %>
+                
+                <% if (deliverable.fase_nombre) { %>
+                    <div class="detail-item">
+                        <span class="detail-label">Fase:</span>
+                        <span class="detail-value"><%= deliverable.fase_nombre %></span>
+                    </div>
+                <% } %>
+            </div>
+            
+            <!-- Información del Proyecto -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <i class="fas fa-project-diagram"></i>
+                    Información del Proyecto
+                </h3>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Proyecto:</span>
+                    <span class="detail-value"><%= deliverable.proyecto_titulo || 'No especificado' %></span>
+                </div>
+                
+                <% if (deliverable.director_nombres) { %>
+                    <div class="detail-item">
+                        <span class="detail-label">Director:</span>
+                        <span class="detail-value"><%= deliverable.director_nombres %> <%= deliverable.director_apellidos %></span>
+                    </div>
+                <% } %>
+                
+                <% if (deliverable.area_trabajo_nombre) { %>
+                    <div class="detail-item">
+                        <span class="detail-label">Área de trabajo:</span>
+                        <span class="detail-value"><%= deliverable.area_trabajo_nombre %></span>
+                    </div>
+                <% } %>
+            </div>
+            
+            <!-- Contenido del entregable -->
+            <% if (deliverable.contenido) { %>
+                <div class="detail-section content-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-align-left"></i>
+                        Contenido del Entregable
+                    </h3>
+                    <div class="content-text"><%= deliverable.contenido %></div>
+                </div>
+            <% } %>
+            
+            <!-- Archivos adjuntos -->
+            <div class="detail-section files-section">
+                <h3 class="section-title">
+                    <i class="fas fa-paperclip"></i>
+                    Archivos Adjuntos
+                </h3>
+                
+                <% if (deliverable.archivo_url && deliverable.archivo_url.trim()) { %>
+                    <div class="files-grid">
+                        <% 
+                        const files = deliverable.archivo_url.split(',').filter(file => file.trim());
+                        files.forEach(file => {
+                            const fileName = file.split('/').pop();
+                            const fileExtension = fileName.split('.').pop().toLowerCase();
+                            let fileIcon = 'fas fa-file';
+                            
+                            // Determinar el icono según la extensión
+                            if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-image';
+                            } else if (['pdf'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-pdf';
+                            } else if (['doc', 'docx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-word';
+                            } else if (['xls', 'xlsx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-excel';
+                            } else if (['ppt', 'pptx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-powerpoint';
+                            } else if (['zip', 'rar', '7z'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-archive';
+                            }
+                        %>
+                            <div class="file-item" onclick="window.open('<%= file %>', '_blank')">
+                                <div class="file-icon">
+                                    <i class="<%= fileIcon %>"></i>
+                                </div>
+                                <div class="file-name"><%= fileName %></div>
+                                <div class="file-size">
+                                    <i class="fas fa-download"></i> Descargar
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="no-files">
+                        <i class="fas fa-folder-open" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                        <p>No hay archivos adjuntos en este entregable</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
