@@ -289,10 +289,10 @@
                             <div class="list-item">
                                 <div>
                                     <strong><%= deliverable.titulo %></strong><br>
-                                    <small>Fecha: <%= new Date(deliverable.fecha_entrega).toLocaleDateString() %></small>
+                                    <small>Fecha límite: <%= new Date(deliverable.fecha_limite).toLocaleDateString() %></small>
                                 </div>
-                                <span class="status-badge status-<%= new Date(deliverable.fecha_entrega) < new Date() ? 'overdue' : 'pending' %>">
-                                    <%= new Date(deliverable.fecha_entrega) < new Date() ? 'Vencido' : 'Pendiente' %>
+                                <span class="status-badge status-<%= new Date(deliverable.fecha_limite) < new Date() ? 'overdue' : 'pending' %>">
+                                    <%= new Date(deliverable.fecha_limite) < new Date() ? 'Vencido' : 'Pendiente' %>
                                 </span>
                             </div>
                         <% }) %>

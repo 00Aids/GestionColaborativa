@@ -461,8 +461,8 @@ class Project extends BaseModel {
   async findProjectMember(projectId, userId) {
     try {
       const query = `
-        SELECT * FROM project_members 
-        WHERE proyecto_id = ? AND usuario_id = ? AND activo = 1
+        SELECT * FROM proyecto_usuarios 
+        WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'activo'
       `;
       
       const [rows] = await this.db.execute(query, [projectId, userId]);
