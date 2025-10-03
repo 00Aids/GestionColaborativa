@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %> - Sistema de Gestión Académica</title>
+    <title><%= typeof title !== 'undefined' ? title : 'Evaluaciones' %> - Sistema de Gestión Académica</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
@@ -382,7 +382,7 @@
                 Sistema de Gestión Académica
             </div>
             <div class="user-info">
-                <span>Bienvenido, <%= user.nombres %> <%= user.apellidos %></span>
+                <span>Bienvenido, <%= (typeof user !== 'undefined' && user) ? ((user.nombres || user.name || 'Director') + ' ' + (user.apellidos || '')) : 'Director' %></span>
                 <a href="/auth/logout" class="btn btn-outline" style="margin-left: 1rem;">
                     <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                 </a>
@@ -409,19 +409,19 @@
 
     <div class="dashboard-container">
         <!-- Mensajes Flash -->
-        <% if (success && success.length > 0) { %>
+        <% if (typeof success !== 'undefined' && success && success.length > 0) { %>
             <div class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <%= success %>
             </div>
         <% } %>
-        <% if (error && error.length > 0) { %>
+        <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i> <%= error %>
             </div>
         <% } %>
 
         <div class="dashboard-header">
-            <h1><i class="fas fa-clipboard-check"></i> <%= title %></h1>
+            <h1><i class="fas fa-clipboard-check"></i> <%= typeof title !== 'undefined' ? title : 'Evaluaciones' %></h1>
             <p class="text-muted">Revisa las evaluaciones de los proyectos bajo tu dirección</p>
         </div>
 
@@ -432,25 +432,25 @@
                     <div class="form-group">
                         <label for="search">Buscar evaluación</label>
                         <input type="text" id="search" name="search" class="form-control" 
-                               placeholder="Proyecto o estudiante..." value="<%= search || '' %>">
+                               placeholder="Proyecto o estudiante..." value="<%= typeof search !== 'undefined' ? search : '' %>">
                     </div>
                     <div class="form-group">
                         <label for="calificacion">Calificación</label>
                         <select id="calificacion" name="calificacion" class="form-control">
                             <option value="">Todas las calificaciones</option>
-                            <option value="excelente" <%= calificacion === 'excelente' ? 'selected' : '' %>>Excelente (4.5-5.0)</option>
-                            <option value="buena" <%= calificacion === 'buena' ? 'selected' : '' %>>Buena (3.5-4.4)</option>
-                            <option value="regular" <%= calificacion === 'regular' ? 'selected' : '' %>>Regular (2.5-3.4)</option>
-                            <option value="deficiente" <%= calificacion === 'deficiente' ? 'selected' : '' %>>Deficiente (0-2.4)</option>
+                            <option value="excelente" <%= (typeof calificacion !== 'undefined' && calificacion === 'excelente') ? 'selected' : '' %>>Excelente (4.5-5.0)</option>
+                            <option value="buena" <%= (typeof calificacion !== 'undefined' && calificacion === 'buena') ? 'selected' : '' %>>Buena (3.5-4.4)</option>
+                            <option value="regular" <%= (typeof calificacion !== 'undefined' && calificacion === 'regular') ? 'selected' : '' %>>Regular (2.5-3.4)</option>
+                            <option value="deficiente" <%= (typeof calificacion !== 'undefined' && calificacion === 'deficiente') ? 'selected' : '' %>>Deficiente (0-2.4)</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="proyecto">Proyecto</label>
                         <select id="proyecto" name="proyecto" class="form-control">
                             <option value="">Todos los proyectos</option>
-                            <% if (projects && projects.length > 0) { %>
+                            <% if (typeof projects !== 'undefined' && projects && projects.length > 0) { %>
                                 <% projects.forEach(project => { %>
-                                    <option value="<%= project.id %>" <%= proyecto == project.id ? 'selected' : '' %>>
+                                    <option value="<%= project.id %>" <%= (typeof proyecto !== 'undefined' && proyecto == project.id) ? 'selected' : '' %>>
                                         <%= project.titulo %>
                                     </option>
                                 <% }); %>
@@ -473,7 +473,7 @@
                     <i class="fas fa-clipboard-check"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><%= stats.total %></h3>
+                    <h3><%= (typeof stats !== 'undefined' && typeof stats.total !== 'undefined') ? stats.total : 0 %></h3>
                     <p>Total Evaluaciones</p>
                 </div>
             </div>
@@ -483,7 +483,7 @@
                     <i class="fas fa-star"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><%= stats.excelentes %></h3>
+                    <h3><%= (typeof stats !== 'undefined' && typeof stats.excelentes !== 'undefined') ? stats.excelentes : 0 %></h3>
                     <p>Excelentes</p>
                 </div>
             </div>
@@ -493,7 +493,7 @@
                     <i class="fas fa-thumbs-up"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><%= stats.buenas %></h3>
+                    <h3><%= (typeof stats !== 'undefined' && typeof stats.buenas !== 'undefined') ? stats.buenas : 0 %></h3>
                     <p>Buenas</p>
                 </div>
             </div>
@@ -503,7 +503,7 @@
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><%= stats.deficientes %></h3>
+                    <h3><%= (typeof stats !== 'undefined' && typeof stats.deficientes !== 'undefined') ? stats.deficientes : 0 %></h3>
                     <p>Deficientes</p>
                 </div>
             </div>
@@ -513,7 +513,7 @@
                     <i class="fas fa-calculator"></i>
                 </div>
                 <div class="stat-content">
-                    <h3><%= stats.promedio %></h3>
+                    <h3><%= (typeof stats !== 'undefined' && typeof stats.promedio !== 'undefined') ? stats.promedio : 0 %></h3>
                     <p>Promedio General</p>
                 </div>
             </div>
@@ -521,12 +521,12 @@
 
         <!-- Grid de Evaluaciones -->
         <div class="evaluations-grid">
-            <% if (evaluations.length === 0) { %>
+            <% if (!Array.isArray(evaluations) || evaluations.length === 0) { %>
                 <div class="empty-state">
                     <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
                     <h3>No hay evaluaciones</h3>
                     <p class="text-muted">
-                        <% if (search || calificacion || proyecto) { %>
+                        <% if ((typeof search !== 'undefined' && search) || (typeof calificacion !== 'undefined' && calificacion) || (typeof proyecto !== 'undefined' && proyecto)) { %>
                             No se encontraron evaluaciones que coincidan con los filtros aplicados.
                         <% } else { %>
                             Aún no hay evaluaciones para tus proyectos dirigidos.
@@ -601,9 +601,15 @@
                                 <span>Evaluado: <%= evaluation.fecha_evaluacion ? new Date(evaluation.fecha_evaluacion).toLocaleDateString('es-ES') : 'Fecha no disponible' %></span>
                             </div>
                             <div class="evaluation-actions">
-                                <a href="/evaluations/<%= evaluation.id %>" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-eye"></i> Ver Detalles
-                                </a>
+                                <% if (evaluation.proyecto_id) { %>
+                                    <a href="/director/projects/<%= evaluation.proyecto_id %>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye"></i> Ver Proyecto
+                                    </a>
+                                <% } else { %>
+                                    <a href="/director/evaluations" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye"></i> Listado de Evaluaciones
+                                    </a>
+                                <% } %>
                                 <% if (evaluation.proyecto_id) { %>
                                     <a href="/director/projects/<%= evaluation.proyecto_id %>" class="btn btn-outline btn-sm">
                                         <i class="fas fa-project-diagram"></i> Ver Proyecto
@@ -617,24 +623,24 @@
         </div>
 
         <!-- Paginación -->
-        <% if (totalPages > 1) { %>
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
             <div class="pagination">
-                <% if (currentPage > 1) { %>
-                    <a href="?page=<%= currentPage - 1 %><%= search ? '&search=' + search : '' %><%= calificacion ? '&calificacion=' + calificacion : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>">
+                <% if (typeof currentPage !== 'undefined' && currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + search : '' %><%= (typeof calificacion !== 'undefined' && calificacion) ? '&calificacion=' + calificacion : '' %><%= (typeof proyecto !== 'undefined' && proyecto) ? '&proyecto=' + proyecto : '' %>">
                         <i class="fas fa-chevron-left"></i> Anterior
                     </a>
                 <% } %>
                 
                 <% for (let i = 1; i <= totalPages; i++) { %>
-                    <% if (i === currentPage) { %>
+                    <% if (typeof currentPage !== 'undefined' && i === currentPage) { %>
                         <span class="current"><%= i %></span>
                     <% } else { %>
-                        <a href="?page=<%= i %><%= search ? '&search=' + search : '' %><%= calificacion ? '&calificacion=' + calificacion : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>"><%= i %></a>
+                        <a href="?page=<%= i %><%= (typeof search !== 'undefined' && search) ? '&search=' + search : '' %><%= (typeof calificacion !== 'undefined' && calificacion) ? '&calificacion=' + calificacion : '' %><%= (typeof proyecto !== 'undefined' && proyecto) ? '&proyecto=' + proyecto : '' %>"><%= i %></a>
                     <% } %>
                 <% } %>
                 
-                <% if (currentPage < totalPages) { %>
-                    <a href="?page=<%= currentPage + 1 %><%= search ? '&search=' + search : '' %><%= calificacion ? '&calificacion=' + calificacion : '' %><%= proyecto ? '&proyecto=' + proyecto : '' %>">
+                <% if (typeof currentPage !== 'undefined' && typeof totalPages !== 'undefined' && currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %><%= (typeof search !== 'undefined' && search) ? '&search=' + search : '' %><%= (typeof calificacion !== 'undefined' && calificacion) ? '&calificacion=' + calificacion : '' %><%= (typeof proyecto !== 'undefined' && proyecto) ? '&proyecto=' + proyecto : '' %>">
                         Siguiente <i class="fas fa-chevron-right"></i>
                     </a>
                 <% } %>

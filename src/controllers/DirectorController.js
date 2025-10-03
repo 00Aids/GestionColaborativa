@@ -175,7 +175,7 @@ class DirectorController {
   async evaluations(req, res) {
     try {
       const user = req.session.user;
-      const { estado, proyecto, page = 1 } = req.query;
+      const { estado, proyecto, calificacion, search, page = 1 } = req.query;
       const limit = 15;
       const offset = (page - 1) * limit;
 
@@ -193,6 +193,8 @@ class DirectorController {
           totalPages: 0,
           estado,
           proyecto,
+          calificacion,
+          search,
           success: req.flash('success'),
           error: req.flash('error')
         });
@@ -221,6 +223,33 @@ class DirectorController {
       if (proyecto) {
         allEvaluations = allEvaluations.filter(e => e.proyecto_id == proyecto);
       }
+      if (calificacion) {
+        // Filtrar por rango de calificación
+        let min = 0, max = 5;
+        switch (calificacion) {
+          case 'excelente':
+            min = 4.5; max = 5.0; break;
+          case 'buena':
+            min = 3.5; max = 4.4; break;
+          case 'regular':
+            min = 2.5; max = 3.4; break;
+          case 'deficiente':
+            min = 0.0; max = 2.4; break;
+        }
+        allEvaluations = allEvaluations.filter(e => {
+          const grade = Number(e.calificacion);
+          return !Number.isNaN(grade) && grade >= min && grade <= max;
+        });
+      }
+      if (search) {
+        const term = String(search).toLowerCase();
+        allEvaluations = allEvaluations.filter(e => {
+          const proyectoTitulo = (e.proyecto_titulo || '').toLowerCase();
+          const estudianteNombre = ((e.estudiante_nombres || '') + ' ' + (e.estudiante_apellidos || '')).toLowerCase();
+          const entregableTitulo = (e.entregable_titulo || '').toLowerCase();
+          return proyectoTitulo.includes(term) || estudianteNombre.includes(term) || entregableTitulo.includes(term);
+        });
+      }
 
       // Ordenar por fecha de evaluación más reciente
       allEvaluations.sort((a, b) => new Date(b.fecha_evaluacion) - new Date(a.fecha_evaluacion));
@@ -247,6 +276,8 @@ class DirectorController {
         totalPages,
         estado,
         proyecto,
+        calificacion,
+        search,
         success: req.flash('success'),
         error: req.flash('error')
       });
