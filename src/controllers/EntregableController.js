@@ -18,19 +18,34 @@ class EntregableController {
     try {
       const user = req.session.user;
       
-      // Obtener el área de trabajo del coordinador para las estadísticas
+      // Obtener el área de trabajo del coordinador (si existe)
       const userAreas = await this.userModel.getUserAreas(user.id);
-      if (!userAreas || userAreas.length === 0) {
-        req.flash('error', 'No tienes un área de trabajo asignada');
-        return res.redirect('/dashboard/coordinator');
-      }
-
-      const areaTrabajoId = userAreas[0].area_trabajo_id;
+      const areaTrabajoId = (userAreas && userAreas.length > 0) ? userAreas[0].area_trabajo_id : null;
       
       // Obtener entregables de proyectos asignados al coordinador
       const deliverables = await this.entregableModel.findByCoordinatorForReview(user.id);
       
-      const areaStats = await this.entregableModel.getWorkflowSummary(areaTrabajoId);
+      // Calcular estadísticas del workflow
+      let areaStats;
+      if (areaTrabajoId) {
+        areaStats = await this.entregableModel.getWorkflowSummary(areaTrabajoId);
+      } else {
+        // Fallback: calcular estadísticas basadas en los entregables del coordinador
+        const now = new Date();
+        areaStats = {
+          total: deliverables.length,
+          pendientes: deliverables.filter(d => d.estado === 'pendiente').length,
+          en_progreso: deliverables.filter(d => d.estado === 'en_progreso').length,
+          entregados: deliverables.filter(d => d.estado === 'entregado').length,
+          aprobados: deliverables.filter(d => ['aprobado','aceptado'].includes(d.estado)).length,
+          requiere_cambios: deliverables.filter(d => d.estado === 'requiere_cambios').length,
+          vencidos: deliverables.filter(d => {
+            if (!d.fecha_limite) return false;
+            const limite = new Date(d.fecha_limite);
+            return limite < now && !['aprobado','aceptado','completado','rechazado'].includes(d.estado);
+          }).length
+        };
+      }
       
       // Organizar entregables por estado
       const deliverablesByStatus = {
@@ -235,9 +250,11 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso usando el area_trabajo_id del proyecto
+      // Verificar acceso: por área o por membresía activa en el proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
+      const hasAreaAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
+      const isProjectMember = await this.projectModel.findProjectMember(deliverable.proyecto_id, user.id);
+      const hasAccess = hasAreaAccess || !!isProjectMember;
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -301,7 +318,9 @@ class EntregableController {
       }
 
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
+      const hasAreaAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
+      const isProjectMember = await this.projectModel.findProjectMember(deliverable.proyecto_id, user.id);
+      const hasAccess = hasAreaAccess || !!isProjectMember;
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -349,9 +368,11 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso usando el area_trabajo_id del proyecto
+      // Verificar acceso: por área o por membresía activa en el proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
+      const hasAreaAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
+      const isProjectMember = await this.projectModel.findProjectMember(deliverable.proyecto_id, user.id);
+      const hasAccess = hasAreaAccess || !!isProjectMember;
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -406,9 +427,13 @@ class EntregableController {
         });
       }
 
-      // Verificar acceso
+      // Verificar acceso: por área del proyecto o por membresía activa en el proyecto
+      const project = await this.projectModel.findById(deliverable.proyecto_id);
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === deliverable.area_trabajo_id);
+      const targetAreaId = project ? project.area_trabajo_id : deliverable.area_trabajo_id;
+      const hasAreaAccess = userAreas.some(area => area.area_trabajo_id === targetAreaId) || user.area_trabajo_id === targetAreaId;
+      const isProjectMember = await this.projectModel.findProjectMember(deliverable.proyecto_id, user.id);
+      const hasAccess = hasAreaAccess || !!isProjectMember;
       
       if (!hasAccess) {
         return res.status(403).json({
@@ -478,9 +503,11 @@ class EntregableController {
         return res.redirect('/coordinator/deliverables');
       }
 
-      // Verificar acceso usando el area_trabajo_id del proyecto
+      // Verificar acceso: por área o por membresía activa en el proyecto
       const userAreas = await this.userModel.getUserAreas(user.id);
-      const hasAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id);
+      const hasAreaAccess = userAreas.some(area => area.area_trabajo_id === project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
+      const isProjectMember = await this.projectModel.findProjectMember(deliverable.proyecto_id, user.id);
+      const hasAccess = hasAreaAccess || !!isProjectMember;
       
       if (!hasAccess) {
         req.flash('error', 'No tienes permisos para ver este entregable');

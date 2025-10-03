@@ -1594,6 +1594,62 @@ class AdminController {
     }
   }
 
+  // Remover miembro de un proyecto
+  async removeMember(req, res) {
+    try {
+      const user = req.session.user;
+      const { projectId, userId } = req.params;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'No tienes permisos para realizar esta acción.' 
+        });
+      }
+
+      // Verificar que el proyecto existe
+      const project = await this.projectModel.findById(projectId);
+      if (!project) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Proyecto no encontrado.' 
+        });
+      }
+
+      // Verificar que el usuario es miembro del proyecto
+      const member = await this.projectModel.query(`
+        SELECT * FROM proyecto_usuarios 
+        WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'activo'
+      `, [projectId, userId]);
+
+      if (!member || member.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'El usuario no es miembro activo de este proyecto.' 
+        });
+      }
+
+      // Desactivar la membresía en lugar de eliminarla
+      await this.projectModel.query(`
+        UPDATE proyecto_usuarios 
+        SET estado = 'inactivo'
+        WHERE proyecto_id = ? AND usuario_id = ?
+      `, [projectId, userId]);
+
+      res.json({ 
+        success: true, 
+        message: 'Miembro removido exitosamente del proyecto.' 
+      });
+    } catch (error) {
+      console.error('Error removing project member:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error al remover el miembro del proyecto.' 
+      });
+    }
+  }
+
   // Mostrar página de detalles del proyecto (nueva función)
   async showProjectDetails(req, res) {
     try {

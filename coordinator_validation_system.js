@@ -134,6 +134,31 @@ class CoordinatorValidationSystem {
         }
       }
       
+      // ===== SINCRONIZACIÓN DE ÁREA =====
+      const projectAreaId = validation.project.area_trabajo_id;
+      if (projectAreaId) {
+        // Asegurar que el coordinador pertenezca al área del proyecto
+        const [belongsRows] = await pool.execute(
+          'SELECT 1 FROM usuario_areas_trabajo WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1',
+          [coordinatorId, projectAreaId]
+        );
+        if (belongsRows.length === 0) {
+          await pool.execute(
+            'INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, es_propietario, activo, created_at) VALUES (?, ?, 0, 0, 1, NOW())',
+            [coordinatorId, projectAreaId]
+          );
+          console.log(`✅ Coordinador ${coordinatorId} agregado al área de trabajo ${projectAreaId}`);
+        }
+        // Si el usuario no tiene área primaria, establecerla al área del proyecto
+        if (!validation.coordinator.area_trabajo_id) {
+          await pool.execute(
+            'UPDATE usuarios SET area_trabajo_id = ?, updated_at = NOW() WHERE id = ? AND area_trabajo_id IS NULL',
+            [projectAreaId, coordinatorId]
+          );
+          console.log(`✅ Establecida área primaria del coordinador ${coordinatorId} a ${projectAreaId}`);
+        }
+      }
+      
       // Realizar la asignación
       await pool.execute(`
         INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion, estado)

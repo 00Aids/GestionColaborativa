@@ -134,6 +134,9 @@ router.get('/invitations/stats/:projectId', adminController.getInvitationStats.b
 // API para obtener miembros de un proyecto
 router.get('/projects/:projectId/members', adminController.getProjectMembers.bind(adminController));
 
+// API para remover miembro de un proyecto
+router.delete('/projects/:projectId/members/:userId', adminController.removeMember.bind(adminController));
+
 // =============================================
 // RUTAS DE GESTIÓN DE LÍNEAS DE INVESTIGACIÓN
 // =============================================

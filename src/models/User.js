@@ -219,7 +219,18 @@ class User extends BaseModel {
       throw new Error(`Error assigning user to area: ${error.message}`);
     }
   }
-
+  
+  // Establecer área primaria del usuario si está vacía (NULL o 0)
+  async setPrimaryAreaIfEmpty(userId, areaId) {
+    try {
+      const query = `UPDATE usuarios SET area_trabajo_id = ?, updated_at = NOW() WHERE id = ? AND (area_trabajo_id IS NULL OR area_trabajo_id = 0)`;
+      const [result] = await this.db.execute(query, [areaId, userId]);
+      return result;
+    } catch (error) {
+      throw new Error(`Error setting primary area if empty: ${error.message}`);
+    }
+  }
+  
   // Remover usuario de área de trabajo
   async removeFromArea(userId, areaId) {
     try {

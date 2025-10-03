@@ -97,63 +97,9 @@ router.get('/api/projects/:projectId/deliverables', async (req, res) => {
 });
 
 // API para agregar comentario a entregable (como director)
-router.post('/api/deliverables/:deliverableId/comments', async (req, res) => {
-  try {
-    const deliverableId = req.params.deliverableId;
-    const { comentario } = req.body;
-    const user = req.session.user;
-    
-    // Verificar que el entregable pertenezca a un proyecto dirigido por este director
-    const deliverable = await entregableController.getDeliverableById(deliverableId);
-    if (!deliverable) {
-      return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
-    }
-    
-    const project = await directorController.getProjectById(deliverable.proyecto_id, user.id);
-    if (!project) {
-      return res.status(403).json({ success: false, message: 'No tienes permisos para comentar este entregable' });
-    }
-    
-    // Agregar comentario
-    await entregableController.addComment(deliverableId, user.id, comentario);
-    
-    res.json({ success: true, message: 'Comentario agregado exitosamente' });
-  } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ success: false, message: 'Error al agregar comentario' });
-  }
-});
+router.post('/api/deliverables/:deliverableId/comments', entregableController.addComment.bind(entregableController));
 
-// API para aprobar/rechazar entregable (como director)
-router.post('/api/deliverables/:deliverableId/review', async (req, res) => {
-  try {
-    const deliverableId = req.params.deliverableId;
-    const { accion, comentario } = req.body; // accion: 'aprobar' o 'rechazar'
-    const user = req.session.user;
-    
-    // Verificar que el entregable pertenezca a un proyecto dirigido por este director
-    const deliverable = await entregableController.getDeliverableById(deliverableId);
-    if (!deliverable) {
-      return res.status(404).json({ success: false, message: 'Entregable no encontrado' });
-    }
-    
-    const project = await directorController.getProjectById(deliverable.proyecto_id, user.id);
-    if (!project) {
-      return res.status(403).json({ success: false, message: 'No tienes permisos para revisar este entregable' });
-    }
-    
-    // Actualizar estado del entregable
-    const nuevoEstado = accion === 'aprobar' ? 'aprobado' : 'rechazado';
-    await entregableController.updateStatus(deliverableId, nuevoEstado, comentario, user.id);
-    
-    res.json({ 
-      success: true, 
-      message: `Entregable ${accion === 'aprobar' ? 'aprobado' : 'rechazado'} exitosamente` 
-    });
-  } catch (error) {
-    console.error('Error reviewing deliverable:', error);
-    res.status(500).json({ success: false, message: 'Error al revisar entregable' });
-  }
-});
+// API para revisar entregable (approve/reject/request_changes)
+router.post('/api/deliverables/:deliverableId/review', entregableController.updateDeliverableStatus.bind(entregableController));
 
 module.exports = router;

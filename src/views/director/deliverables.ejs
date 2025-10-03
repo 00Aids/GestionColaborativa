@@ -675,7 +675,7 @@
                         <% } %>
                         
                         <div class="deliverable-actions">
-                            <a href="/deliverables/<%= deliverable.id %>" class="btn btn-primary btn-sm">
+                            <a href="/director/projects/<%= deliverable.proyecto_id %>" class="btn btn-primary btn-sm">
                                 <i class="fas fa-eye"></i> Ver Detalles
                             </a>
                             
@@ -698,11 +698,14 @@
                         <!-- Acciones de revisión para entregables entregados -->
                         <% if (deliverable.estado === 'entregado' || deliverable.estado === 'en_revision') { %>
                             <div class="review-actions">
-                                <button class="btn btn-success btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'aprobado')">
+                                <button class="btn btn-success btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'approve')">
                                     <i class="fas fa-check"></i> Aprobar
                                 </button>
-                                <button class="btn btn-danger btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'rechazado')">
+                                <button class="btn btn-danger btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'reject')">
                                     <i class="fas fa-times"></i> Rechazar
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="reviewDeliverable('<%= deliverable.id %>', 'request_changes')">
+                                    <i class="fas fa-edit"></i> Solicitar Cambios
                                 </button>
                                 <button class="btn btn-warning btn-sm" onclick="addComment('<%= deliverable.id %>')">
                                     <i class="fas fa-comment"></i> Comentar
@@ -777,16 +780,31 @@
 
         // Función para revisar entregable
         function reviewDeliverable(deliverableId, action) {
-            if (!confirm(`¿Estás seguro de que deseas ${action === 'aprobado' ? 'aprobar' : 'rechazar'} este entregable?`)) {
+            let confirmActionLabel = '';
+            if (action === 'approve') confirmActionLabel = 'aprobar';
+            else if (action === 'reject') confirmActionLabel = 'rechazar';
+            else if (action === 'request_changes') confirmActionLabel = 'solicitar cambios';
+            else confirmActionLabel = 'procesar';
+
+            let observaciones = '';
+            if (action === 'request_changes') {
+                observaciones = prompt('Especifica las observaciones para solicitar cambios:');
+                if (!observaciones || !observaciones.trim()) {
+                    alert('Debes ingresar observaciones para solicitar cambios');
+                    return;
+                }
+            }
+
+            if (!confirm(`¿Estás seguro de que deseas ${confirmActionLabel} este entregable?`)) {
                 return;
             }
 
-            fetch(`/api/director/deliverables/${deliverableId}/review`, {
+            fetch(`/director/api/deliverables/${deliverableId}/review`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ action })
+                body: JSON.stringify({ action, observaciones })
             })
             .then(response => response.json())
             .then(data => {
@@ -856,7 +874,7 @@
                 return;
             }
 
-            fetch(`/api/director/deliverables/${currentDeliverableId}/comment`, {
+            fetch(`/director/api/deliverables/${currentDeliverableId}/comments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
