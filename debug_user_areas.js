@@ -3,7 +3,7 @@ const { pool } = require('./src/config/database');
 
 async function debugUserAreas() {
     try {
-        console.log('🔍 Verificando áreas del usuario s@test.com...\n');
+        console.log('🔍 Verificando áreas del usuario pruebagestion3@gmail.com...\n');
 
         // Obtener información básica del usuario
         const [userRows] = await pool.execute(`
@@ -11,7 +11,7 @@ async function debugUserAreas() {
             FROM usuarios u
             JOIN roles r ON u.rol_id = r.id
             WHERE u.email = ?
-        `, ['s@test.com']);
+        `, ['pruebagestion3@gmail.com']);
 
         if (userRows.length === 0) {
             console.log('❌ Usuario no encontrado');
@@ -51,6 +51,68 @@ async function debugUserAreas() {
             console.log(`   Primera área de getUserAreas: ${firstAreaId}`);
         } else {
             console.log('\n✅ Las áreas coinciden correctamente');
+        }
+
+        // 🔧 Corrección puntual si no tiene área primaria pero sí proyectos asignados
+        console.log('\n🔧 Intentando corregir área primaria y relación de área...');
+        if (!user.area_trabajo_id) {
+            // Buscar un proyecto donde el usuario participa y usar su área (proyecto_usuarios primero, luego project_members)
+            let targetAreaId = null;
+
+            const [assignedProjectsPU] = await pool.execute(`
+                SELECT p.id, p.titulo, p.area_trabajo_id
+                FROM proyectos p
+                JOIN proyecto_usuarios pu ON pu.proyecto_id = p.id
+                WHERE pu.usuario_id = ? AND pu.estado = 'activo' AND p.area_trabajo_id IS NOT NULL
+                ORDER BY p.id LIMIT 1
+            `, [user.id]);
+
+            if (assignedProjectsPU.length > 0) {
+                targetAreaId = assignedProjectsPU[0].area_trabajo_id;
+            } else {
+                const [assignedProjectsPM] = await pool.execute(`
+                    SELECT p.id, p.titulo, p.area_trabajo_id
+                    FROM proyectos p
+                    JOIN project_members pm ON pm.proyecto_id = p.id
+                    WHERE pm.usuario_id = ? AND pm.activo = 1 AND p.area_trabajo_id IS NOT NULL
+                    ORDER BY p.id LIMIT 1
+                `, [user.id]);
+
+                if (assignedProjectsPM.length > 0) {
+                    targetAreaId = assignedProjectsPM[0].area_trabajo_id;
+                }
+            }
+
+            if (targetAreaId) {
+                console.log(`   🎯 Área objetivo desde proyecto: ${targetAreaId}`);
+
+                // Verificar/crear relación en usuario_areas_trabajo
+                const [exists] = await pool.execute(
+                    'SELECT 1 FROM usuario_areas_trabajo WHERE usuario_id = ? AND area_trabajo_id = ? AND activo = 1',
+                    [user.id, targetAreaId]
+                );
+                
+                if (exists.length === 0) {
+                    await pool.execute(
+                        'INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, es_propietario, activo, created_at) VALUES (?, ?, 0, 0, 1, NOW())',
+                        [user.id, targetAreaId]
+                    );
+                    console.log('   ✅ Relación en usuario_areas_trabajo creada');
+                } else {
+                    console.log('   ℹ️ Relación de área ya existía activa');
+                }
+
+                // Actualizar área primaria si está NULL/0
+                await pool.execute(
+                    'UPDATE usuarios SET area_trabajo_id = ?, updated_at = NOW() WHERE id = ? AND (area_trabajo_id IS NULL OR area_trabajo_id = 0)',
+                    [targetAreaId, user.id]
+                );
+                console.log('   ✅ Área primaria actualizada');
+            } else {
+                console.log('   ❌ No se encontraron proyectos asignados con área definida');
+            }
+        } else {
+            console.log('   ℹ️ Usuario ya tiene área primaria, no es necesario corregir');
         }
 
     } catch (error) {

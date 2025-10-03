@@ -1,77 +1,66 @@
-const Project = require('../models/Project');
-const User = require('../models/User');
-const Entregable = require('../models/Entregable');
-const Evaluation = require('../models/Evaluation');
-const Invitation = require('../models/Invitation');
-const { pool } = require('../config/database');
-const nodemailer = require('nodemailer'); // Necesitarás instalarlo: npm install nodemailer
-const DashboardHelper = require('../helpers/dashboardHelper');
+const nodemailer = require('nodemailer');
 
 class ProjectController {
-  constructor() {
-    this.projectModel = new Project();
-    this.userModel = new User();
-    this.entregableModel = new Entregable();
-    this.evaluationModel = new Evaluation();
-    this.db = pool; // Inicializar la conexión a la base de datos
+  constructor(projectModel, userModel, entregableModel, evaluationModel) {
+    const Project = require('../models/Project');
+    const User = require('../models/User');
+    const Entregable = require('../models/Entregable');
+    const Evaluation = require('../models/Evaluation');
+    this.projectModel = projectModel || new Project();
+    this.userModel = userModel || new User();
+    this.entregableModel = entregableModel || new Entregable();
+    this.evaluationModel = evaluationModel || new Evaluation();
   }
 
-  // Listar proyectos
-  async index(req, res) {
+  // Vista index de proyectos (alias de list)
+  async index(req, res) { return this.list(req, res); }
+
+  async list(req, res) {
     try {
-      const user = req.session.user;
-      const { 
-        search, 
-        searchParticipants,
-        estado, 
-        fechaInicio, 
-        fechaFin, 
-        director, 
-        estudiante,
-        sortBy = 'created_at',
-        sortOrder = 'desc',
-        page = 1 
-      } = req.query;
-      
-      const limit = 10;
-      const offset = (page - 1) * limit;
-      
-      let projects;
-      
-      // Agregar filtro por área de trabajo (solo para roles que no sean Director de Proyecto)
-      const areaTrabajoId = req.areaTrabajoId;
-      const conditions = {};
-      
-      if (estado) conditions.estado = estado;
-      // Solo aplicar filtro por área de trabajo si no es Director de Proyecto
-      if (areaTrabajoId && user.rol_nombre !== 'Director de Proyecto') {
-        conditions.area_trabajo_id = areaTrabajoId;
+      const user = req.session?.user;
+      if (!user) {
+        req.flash('error', 'Sesión inválida');
+        return res.redirect('/login');
       }
+
+      const { page, search, searchParticipants, estado, fechaInicio, fechaFin, director, estudiante, sortBy, sortOrder, limit } = req.query;
+
+      // Construir condiciones seguras (evitar undefined)
+      const conditions = {};
+      if (estudiante) conditions.estudiante_id = parseInt(estudiante, 10);
+      if (director) conditions.director_id = parseInt(director, 10);
+      if (estado) conditions.estado = estado;
       if (fechaInicio) conditions.fecha_inicio_desde = fechaInicio;
       if (fechaFin) conditions.fecha_fin_hasta = fechaFin;
-      if (director) conditions.director_id = director;
-      if (estudiante) conditions.estudiante_id = estudiante;
-      
-      // Búsqueda general o por participantes
-      if (search || searchParticipants) {
-        const searchTerm = search || searchParticipants;
-        projects = await this.projectModel.search(searchTerm, conditions, searchParticipants ? 'participants' : 'general');
-      } else {
-        projects = await this.projectModel.findWithDetails(conditions);
-      }
-      
-      // Filtrar según el rol del usuario
+
+      // Obtener proyectos con condiciones
+      let projects = await this.projectModel.findWithDetails(conditions);
+
+      // Filtrar proyectos según el rol del usuario
       if (user.rol_nombre === 'Estudiante') {
         projects = projects.filter(project => project.estudiante_id === user.id);
       } else if (user.rol_nombre === 'Director de Proyecto') {
         projects = projects.filter(project => project.director_id === user.id);
       }
-      
+
+      // Filtro de búsqueda por título/descripcion
+      if (search && String(search).trim().length > 0) {
+        const term = String(search).toLowerCase();
+        projects = projects.filter(p => (p.titulo || '').toLowerCase().includes(term) || (p.descripcion || '').toLowerCase().includes(term));
+      }
+
+      // Filtro de búsqueda por participantes
+      if (searchParticipants && String(searchParticipants).trim().length > 0) {
+        const term = String(searchParticipants).toLowerCase();
+        projects = projects.filter(p => (p.estudiante_nombre || '').toLowerCase().includes(term) || (p.director_nombre || '').toLowerCase().includes(term));
+      }
+
       // Ordenamiento
+      const sortKey = sortBy || 'created_at';
+      const order = (sortOrder === 'asc' || sortOrder === 'desc') ? sortOrder : 'desc';
       projects.sort((a, b) => {
         let aValue, bValue;
-        
-        switch (sortBy) {
+        switch (sortKey) {
           case 'titulo':
             aValue = a.titulo?.toLowerCase() || '';
             bValue = b.titulo?.toLowerCase() || '';
@@ -89,57 +78,57 @@ class ProjectController {
             bValue = b.director_nombre?.toLowerCase() || '';
             break;
           case 'fecha_inicio':
-            aValue = new Date(a.fecha_inicio || 0);
-            bValue = new Date(b.fecha_inicio || 0);
+            aValue = new Date(a.fecha_inicio || 0).getTime();
+            bValue = new Date(b.fecha_inicio || 0).getTime();
             break;
           case 'created_at':
           default:
-            aValue = new Date(a.created_at || 0);
-            bValue = new Date(b.created_at || 0);
+            aValue = new Date(a.created_at || 0).getTime();
+            bValue = new Date(b.created_at || 0).getTime();
             break;
         }
-        
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        if (aValue < bValue) return order === 'asc' ? -1 : 1;
+        if (aValue > bValue) return order === 'asc' ? 1 : -1;
         return 0;
       });
-      
-      // Obtener estadísticas para las tarjetas
-      const stats = await this.getProjectStats(projects, user);
-      
-      // Obtener listas para filtros
-      const [directors, students] = await Promise.all([
-        this.userModel.findByRole('Director de Proyecto'),
-        this.userModel.findByRole('Estudiante')
-      ]);
-      
+
       // Calcular progreso para cada proyecto
       for (let project of projects) {
         project.progress = await this.calculateProjectProgress(project.id);
       }
 
       // Paginación
+      const perPage = parseInt(limit, 10) || 10;
+      const currentPage = parseInt(page, 10) || 1;
+      const offset = (currentPage - 1) * perPage;
       const totalProjects = projects.length;
-      const paginatedProjects = projects.slice(offset, offset + limit);
-      const totalPages = Math.ceil(totalProjects / limit);
-      
+      const paginatedProjects = projects.slice(offset, offset + perPage);
+      const totalPages = Math.ceil(totalProjects / perPage);
+
+      // Obtener listas para filtros y estadísticas
+      const [directors, students] = await Promise.all([
+        this.userModel.findByRole('Director de Proyecto'),
+        this.userModel.findByRole('Estudiante')
+      ]);
+      const stats = await this.getProjectStats(projects, user);
+
       res.render('projects/index', {
         title: 'Proyectos',
         user,
         projects: paginatedProjects,
-        currentPage: parseInt(page),
+        currentPage,
         totalPages,
         search,
         searchParticipants,
         estado,
         fechaInicio,
         fechaFin,
-        dateFrom: fechaInicio, // Agregar alias para la vista
-        dateTo: fechaFin,      // Agregar alias para la vista
+        dateFrom: fechaInicio,
+        dateTo: fechaFin,
         director,
         estudiante,
-        sortBy,
-        sortOrder,
+        sortBy: sortKey,
+        sortOrder: order,
         stats,
         directors: directors || [],
         students: students || [],
@@ -181,9 +170,9 @@ class ProjectController {
         this.userModel.findByRole('Estudiante'),
         this.userModel.findByRole('Coordinador Académico'),
         this.userModel.findByRole('Evaluador'),
-        this.userModel.db.execute('SELECT * FROM lineas_investigacion WHERE activo = 1'),
-        this.userModel.db.execute('SELECT * FROM ciclos_academicos WHERE activo = 1'),
-        this.userModel.db.execute(`
+        this.userModel.query('SELECT * FROM lineas_investigacion WHERE activo = 1'),
+        this.userModel.query('SELECT * FROM ciclos_academicos WHERE activo = 1'),
+        this.userModel.query(`
           SELECT u.id, u.nombres, u.apellidos, u.area_trabajo_id, at.nombre as area_nombre
           FROM usuarios u
           LEFT JOIN areas_trabajo at ON u.area_trabajo_id = at.id
@@ -200,9 +189,9 @@ class ProjectController {
         students: students || [],
         coordinators: coordinators || [],
         evaluators: evaluators || [],
-        administradores: administradoresResult[0] || [],
-        lineasInvestigacion: lineasResult[0] || [],
-        ciclosAcademicos: ciclosResult[0] || [],
+        administradores: administradoresResult || [],
+        lineasInvestigacion: lineasResult || [],
+        ciclosAcademicos: ciclosResult || [],
         error: req.flash('error'),
         success: req.flash('success')
       });
@@ -249,18 +238,17 @@ class ProjectController {
         return res.redirect('/projects/create');
       }
       
-      // Obtener el área de trabajo del administrador seleccionado
-      const [adminResult] = await this.userModel.db.execute(
+      const adminRows = await this.userModel.query(
         'SELECT area_trabajo_id FROM usuarios WHERE id = ? AND rol_id = (SELECT id FROM roles WHERE nombre = "Administrador General")',
         [parseInt(administrador_id)]
       );
       
-      if (!adminResult || adminResult.length === 0) {
+      if (!adminRows || adminRows.length === 0) {
         req.flash('error', 'El administrador seleccionado no es válido');
         return res.redirect('/projects/create');
       }
       
-      const adminAreaTrabajoId = adminResult[0].area_trabajo_id;
+      const adminAreaTrabajoId = adminRows[0].area_trabajo_id;
       if (!adminAreaTrabajoId) {
         req.flash('error', 'El administrador seleccionado no tiene un área de trabajo asignada');
         return res.redirect('/projects/create');
@@ -354,6 +342,18 @@ class ProjectController {
           req.flash('error', 'No tienes permisos para ver este proyecto');
           return res.redirect('/projects');
         }
+      } else if (user.rol_nombre === 'Coordinador Académico') {
+        // Los coordinadores pueden ver proyectos donde estén asignados como miembros activos
+        // o pertenezcan a cualquiera de sus áreas de trabajo
+        const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+        const hasAreaAccess = Array.isArray(req.userAreas) && req.userAreas.some(a => a.area_trabajo_id === project.area_trabajo_id);
+        if (!isProjectMember && !hasAreaAccess) {
+          req.flash('error', 'No tienes permisos para ver este proyecto');
+          return res.redirect('/coordinator/projects');
+        }
+      } else if (user.rol_nombre === 'Administrador General') {
+        // Los administradores generales pueden ver cualquier proyecto
+        // No se aplica restricción por área ni membresía
       } else {
         // Para otros roles, verificar que el proyecto pertenezca al área de trabajo del usuario
         if (project.area_trabajo_id !== req.areaTrabajoId) {
@@ -444,6 +444,17 @@ class ProjectController {
       const result = await this.projectModel.joinProjectWithCode(invitation_code.trim(), user.id);
       
       if (result.success) {
+        // Asegurar que el usuario tenga asignada el área de trabajo del proyecto
+        const project = await this.projectModel.findById(result.project.id);
+        if (project && project.area_trabajo_id) {
+          const alreadyInArea = await this.userModel.belongsToArea(user.id, project.area_trabajo_id);
+          if (!alreadyInArea) {
+            await this.userModel.assignToArea(user.id, project.area_trabajo_id, false, false);
+          }
+          // Sincronizar área primaria si está vacía
+          await this.userModel.setPrimaryAreaIfEmpty(user.id, project.area_trabajo_id);
+        }
+        
         req.flash('success', `Te has unido exitosamente al proyecto: ${result.project.titulo}`);
         res.redirect(`/projects/${result.project.id}`);
       } else {
@@ -689,13 +700,15 @@ class ProjectController {
               await userModel.assignToArea(userId, project.area_trabajo_id, false, false);
               console.log(`Usuario ${userId} agregado al área de trabajo ${project.area_trabajo_id}`);
           }
-  
+          // Sincronizar área primaria si está vacía
+          await userModel.setPrimaryAreaIfEmpty(userId, project.area_trabajo_id);
+
           // Aceptar la invitación
           await invitation.accept(invitationData.id, userId);
-  
+
           // Agregar usuario al proyecto
           await this.addUserToProject(invitationData.proyecto_id, userId);
-  
+
           // Establecer mensaje flash de éxito
           req.flash('success', `Te has unido exitosamente al proyecto "${invitationData.proyecto_nombre}"`);
           
@@ -718,12 +731,12 @@ class ProjectController {
           if (!invitationData) {
               return res.status(404).json({ error: 'Invitación no encontrada' });
           }
-  
+
           await invitation.reject(invitationData.id);
-  
+
           // Establecer mensaje flash de información
           req.flash('info', 'Has rechazado la invitación al proyecto');
-          
+
           // Redirigir al dashboard  
           res.redirect(DashboardHelper.getDashboardRouteFromUser(req.session.user));
       } catch (error) {
@@ -746,7 +759,7 @@ class ProjectController {
                   pass: process.env.SMTP_PASS
               }
           });
-  
+
           const invitationUrl = `${process.env.APP_URL}/projects/invitations/accept/${codigo}`;
           
           const mailOptions = {
@@ -763,7 +776,7 @@ class ProjectController {
                   <p>Esta invitación expira en 7 días.</p>
               `
           };
-  
+
           await transporter.sendMail(mailOptions);
       } catch (error) {
           console.error('Error sending invitation email:', error);
@@ -776,12 +789,12 @@ class ProjectController {
       try {
           // Verificar si el usuario ya está en el proyecto
           const query = 'SELECT * FROM proyecto_usuarios WHERE proyecto_id = ? AND usuario_id = ?';
-          const [existing] = await this.db.execute(query, [projectId, userId]);
+          const existing = await this.projectModel.query(query, [projectId, userId]);
           
           if (existing.length === 0) {
               // Agregar usuario al proyecto con rol por defecto
               const insertQuery = 'INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion) VALUES (?, ?, ?, NOW())';
-              await this.db.execute(insertQuery, [projectId, userId, 'estudiante']);
+              await this.projectModel.query(insertQuery, [projectId, userId, 'estudiante']);
           }
       } catch (error) {
           throw new Error(`Error adding user to project: ${error.message}`);
@@ -1054,6 +1067,8 @@ class ProjectController {
           await userModel.assignToArea(user.id, project.area_trabajo_id, false, false);
           console.log(`Usuario ${user.id} agregado al área de trabajo ${project.area_trabajo_id}`);
       }
+      // Sincronizar área primaria si está vacía
+      await userModel.setPrimaryAreaIfEmpty(user.id, project.area_trabajo_id);
 
       // Agregar usuario al proyecto y marcar invitación como aceptada
       await this.addUserToProject(invitationData.proyecto_id, user.id);
@@ -1090,16 +1105,17 @@ class ProjectController {
 
       // Calcular información adicional para cada entregable
       const deliverablesWithDetails = deliverables.map(deliverable => {
-        const dueDate = new Date(deliverable.fecha_entrega);
+        const dueDateSource = deliverable.fecha_limite || deliverable.fecha_entrega;
+        const dueDate = dueDateSource ? new Date(dueDateSource) : null;
         const today = new Date();
-        const diffTime = dueDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffTime = dueDate ? (dueDate - today) : 0;
+        const diffDays = dueDate ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : null;
 
         return {
           ...deliverable,
           dias_restantes: diffDays,
-          is_overdue: diffDays < 0 && deliverable.estado === 'pendiente',
-          is_due_soon: diffDays <= 7 && diffDays >= 0 && deliverable.estado === 'pendiente'
+          is_overdue: dueDate ? (diffDays < 0 && deliverable.estado === 'pendiente') : false,
+          is_due_soon: dueDate ? (diffDays <= 7 && diffDays >= 0 && deliverable.estado === 'pendiente') : false
         };
       });
 
@@ -1277,24 +1293,33 @@ class ProjectController {
     try {
       // Obtener entregables del proyecto
       const deliverables = await this.entregableModel.findByProject(projectId);
-      
-      if (deliverables.length === 0) {
-        return 0;
-      }
 
       // Calcular progreso basado en entregables
       const completedDeliverables = deliverables.filter(d => d.estado === 'completado').length;
-      const deliverableProgress = (completedDeliverables / deliverables.length) * 100;
+      const deliverableProgress = deliverables.length > 0 ? (completedDeliverables / deliverables.length) * 100 : 0;
 
       // Obtener información del proyecto para calcular progreso temporal
       const project = await this.projectModel.findById(projectId);
       let timeProgress = 0;
+
+      // Función de parseo seguro de fechas
+      const parseDate = (value) => {
+        if (!value) return null;
+        if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+        if (typeof value === 'string') {
+          const iso = new Date(value);
+          if (!isNaN(iso.getTime())) return iso;
+          const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        }
+        return null;
+      };
       
-      if (project && project.fecha_inicio && project.fecha_fin) {
-        const startDate = new Date(project.fecha_inicio);
-        const endDate = new Date(project.fecha_fin);
-        const currentDate = new Date();
-        
+      const startDate = project ? parseDate(project.fecha_inicio) : null;
+      const endDate = project ? parseDate(project.fecha_fin) : null;
+      const currentDate = new Date();
+      
+      if (startDate && endDate) {
         const totalDuration = endDate - startDate;
         const elapsedTime = currentDate - startDate;
         
@@ -1322,31 +1347,44 @@ class ProjectController {
         return false;
       }
 
-      // Verificar que el proyecto pertenezca al área de trabajo del usuario
-      if (project.area_trabajo_id !== user.area_trabajo_id) {
-        return false;
-      }
-
       // Verificar permisos según el rol
       switch (user.rol_nombre) {
-        case 'Estudiante':
-          // Verificar si es el estudiante principal O es miembro del proyecto
+        case 'Administrador General':
+          // Acceso total sin restricción por área
+          return true;
+        case 'Director de Proyecto':
+          // Directores acceden a sus proyectos independientemente del área
+          return project.director_id === user.id;
+        case 'Coordinador Académico': {
+          // Coordinadores: acceso si son miembros activos del proyecto o si el proyecto pertenece a cualquiera de sus áreas
+          const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+          if (isProjectMember) return true;
+          try {
+            const userModel = new User();
+            const areas = await userModel.getUserAreas(user.id);
+            const areaIds = Array.isArray(areas) ? areas.map(a => a.area_trabajo_id) : [];
+            return areaIds.includes(project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
+          } catch (e) {
+            // Fallback: usar el área principal del usuario
+            return user.area_trabajo_id === project.area_trabajo_id;
+          }
+        }
+        case 'Estudiante': {
+          // Estudiantes: acceso si son el estudiante principal o miembros activos; si no, restringir por área principal
           const isMainStudent = project.estudiante_id === user.id;
           const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
-          return isMainStudent || isProjectMember;
-        case 'Director de Proyecto':
-          return project.director_id === user.id;
-        case 'Coordinador Académico':
-        case 'Administrador General':
-          return true;
+          if (isMainStudent || isProjectMember) return true;
+          return user.area_trabajo_id === project.area_trabajo_id;
+        }
         default:
-          return false;
+          // Otros roles: restringir por coincidencia de área principal
+          return user.area_trabajo_id === project.area_trabajo_id;
       }
     } catch (error) {
-       console.error('Error checking project access:', error);
-       return false;
-     }
-   }
+      console.error('Error checking project access:', error);
+      return false;
+    }
+  }
 
    // ==================== GESTIÓN DE COMENTARIOS ====================
 
@@ -1513,48 +1551,36 @@ class ProjectController {
        res.status(500).json({ success: false, message: 'Error interno del servidor' });
      }
   }
-
+  
   // ===== MÉTODOS PARA COORDINADOR =====
   
   async getProjectsByCoordinator(coordinatorId) {
     try {
-      // Obtener proyectos donde el coordinador está asignado directamente
       const query = `
         SELECT 
           p.*,
-          u.nombres as estudiante_nombres,
-          u.apellidos as estudiante_apellidos,
-          u.email as estudiante_email,
-          director.nombres as director_nombres,
-          director.apellidos as director_apellidos,
-          evaluador.nombres as evaluador_nombres,
-          evaluador.apellidos as evaluador_apellidos,
-          COUNT(d.id) as total_entregables,
-          COUNT(CASE WHEN d.estado = 'completado' THEN 1 END) as entregables_completados
+          CONCAT(u_est.nombres, ' ', u_est.apellidos) AS estudiante_nombre,
+          CONCAT(u_dir.nombres, ' ', u_dir.apellidos) AS director_nombre,
+          CONCAT(u_eval.nombres, ' ', u_eval.apellidos) AS evaluador_nombre,
+          COUNT(d.id) AS total_entregables,
+          SUM(CASE WHEN d.estado = 'completado' THEN 1 ELSE 0 END) AS entregables_completados
         FROM proyectos p
-        LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
-        LEFT JOIN usuarios u ON p.estudiante_id = u.id
-        LEFT JOIN usuarios director ON p.director_id = director.id
-        LEFT JOIN usuarios evaluador ON p.evaluador_id = evaluador.id
-        LEFT JOIN entregables d ON p.id = d.proyecto_id
-        WHERE pu.usuario_id = ? AND pu.rol = 'coordinador'
+        INNER JOIN proyecto_usuarios pu 
+          ON p.id = pu.proyecto_id 
+         AND pu.usuario_id = ? 
+         AND pu.estado = 'activo'
+        LEFT JOIN usuarios u_est ON p.estudiante_id = u_est.id
+        LEFT JOIN usuarios u_dir ON p.director_id = u_dir.id
+        LEFT JOIN usuarios u_eval ON p.evaluador_id = u_eval.id
+        LEFT JOIN entregables d ON d.proyecto_id = p.id
         GROUP BY p.id
         ORDER BY p.created_at DESC
       `;
-      
-      const [projects] = await pool.execute(query, [coordinatorId]);
-      
-      // Calcular progreso para cada proyecto
-      for (let project of projects) {
-        project.progreso = project.total_entregables > 0 
-          ? Math.round((project.entregables_completados / project.total_entregables) * 100)
-          : 0;
-      }
-      
-      return projects || [];
+      const [rows] = await this.projectModel.db.execute(query, [coordinatorId]);
+      return rows;
     } catch (error) {
       console.error('Error getting projects by coordinator:', error);
-      return [];
+      throw error;
     }
   }
 }

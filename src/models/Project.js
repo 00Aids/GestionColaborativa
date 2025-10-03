@@ -48,6 +48,10 @@ class Project extends BaseModel {
       
       if (Object.keys(conditions).length > 0) {
         for (const [key, value] of Object.entries(conditions)) {
+          // Ignorar condiciones con valores no válidos para evitar pasar undefined a la consulta
+          if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+            continue;
+          }
           if (key === 'fecha_inicio_desde') {
             query += ` AND p.fecha_inicio >= ?`;
             values.push(value);
@@ -457,7 +461,7 @@ class Project extends BaseModel {
     }
   }
 
-  // Buscar miembro de proyecto
+  // Buscar miembro de proyecto (usa tabla proyecto_usuarios)
   async findProjectMember(projectId, userId) {
     try {
       const query = `

@@ -877,7 +877,7 @@
                     
                     <div class="form-group">
                         <label for="deliverable-due-date">Fecha de Vencimiento *</label>
-                        <input type="date" id="deliverable-due-date" name="fecha_vencimiento" required>
+                        <input type="date" id="deliverable-due-date" name="fecha_entrega" required>
                     </div>
                     
                     <div class="form-group">
@@ -1162,7 +1162,7 @@
             // Fill form with deliverable data
             document.getElementById('deliverable-title').value = deliverable.titulo;
             document.getElementById('deliverable-description').value = deliverable.descripcion || '';
-            document.getElementById('deliverable-due-date').value = deliverable.fecha_vencimiento.split('T')[0];
+            document.getElementById('deliverable-due-date').value = deliverable.fecha_entrega.split('T')[0];
             document.getElementById('deliverable-status').value = deliverable.estado;
             
             modal.style.display = 'block';
@@ -1177,7 +1177,7 @@
             const data = {
                 titulo: formData.get('titulo'),
                 descripcion: formData.get('descripcion'),
-                fecha_vencimiento: formData.get('fecha_vencimiento'),
+                fecha_entrega: formData.get('fecha_entrega'),
                 estado: formData.get('estado')
             };
             
@@ -1186,7 +1186,7 @@
                 return;
             }
             
-            if (!data.fecha_vencimiento) {
+            if (!data.fecha_entrega) {
                 showNotification('La fecha de vencimiento es requerida', 'error');
                 return;
             }

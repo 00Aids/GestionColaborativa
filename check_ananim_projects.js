@@ -1,8 +1,8 @@
 const { pool } = require('./src/config/database');
 
-async function checkAnanimProjects() {
+async function checkCoordinatorProjects() {
   try {
-    console.log('🔍 Verificando proyectos de ananim@gmail.com...\n');
+    console.log('🔍 Verificando proyectos de pruebagestion3@gmail.com...\n');
     
     // Verificar información del usuario
     const [user] = await pool.execute(`
@@ -11,7 +11,7 @@ async function checkAnanimProjects() {
       LEFT JOIN roles r ON u.rol_id = r.id
       LEFT JOIN areas_trabajo a ON u.area_trabajo_id = a.id
       WHERE u.email = ?
-    `, ['ananim@gmail.com']);
+    `, ['pruebagestion3@gmail.com']);
     
     if (user.length === 0) {
       console.log('❌ Usuario no encontrado');
@@ -88,32 +88,9 @@ async function checkAnanimProjects() {
       console.log('  - No hay entregables en el área');
     }
     
-    // Verificar el proyecto específico mencionado
-    console.log('\n🔍 Verificando proyecto "levante y engordamiento de pollitasss":');
-    const [specificProject] = await pool.execute(`
-      SELECT p.id, p.titulo, p.area_trabajo_id, a.codigo as area_codigo, p.estado,
-             pu.usuario_id, pu.rol as rol_usuario
-      FROM proyectos p
-      LEFT JOIN areas_trabajo a ON p.area_trabajo_id = a.id
-      LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id AND pu.usuario_id = ?
-      WHERE p.titulo LIKE '%pollitas%'
-    `, [userData.id]);
-    
-    if (specificProject.length > 0) {
-      specificProject.forEach(project => {
-        console.log(`  - ${project.titulo} (ID: ${project.id})`);
-        console.log(`    Área: ${project.area_codigo} (ID: ${project.area_trabajo_id})`);
-        console.log(`    Estado: ${project.estado}`);
-        console.log(`    ¿Ananim asignado?: ${project.usuario_id ? 'Sí (' + project.rol_usuario + ')' : 'No'}`);
-      });
-    } else {
-      console.log('  - Proyecto no encontrado');
-    }
-    
     await pool.end();
   } catch (error) {
     console.error('❌ Error:', error.message);
   }
 }
-
-checkAnanimProjects();
+checkCoordinatorProjects();

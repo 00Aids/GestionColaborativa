@@ -7,8 +7,11 @@ class AuthMiddleware {
       return next();
     }
     
-    // Si es una petición AJAX, devolver JSON
-    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+    const accepts = req.headers.accept || '';
+    const isApiRequest = req.xhr || accepts.includes('application/json') || (req.originalUrl && req.originalUrl.startsWith('/api/'));
+    const isHtmlNavigation = req.method === 'GET' && !isApiRequest;
+
+    if (!isHtmlNavigation) {
       return res.status(401).json({ error: 'No autorizado' });
     }
     
@@ -17,7 +20,7 @@ class AuthMiddleware {
     
     // Redirigir al login
     req.flash('error', 'Debes iniciar sesión para acceder a esta página');
-    res.redirect('/auth/login');
+    return res.redirect('/auth/login');
   }
 
   // Verificar si el usuario NO está autenticado (para login/register)
@@ -32,7 +35,18 @@ class AuthMiddleware {
   static requireRole(roles) {
     return (req, res, next) => {
       if (!req.session || !req.session.user) {
-        return res.status(401).json({ error: 'No autorizado' });
+        const accepts = req.headers.accept || '';
+        const isApiRequest = req.xhr || accepts.includes('application/json') || (req.originalUrl && req.originalUrl.startsWith('/api/'));
+        const isHtmlNavigation = req.method === 'GET' && !isApiRequest;
+
+        if (!isHtmlNavigation) {
+          return res.status(401).json({ error: 'No autorizado' });
+        }
+
+        // Guardar la URL original para redirigir después del login
+        req.session.redirectTo = req.originalUrl;
+        req.flash('error', 'Debes iniciar sesión para acceder a esta página');
+        return res.redirect('/auth/login');
       }
 
       const userRole = req.session.user.rol_nombre;
@@ -44,8 +58,10 @@ class AuthMiddleware {
         return next();
       }
       
-      // Si es una petición AJAX, devolver JSON
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+      // Si es una petición API/AJAX, devolver JSON, de lo contrario redirigir
+      const accepts = req.headers.accept || '';
+      const isApiRequest = req.xhr || accepts.includes('application/json') || (req.originalUrl && req.originalUrl.startsWith('/api/'));
+      if (isApiRequest) {
         return res.status(403).json({ error: 'Acceso denegado' });
       }
       
