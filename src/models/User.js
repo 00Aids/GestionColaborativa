@@ -208,13 +208,24 @@ class User extends BaseModel {
         isAdmin = true;
       }
 
-      const query = `
+      // Insertar en la tabla de relaciones usuario_areas_trabajo
+      const insertQuery = `
         INSERT INTO usuario_areas_trabajo (usuario_id, area_trabajo_id, es_admin, es_propietario, activo, created_at)
         VALUES (?, ?, ?, ?, 1, ?)
       `;
       
-      const [result] = await this.db.execute(query, [userId, areaId, isAdmin ? 1 : 0, isOwner ? 1 : 0, new Date()]);
-      return result;
+      await this.db.execute(insertQuery, [userId, areaId, isAdmin ? 1 : 0, isOwner ? 1 : 0, new Date()]);
+
+      // Actualizar el area_trabajo_id en la tabla usuarios si no tiene uno asignado
+      const updateQuery = `
+        UPDATE usuarios 
+        SET area_trabajo_id = ?, updated_at = ?
+        WHERE id = ? AND (area_trabajo_id IS NULL OR area_trabajo_id = 0)
+      `;
+      
+      await this.db.execute(updateQuery, [areaId, new Date(), userId]);
+
+      return { success: true };
     } catch (error) {
       throw new Error(`Error assigning user to area: ${error.message}`);
     }

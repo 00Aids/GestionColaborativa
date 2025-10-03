@@ -422,6 +422,12 @@ class Project extends BaseModel {
         return { success: false, message: 'Ya eres miembro de este proyecto' };
       }
 
+      // Obtener información del proyecto para conseguir el area_trabajo_id
+      const project = await this.findById(invitation.proyecto_id);
+      if (!project) {
+        return { success: false, message: 'Proyecto no encontrado' };
+      }
+
       // Agregar usuario como miembro del proyecto
       const memberData = {
         proyecto_id: invitation.proyecto_id,
@@ -444,6 +450,24 @@ class Project extends BaseModel {
         memberData.estado,
         memberData.fecha_asignacion
       ]);
+
+      // Asignar automáticamente el usuario al área de trabajo del proyecto
+      if (project.area_trabajo_id) {
+        const User = require('./User');
+        const userModel = new User();
+        
+        try {
+          // Verificar si el usuario ya pertenece al área de trabajo
+          const belongsToArea = await userModel.belongsToArea(userId, project.area_trabajo_id);
+          if (!belongsToArea) {
+            await userModel.assignToArea(userId, project.area_trabajo_id, false, false);
+          }
+        } catch (areaError) {
+          // Si hay error asignando al área, no fallar todo el proceso
+          // pero registrar el error para debugging
+          console.warn(`Warning: Could not assign user ${userId} to area ${project.area_trabajo_id}: ${areaError.message}`);
+        }
+      }
 
       // Incrementar contador de usos de la invitación usando el modelo Invitation
       await invitationModel.incrementUsage(invitation.id);

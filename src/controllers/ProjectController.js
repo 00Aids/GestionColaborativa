@@ -792,6 +792,26 @@ class ProjectController {
           const existing = await this.projectModel.query(query, [projectId, userId]);
           
           if (existing.length === 0) {
+              // Obtener información del proyecto para conseguir el area_trabajo_id
+              const project = await this.projectModel.findById(projectId);
+              
+              // Asignar automáticamente el usuario al área de trabajo del proyecto
+              if (project && project.area_trabajo_id) {
+                  const User = require('../models/User');
+                  const userModel = new User();
+                  
+                  try {
+                      // Verificar si el usuario ya pertenece al área de trabajo
+                      const belongsToArea = await userModel.belongsToArea(userId, project.area_trabajo_id);
+                      if (!belongsToArea) {
+                          await userModel.assignToArea(userId, project.area_trabajo_id, false, false);
+                      }
+                  } catch (areaError) {
+                      // Si hay error asignando al área, no fallar todo el proceso
+                      console.warn(`Warning: Could not assign user ${userId} to area ${project.area_trabajo_id}: ${areaError.message}`);
+                  }
+              }
+              
               // Agregar usuario al proyecto con rol por defecto
               const insertQuery = 'INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion) VALUES (?, ?, ?, NOW())';
               await this.projectModel.query(insertQuery, [projectId, userId, 'estudiante']);

@@ -221,6 +221,31 @@
                 <div class="stat-number"><%= myEvaluations?.length || 0 %></div>
                 <div class="stat-label">Evaluaciones</div>
             </div>
+            <% if (myProjects && myProjects.length > 0) { %>
+                <% 
+                // Calcular tiempo restante del proyecto más próximo a vencer
+                let minDaysRemaining = null;
+                myProjects.forEach(project => {
+                    if (project.fecha_fin) {
+                        const endDate = new Date(project.fecha_fin);
+                        const today = new Date();
+                        const timeDiff = endDate - today;
+                        const daysRemaining = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+                        if (minDaysRemaining === null || daysRemaining < minDaysRemaining) {
+                            minDaysRemaining = daysRemaining;
+                        }
+                    }
+                });
+                %>
+                <% if (minDaysRemaining !== null) { %>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: <%= minDaysRemaining <= 7 ? '#e53e3e' : minDaysRemaining <= 30 ? '#d69e2e' : '#38a169' %>">
+                            <%= minDaysRemaining %>
+                        </div>
+                        <div class="stat-label">Días Restantes</div>
+                    </div>
+                <% } %>
+            <% } %>
         </div>
 
         <!-- Unirse a Proyecto con Código -->
@@ -264,7 +289,30 @@
                             <div class="project-info">
                                 <strong>Director:</strong> <%= project.director_nombres || 'No asignado' %> <%= project.director_apellidos || '' %><br>
                                 <strong>Estado:</strong> <%= project.estado %><br>
-                                <strong>Línea:</strong> <%= project.linea_investigacion_nombre || 'No definida' %>
+                                <strong>Línea:</strong> <%= project.linea_investigacion_nombre || 'No definida' %><br>
+                                <% if (project.fecha_inicio && project.fecha_fin) { %>
+                                    <% 
+                                    const startDate = new Date(project.fecha_inicio);
+                                    const endDate = new Date(project.fecha_fin);
+                                    const today = new Date();
+                                    const totalTime = endDate - startDate;
+                                    const elapsedTime = today - startDate;
+                                    const remainingTime = endDate - today;
+                                    const daysRemaining = Math.max(0, Math.ceil(remainingTime / (1000 * 60 * 60 * 24)));
+                                    const progressPercentage = Math.min(100, Math.max(0, (elapsedTime / totalTime) * 100));
+                                    %>
+                                    <strong>Tiempo restante:</strong> 
+                                    <span style="color: <%= daysRemaining <= 7 ? '#ff6b6b' : daysRemaining <= 30 ? '#feca57' : '#48dbfb' %>; font-weight: bold;">
+                                        <%= daysRemaining %> días
+                                    </span><br>
+                                    <strong>Progreso temporal:</strong> 
+                                    <div style="background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin: 5px 0; overflow: hidden;">
+                                        <div style="background: <%= daysRemaining <= 7 ? '#ff6b6b' : daysRemaining <= 30 ? '#feca57' : '#48dbfb' %>; height: 100%; width: <%= progressPercentage %>%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                                    </div>
+                                    <small style="opacity: 0.8;"><%= progressPercentage.toFixed(1) %>% del tiempo transcurrido</small>
+                                <% } else { %>
+                                    <strong>Fechas:</strong> <span style="color: #ff6b6b;">No definidas</span>
+                                <% } %>
                             </div>
                         </div>
                     <% }) %>
