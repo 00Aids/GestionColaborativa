@@ -6,10 +6,12 @@ class ProjectController {
     const User = require('../models/User');
     const Entregable = require('../models/Entregable');
     const Evaluation = require('../models/Evaluation');
+    const Invitation = require('../models/Invitation');
     this.projectModel = projectModel || new Project();
     this.userModel = userModel || new User();
     this.entregableModel = entregableModel || new Entregable();
     this.evaluationModel = evaluationModel || new Evaluation();
+    this.invitationModel = new Invitation();
   }
 
   // Vista index de proyectos (alias de list)
@@ -556,7 +558,7 @@ class ProjectController {
           }
   
           // Crear la invitación
-          const invitation = new Invitation();
+          const invitation = this.invitationModel;
           const invitationData = {
               proyecto_id: parseInt(projectId),
               email: email || null,
@@ -601,7 +603,7 @@ class ProjectController {
   async getProjectInvitations(req, res) {
       try {
           const { id: projectId } = req.params;
-          const invitation = new Invitation();
+          const invitation = this.invitationModel;
           
           const invitations = await invitation.findByProject(projectId);
           const stats = await invitation.getStats(projectId);
@@ -622,7 +624,7 @@ class ProjectController {
     try {
       const { codigo } = req.params;
       
-      const invitation = new Invitation();
+      const invitation = this.invitationModel;
       const invitationData = await invitation.findByCode(codigo);
       
       if (!invitationData) {
@@ -678,7 +680,7 @@ class ProjectController {
           const { codigo } = req.params;
           const userId = req.session.user.id; // Cambiar de req.user.id
           
-          const invitation = new Invitation();
+          const invitation = this.invitationModel;
           const invitationData = await invitation.findByCode(codigo);
           
           if (!invitationData) {
@@ -692,8 +694,7 @@ class ProjectController {
           }
 
           // Asegurar que el usuario esté en el área de trabajo del proyecto
-          const User = require('../models/User');
-          const userModel = new User();
+            const userModel = this.userModel;
           const userBelongsToArea = await userModel.belongsToArea(userId, project.area_trabajo_id);
           
           if (!userBelongsToArea) {
@@ -725,7 +726,7 @@ class ProjectController {
       try {
           const { codigo } = req.params;
           
-          const invitation = new Invitation();
+          const invitation = this.invitationModel;
           const invitationData = await invitation.findByCode(codigo);
           
           if (!invitationData) {
@@ -797,8 +798,7 @@ class ProjectController {
               
               // Asignar automáticamente el usuario al área de trabajo del proyecto
               if (project && project.area_trabajo_id) {
-                  const User = require('../models/User');
-                  const userModel = new User();
+                    const userModel = this.userModel;
                   
                   try {
                       // Verificar si el usuario ya pertenece al área de trabajo
@@ -835,7 +835,7 @@ class ProjectController {
               return res.status(404).json({ error: 'Proyecto no encontrado' });
           }
   
-          const invitation = new Invitation();
+          const invitation = this.invitationModel;
           const invitationData = {
               proyecto_id: parseInt(projectId),
               invitado_por: invitadoPor,
@@ -870,12 +870,20 @@ class ProjectController {
   // Enviar invitación por email
   async sendEmailInvitation(req, res) {
       try {
+          console.log('🔍 DEBUG - Iniciando sendEmailInvitation');
+          console.log('📝 Body recibido:', req.body);
+          console.log('📝 Params recibidos:', req.params);
+          console.log('👤 Usuario en sesión:', req.session.user);
+
           const { id: projectId } = req.params;
           const { email, message, expires_in_days } = req.body;
           const invitadoPor = req.session.user.id;
 
+          console.log('🔍 Datos extraídos:', { projectId, email, message, expires_in_days, invitadoPor });
+
           // Validar email
           if (!email || !email.includes('@')) {
+              console.log('❌ Email inválido:', email);
               return res.status(400).json({ 
                   success: false,
                   error: 'Email válido es requerido' 
@@ -883,8 +891,12 @@ class ProjectController {
           }
 
           // Verificar que el usuario tenga permisos en el proyecto
+          console.log('🔍 Buscando proyecto con ID:', projectId);
           const project = await this.projectModel.findById(projectId);
+          console.log('📋 Proyecto encontrado:', project);
+          
           if (!project) {
+              console.log('❌ Proyecto no encontrado');
               return res.status(404).json({ 
                   success: false,
                   error: 'Proyecto no encontrado' 
@@ -892,10 +904,13 @@ class ProjectController {
           }
 
           // Verificar si ya existe una invitación pendiente para este email
-          const invitation = new Invitation();
+          console.log('🔍 Verificando invitaciones existentes...');
+          const invitation = this.invitationModel;
           const existingInvitation = await invitation.findByEmailAndProject(email, projectId);
+          console.log('📧 Invitación existente:', existingInvitation);
           
           if (existingInvitation && existingInvitation.estado === 'pendiente') {
+              console.log('❌ Ya existe invitación pendiente');
               return res.status(400).json({ 
                   success: false,
                   error: 'Ya existe una invitación pendiente para este email' 
@@ -921,7 +936,7 @@ class ProjectController {
           const newInvitation = await invitation.create(invitationData);
 
           // Obtener información del usuario que invita
-          const userModel = new User();
+          const userModel = this.userModel;
           const inviter = await userModel.findById(invitadoPor);
           const inviterName = `${inviter.nombres} ${inviter.apellidos}`;
 
@@ -966,7 +981,7 @@ class ProjectController {
       }
 
       // Verificar que la invitación existe y está pendiente
-      const invitation = new Invitation();
+      const invitation = this.invitationModel;
       const invitationData = await invitation.findByCode(codigo);
       
       if (!invitationData || invitationData.estado !== 'pendiente') {
@@ -975,7 +990,7 @@ class ProjectController {
       }
 
       // Verificar si el email ya existe
-      const userModel = new User();
+      const userModel = this.userModel;
       const existingUser = await userModel.findByEmail(email);
       
       if (existingUser) {
@@ -1037,7 +1052,7 @@ class ProjectController {
       const { email, password } = req.body;
 
       // Verificar que la invitación existe y está pendiente
-      const invitation = new Invitation();
+      const invitation = this.invitationModel;
       const invitationData = await invitation.findByCode(codigo);
       
       if (!invitationData || invitationData.estado !== 'pendiente') {
@@ -1046,7 +1061,7 @@ class ProjectController {
       }
 
       // Verificar credenciales
-      const userModel = new User();
+      const userModel = this.userModel;
       const user = await userModel.findByEmail(email);
       
       if (!user) {
@@ -1380,7 +1395,7 @@ class ProjectController {
           const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
           if (isProjectMember) return true;
           try {
-            const userModel = new User();
+            const userModel = this.userModel;
             const areas = await userModel.getUserAreas(user.id);
             const areaIds = Array.isArray(areas) ? areas.map(a => a.area_trabajo_id) : [];
             return areaIds.includes(project.area_trabajo_id) || user.area_trabajo_id === project.area_trabajo_id;
