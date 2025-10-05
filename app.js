@@ -15,7 +15,18 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Configuración de seguridad
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net"]
+    }
+  }
+}));
 
 // Rate limiting
 const limiter = rateLimit({

@@ -689,7 +689,7 @@
         <% if (myDeliverables && myDeliverables.length > 0) { %>
             <div class="deliverables-grid">
                 <% myDeliverables.forEach(deliverable => { 
-                    const dueDate = new Date(deliverable.fecha_entrega);
+                    const dueDate = new Date(deliverable.fecha_limite);
                     const today = new Date();
                     const isOverdue = dueDate < today && deliverable.estado === 'pendiente';
                     const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));

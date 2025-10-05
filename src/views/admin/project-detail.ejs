@@ -2230,9 +2230,6 @@
                         </div>
                         <h3>No hay tareas en este proyecto</h3>
                         <p>Comienza creando tu primera tarea para organizar el trabajo del equipo.</p>
-                        <button onclick="openTaskModal()" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Crear Primera Tarea
-                        </button>
                     </div>
                     <% } %>
                 </div>
@@ -3199,107 +3196,154 @@
                     }
                 }
                 
-                // Crear modal dinámicamente
+                // Crear modal dinámicamente con formulario completo
                 const modalHtml = `
                     <div class="modal fade" id="taskModal" tabindex="-1">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title">
-                                        <i class="fas fa-tasks"></i>
+                                        <i class="fas fa-plus-circle" style="color: #667eea;"></i>
                                         ${taskId ? 'Editar Tarea' : 'Nueva Tarea'}
                                     </h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <div class="modal-body">
-                                    <form id="taskForm">
-                                        <div class="row">
-                                            <div class="col-md-8">
-                                                <div class="form-group">
-                                                    <label class="form-label">Título *</label>
-                                                    <input type="text" class="form-control" id="taskTitle" 
-                                                           value="${taskData ? taskData.titulo : ''}" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="form-label">Prioridad</label>
-                                                    <select class="form-control" id="taskPriority">
-                                                        <option value="baja" ${taskData && taskData.prioridad === 'baja' ? 'selected' : ''}>Baja</option>
-                                                        <option value="media" ${taskData && taskData.prioridad === 'media' ? 'selected' : ''}>Media</option>
-                                                        <option value="alta" ${taskData && taskData.prioridad === 'alta' ? 'selected' : ''}>Alta</option>
-                                                        <option value="critica" ${taskData && taskData.prioridad === 'critica' ? 'selected' : ''}>Crítica</option>
-                                                    </select>
-                                                </div>
-                                            </div>
+                                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                                    <form id="taskForm" enctype="multipart/form-data">
+                                        <!-- Título de la Tarea -->
+                                        <div class="form-group mb-3">
+                                            <label for="taskTitle" class="form-label fw-semibold">Título de la Tarea <span class="text-danger">*</span></label>
+                                            <input type="text" id="taskTitle" class="form-control" required 
+                                                   placeholder="Ingresa el título de la tarea"
+                                                   value="${taskData ? taskData.titulo : ''}"
+                                                   style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
                                         </div>
-                                        
-                                        <div class="form-group">
-                                            <label class="form-label">Descripción</label>
-                                            <textarea class="form-control" id="taskDescription" rows="3">${taskData ? taskData.descripcion || '' : ''}</textarea>
+
+                                        <!-- Descripción -->
+                                        <div class="form-group mb-3">
+                                            <label for="taskDescription" class="form-label fw-semibold">Descripción</label>
+                                            <textarea id="taskDescription" class="form-control" rows="3"
+                                                      placeholder="Describe los detalles de la tarea"
+                                                      style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease; resize: vertical; min-height: 100px;">${taskData ? taskData.descripcion || '' : ''}</textarea>
                                         </div>
-                                        
+
+                                        <!-- Fase del Proyecto -->
+                                        <div class="form-group mb-3">
+                                            <label for="taskPhase" class="form-label fw-semibold">Fase del Proyecto</label>
+                                            <select id="taskPhase" class="form-control" style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                                <option value="">Sin fase específica</option>
+                                                <% if (fases && fases.length > 0) { %>
+                                                    <% fases.forEach(fase => { %>
+                                                        <option value="<%= fase.id %>" ${taskData && taskData.fase_id == <%= fase.id %> ? 'selected' : ''}><%= fase.nombre %></option>
+                                                    <% }) %>
+                                                <% } %>
+                                            </select>
+                                        </div>
+
+                                        <!-- Asignar a y Fecha Límite -->
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Asignar a</label>
-                                                    <select class="form-control" id="taskAssignee">
+                                                <div class="form-group mb-3">
+                                                    <label for="taskAssignee" class="form-label fw-semibold">Asignar a</label>
+                                                    <select id="taskAssignee" class="form-control" style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
                                                         <option value="">Sin asignar</option>
                                                         <% if (members && members.length > 0) { %>
                                                             <% members.forEach(member => { %>
                                                                 <option value="<%= member.usuario_id %>" 
                                                                         ${taskData && taskData.asignado_a == <%= member.usuario_id %> ? 'selected' : ''}>
-                                                                    <%= member.nombres %> <%= member.apellidos %>
+                                                                    <%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)
                                                                 </option>
                                                             <% }); %>
                                                         <% } %>
                                                     </select>
+                                                    <small class="form-text text-muted">Selecciona un miembro del proyecto para asignar esta tarea</small>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Fecha Límite</label>
-                                                    <input type="date" class="form-control" id="taskDueDate" 
-                                                           value="${taskData && taskData.fecha_limite ? new Date(taskData.fecha_limite).toISOString().split('T')[0] : ''}">
+                                                <div class="form-group mb-3">
+                                                    <label for="taskDueDate" class="form-label fw-semibold">Fecha Límite</label>
+                                                    <input type="date" id="taskDueDate" class="form-control"
+                                                           value="${taskData && taskData.fecha_limite ? new Date(taskData.fecha_limite).toISOString().split('T')[0] : ''}"
+                                                           style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                                    <small class="form-text text-muted">Fecha opcional para completar la tarea</small>
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
+                                        <!-- Estimación y Estado Inicial -->
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Estado</label>
-                                                    <select class="form-control" id="taskStatus">
-                                                        <option value="pendiente" ${taskData && taskData.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
-                                                        <option value="en progreso" ${taskData && taskData.estado === 'en progreso' ? 'selected' : ''}>En Progreso</option>
-                                                        <option value="en revision" ${taskData && taskData.estado === 'en revision' ? 'selected' : ''}>En Revisión</option>
-                                                        <option value="completada" ${taskData && taskData.estado === 'completada' ? 'selected' : ''}>Completada</option>
-                                                    </select>
+                                                <div class="form-group mb-3">
+                                                    <label for="taskEstimation" class="form-label fw-semibold">Estimación (horas)</label>
+                                                    <input type="number" id="taskEstimation" class="form-control" 
+                                                           min="0" step="0.5" placeholder="Ej: 8"
+                                                           value="${taskData ? taskData.estimacion_horas || '' : ''}"
+                                                           style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                                    <small class="form-text text-muted">Tiempo estimado para completar la tarea</small>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Workflow Status</label>
-                                                    <select class="form-control" id="taskWorkflowStatus">
-                                                        <option value="todo" ${taskData && taskData.workflow_status === 'todo' ? 'selected' : ''}>To Do</option>
-                                                        <option value="in_progress" ${taskData && taskData.workflow_status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-                                                        <option value="review" ${taskData && taskData.workflow_status === 'review' ? 'selected' : ''}>Review</option>
-                                                        <option value="done" ${taskData && taskData.workflow_status === 'done' ? 'selected' : ''}>Done</option>
+                                                <div class="form-group mb-3">
+                                                    <label for="taskWorkflowStatus" class="form-label fw-semibold">Estado Inicial</label>
+                                                    <select id="taskWorkflowStatus" class="form-control" style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                                        <option value="todo" ${taskData && taskData.workflow_status === 'todo' ? 'selected' : 'selected'}>Por Hacer</option>
+                                                        <option value="in_progress" ${taskData && taskData.workflow_status === 'in_progress' ? 'selected' : ''}>En Progreso</option>
+                                                        <option value="review" ${taskData && taskData.workflow_status === 'review' ? 'selected' : ''}>En Revisión</option>
+                                                        <option value="done" ${taskData && taskData.workflow_status === 'done' ? 'selected' : ''}>Completada</option>
                                                     </select>
+                                                    <small class="form-text text-muted">Estado inicial de la tarea</small>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <!-- Etiquetas -->
+                                        <div class="form-group mb-3">
+                                            <label for="taskTags" class="form-label fw-semibold">Etiquetas</label>
+                                            <input type="text" id="taskTags" class="form-control" 
+                                                   placeholder="frontend, backend, diseño (separadas por comas)"
+                                                   value="${taskData ? taskData.etiquetas || '' : ''}"
+                                                   style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                            <small class="form-text text-muted">Etiquetas para categorizar la tarea, separadas por comas</small>
+                                        </div>
+
+                                        <!-- Archivos Adjuntos -->
+                                        <div class="form-group mb-3">
+                                            <label for="taskFiles" class="form-label fw-semibold">Archivos Adjuntos</label>
+                                            <input type="file" id="taskFiles" class="form-control" multiple 
+                                                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif"
+                                                   style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; transition: all 0.3s ease;">
+                                            <small class="form-text text-muted">Puedes adjuntar múltiples archivos relacionados con la tarea</small>
                                         </div>
                                     </form>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="button" class="btn btn-primary" onclick="saveTask(${taskId})">
+                                <div class="modal-footer" style="border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                                            style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 24px; font-weight: 600;">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="saveTask(${taskId})"
+                                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; padding: 12px 24px; font-weight: 600; transition: all 0.3s ease;">
                                         <i class="fas fa-save"></i> ${taskId ? 'Actualizar' : 'Crear'} Tarea
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <style>
+                        #taskModal .form-control:focus {
+                            outline: none;
+                            border-color: #667eea !important;
+                            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+                        }
+                        #taskModal .btn-primary:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+                        }
+                        #taskModal .btn-secondary:hover {
+                            background: #f1f5f9 !important;
+                            color: #475569 !important;
+                        }
+                    </style>
                 `;
                 
                 // Remover modal existente si existe
@@ -3323,30 +3367,35 @@
 
         async function saveTask(taskId = null) {
             try {
-                const formData = {
-                    titulo: document.getElementById('taskTitle').value,
-                    descripcion: document.getElementById('taskDescription').value,
-                    prioridad: document.getElementById('taskPriority').value,
-                    asignado_a: document.getElementById('taskAssignee').value || null,
-                    fecha_limite: document.getElementById('taskDueDate').value || null,
-                    estado: document.getElementById('taskStatus').value,
-                    workflow_status: document.getElementById('taskWorkflowStatus').value
-                };
+                const formData = new FormData();
                 
-                if (!formData.titulo.trim()) {
+                // Datos básicos
+                formData.append('titulo', document.getElementById('taskTitle').value);
+                formData.append('descripcion', document.getElementById('taskDescription').value);
+                formData.append('fase_id', document.getElementById('taskPhase').value || null);
+                formData.append('asignado_a', document.getElementById('taskAssignee').value || null);
+                formData.append('fecha_limite', document.getElementById('taskDueDate').value || null);
+                formData.append('estimacion_horas', document.getElementById('taskEstimation').value || null);
+                formData.append('workflow_status', document.getElementById('taskWorkflowStatus').value);
+                formData.append('etiquetas', document.getElementById('taskTags').value);
+                
+                // Archivos adjuntos
+                const files = document.getElementById('taskFiles').files;
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('archivos', files[i]);
+                }
+                
+                if (!document.getElementById('taskTitle').value.trim()) {
                     showAlert('El título es requerido', 'warning');
                     return;
                 }
                 
-                const url = taskId ? `/api/tasks/${taskId}` : `/admin/projects/<%= project.id %>/tasks`;
+                const url = taskId ? `/admin/api/tasks/${taskId}` : `/admin/api/projects/<%= project.id %>/tasks/quick`;
                 const method = taskId ? 'PUT' : 'POST';
                 
                 const response = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
                 
                 const result = await response.json();
@@ -3354,9 +3403,17 @@
                 if (result.success) {
                     showAlert(taskId ? 'Tarea actualizada exitosamente' : 'Tarea creada exitosamente', 'success');
                     bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
-                    setTimeout(() => location.reload(), 1000);
+                    
+                    // Refresh tasks without full page reload
+                    if (!taskId) {
+                        // For new tasks, refresh the task list
+                        await refreshTaskList();
+                    } else {
+                        // For updates, just reload the page
+                        setTimeout(() => location.reload(), 1000);
+                    }
                 } else {
-                    showAlert(result.error || 'Error al guardar la tarea', 'danger');
+                    showAlert(result.message || result.error || 'Error al guardar la tarea', 'danger');
                 }
                 
             } catch (error) {
@@ -3691,6 +3748,33 @@
                 kanbanView.style.display = 'none';
                 toggleBtn.innerHTML = '<i class="fas fa-columns"></i> Vista Kanban';
                 toggleBtn.classList.remove('active');
+            }
+        }
+
+        // Refresh task list function
+        async function refreshTaskList() {
+            try {
+                // Refresh both table and kanban views
+                const response = await fetch(`/admin/api/projects/<%= project.id %>/tasks`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update kanban view if visible
+                    if (isKanbanView) {
+                        renderKanbanTasks(data.data);
+                    }
+                    
+                    // Reload the page to update the table view and task counts
+                    setTimeout(() => location.reload(), 500);
+                } else {
+                    console.error('Error al refrescar tareas:', data.error);
+                    // Fallback to page reload
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (error) {
+                console.error('Error refreshing tasks:', error);
+                // Fallback to page reload
+                setTimeout(() => location.reload(), 1000);
             }
         }
 

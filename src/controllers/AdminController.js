@@ -1816,6 +1816,14 @@ class AdminController {
       const tasks = [...tasksGrouped.todo, ...tasksGrouped.in_progress, ...tasksGrouped.done];
       const deliverables = await this.entregableModel.findByProject(projectId);
       
+      // Obtener fases del proyecto
+      const fases = await this.projectModel.query(`
+        SELECT id, nombre, descripcion, orden
+        FROM fases_proyecto
+        WHERE activo = TRUE
+        ORDER BY orden ASC
+      `);
+      
       res.render('admin/project-detail', {
         title: `Admin: ${project.titulo}`,
         user,
@@ -1826,6 +1834,7 @@ class AdminController {
         tasks,
         tasksGrouped,
         deliverables,
+        fases,
         success: req.flash('success'),
         error: req.flash('error')
       });
