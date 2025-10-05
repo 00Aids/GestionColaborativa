@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detalles del Proyecto - <%= project.nombre %></title>
+    <title>Detalles del Proyecto - <%= (project && project.nombre) ? project.nombre : (project && project.titulo) ? project.titulo : 'Proyecto' %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -1670,43 +1670,47 @@
             <div class="project-card">
                 <div class="project-header">
                     <div>
-                        <h1 class="project-title"><%= project.nombre %></h1>
+                        <h1 class="project-title"><%= (project && project.titulo) ? project.titulo : (project && project.nombre) ? project.nombre : 'Proyecto sin título' %></h1>
                         <div class="project-meta">
-                            <span><i class="fas fa-calendar"></i> Creado: <%= new Date(project.fecha_creacion).toLocaleDateString('es-ES') %></span>
-                            <span><i class="fas fa-clock"></i> Fecha límite: <%= project.fecha_limite ? new Date(project.fecha_limite).toLocaleDateString('es-ES') : 'No definida' %></span>
+                            <span><i class="fas fa-calendar"></i> Creado: <%= (project && project.fecha_creacion) ? new Date(project.fecha_creacion).toLocaleDateString('es-ES') : 'Fecha no disponible' %></span>
+                            <span><i class="fas fa-clock"></i> Fecha límite: <%= (project && project.fecha_limite) ? new Date(project.fecha_limite).toLocaleDateString('es-ES') : 'No definida' %></span>
                         </div>
                     </div>
                     <div>
-                        <span class="status-badge status-<%= project.estado.toLowerCase() %>">
+                        <span class="status-badge status-<%= (project && project.estado) ? project.estado.toLowerCase() : 'unknown' %>">
                             <i class="fas fa-circle"></i>
-                            <%= project.estado %>
+                            <%= (project && project.estado) ? project.estado : 'Estado desconocido' %>
                         </span>
                     </div>
                 </div>
 
                 <div class="project-description">
                     <h3 style="margin-bottom: 15px; color: #2c3e50;"><i class="fas fa-info-circle"></i> Descripción</h3>
-                    <p style="line-height: 1.6; color: #555;"><%= project.descripcion || 'Sin descripción disponible' %></p>
+                    <p style="line-height: 1.6; color: #555;"><%= (project && project.descripcion) ? project.descripcion : 'Sin descripción disponible' %></p>
                 </div>
 
                 <div class="action-buttons" style="margin-top: 25px;">
+                    <% if (project && project.id) { %>
                     <a href="/admin/projects/<%= project.id %>/edit" class="btn btn-primary">
                         <i class="fas fa-edit"></i> Editar Proyecto
                     </a>
+                    <% } %>
                     <button onclick="showInviteModal()" class="btn btn-success">
                         <i class="fas fa-user-plus"></i> Invitar Miembros
                     </button>
                     <button onclick="generateReport()" class="btn btn-warning">
                         <i class="fas fa-chart-bar"></i> Generar Reporte
                     </button>
-                    <% if (project.estado !== 'completado') { %>
-                    <button onclick="showConfirmDialog('¿Completar proyecto?', 'Esta acción marcará el proyecto como completado.', () => completeProject(<%= project.id %>))" class="btn btn-success">
+                    <% if (project && project.estado && project.estado !== 'completado') { %>
+                    <button onclick="showConfirmDialog('¿Completar proyecto?', 'Esta acción marcará el proyecto como completado.', function() { completeProject(<%= project.id %>); })" class="btn btn-success">
                         <i class="fas fa-check"></i> Completar
                     </button>
                     <% } %>
+                    <% if (project && project.id) { %>
                     <button onclick="showConfirmDialog('¿Eliminar proyecto?', 'Esta acción no se puede deshacer.', () => deleteProject(<%= project.id %>))" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
+                    <% } %>
                 </div>
             </div>
 
@@ -1763,10 +1767,10 @@
                         <i class="fas fa-tasks"></i> Progreso Detallado
                     </h4>
                     <% 
-                        const totalTasks = tasks.length;
-                        const completedTasks = tasksGrouped.done.length;
-                        const inProgressTasks = tasksGrouped.in_progress.length;
-                        const todoTasks = tasksGrouped.todo.length;
+                        const totalTasks = (tasks && Array.isArray(tasks)) ? tasks.length : 0;
+                        const completedTasks = (tasksGrouped && tasksGrouped.done && Array.isArray(tasksGrouped.done)) ? tasksGrouped.done.length : 0;
+                        const inProgressTasks = (tasksGrouped && tasksGrouped.in_progress && Array.isArray(tasksGrouped.in_progress)) ? tasksGrouped.in_progress.length : 0;
+                        const todoTasks = (tasksGrouped && tasksGrouped.todo && Array.isArray(tasksGrouped.todo)) ? tasksGrouped.todo.length : 0;
                         const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
                     %>
                     
@@ -1813,7 +1817,7 @@
                                 <span class="timeline-date">
                                     <% 
                                         try {
-                                            const fechaInicio = project.fecha_creacion ? new Date(project.fecha_creacion) : new Date();
+                                            const fechaInicio = (project && project.fecha_creacion) ? new Date(project.fecha_creacion) : new Date();
                                             if (isNaN(fechaInicio.getTime())) {
                                                 throw new Error('Invalid date');
                                             }
@@ -1830,11 +1834,11 @@
                             </div>
                         </div>
                         
-                        <% if (project.fecha_limite) { %>
+                        <% if (project && project.fecha_limite) { %>
                         <% 
                             try {
                                 const fechaLimite = new Date(project.fecha_limite);
-                                const fechaInicio = project.fecha_creacion ? new Date(project.fecha_creacion) : new Date();
+                                const fechaInicio = (project && project.fecha_creacion) ? new Date(project.fecha_creacion) : new Date();
                                 
                                 if (isNaN(fechaLimite.getTime()) || isNaN(fechaInicio.getTime())) {
                                     throw new Error('Invalid dates');
@@ -1886,7 +1890,7 @@
                                 <i class="fas fa-tachometer-alt"></i>
                             </div>
                             <div class="metric-content">
-                                <span class="metric-value"><%= Math.round((completedTasks / Math.max(1, (Date.now() - new Date(project.fecha_creacion)) / (1000 * 60 * 60 * 24))) * 10) / 10 %></span>
+                                <span class="metric-value"><%= (project && project.fecha_creacion && completedTasks > 0) ? Math.round((completedTasks / Math.max(1, (Date.now() - new Date(project.fecha_creacion)) / (1000 * 60 * 60 * 24))) * 10) / 10 : 0 %></span>
                                 <span class="metric-label">Tareas/día</span>
                             </div>
                         </div>
@@ -1978,10 +1982,7 @@
                                     <span class="status-badge status-active">Activo</span>
                                 </td>
                                 <td>
-                                    <button onclick="editMemberRole(<%= member.usuario_id %>)" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="showConfirmDialog('¿Remover miembro?', 'Esta acción removerá al usuario del proyecto.', () => removeMember(<%= member.usuario_id %>))" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
+                                    <button onclick="removeMember(<%= member.usuario_id %>)" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -1995,13 +1996,64 @@
                         No hay miembros asignados a este proyecto.
                     </div>
                     <% } %>
+
+                    <!-- Sección de Miembros Inactivos -->
+                    <% if (inactiveMembers && inactiveMembers.length > 0) { %>
+                    <div style="margin-top: 30px;">
+                        <h4 style="color: #666; margin-bottom: 15px;">
+                            <i class="fas fa-user-slash"></i> Miembros Inactivos (<%= inactiveMembers.length %>)
+                        </h4>
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Fecha de Unión</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% inactiveMembers.forEach(member => { %>
+                                <tr style="opacity: 0.7;">
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <div class="user-avatar" style="width: 32px; height: 32px; font-size: 14px; background: #ccc;">
+                                                <%= member.nombres.charAt(0).toUpperCase() %>
+                                            </div>
+                                            <div>
+                                                <strong><%= member.nombres %> <%= member.apellidos %></strong>
+                                                <br><small style="color: #666;"><%= member.email %></small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge" style="background: #f5f5f5; color: #666;">
+                                            <%= member.rol_nombre %>
+                                        </span>
+                                    </td>
+                                    <td><%= member.fecha_asignacion ? new Date(member.fecha_asignacion).toLocaleDateString('es-ES') : 'No disponible' %></td>
+                                    <td>
+                                        <span class="status-badge" style="background: #ffebee; color: #c62828;">Inactivo</span>
+                                    </td>
+                                    <td>
+                                        <button onclick="reactivateMember(<%= member.usuario_id %>)" class="btn btn-success" style="padding: 6px 12px; font-size: 12px;">
+                                            <i class="fas fa-undo"></i> Reactivar
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } %>
                 </div>
 
                 <!-- Pestaña de Tareas - Vista Kanban -->
                 <div id="tasks" class="tab-pane">
                     <div class="kanban-header">
                         <div class="kanban-title">
-                            <h3><i class="fas fa-columns"></i> Tablero Kanban - <%= project.nombre %></h3>
+                            <h3><i class="fas fa-columns"></i> Tablero Kanban - <%= (project && project.nombre) ? project.nombre : (project && project.titulo) ? project.titulo : 'Proyecto' %></h3>
                             <span class="task-count">(<%= tasks.length %> tareas)</span>
                         </div>
                         <div class="kanban-actions">
@@ -2211,9 +2263,9 @@
                             <div class="timeline-content-card">
                                 <div class="timeline-header">
                                     <h4>Proyecto Creado</h4>
-                                    <span class="timeline-date"><%= new Date(project.fecha_creacion).toLocaleDateString('es-ES') %></span>
+                                    <span class="timeline-date"><%= (project && project.fecha_creacion) ? new Date(project.fecha_creacion).toLocaleDateString('es-ES') : 'Fecha no disponible' %></span>
                                 </div>
-                                <p>El proyecto "<%= project.nombre %>" fue creado por <%= project.director_nombres %> <%= project.director_apellidos %>.</p>
+                                <p>El proyecto "<%= (project && project.nombre) ? project.nombre : (project && project.titulo) ? project.titulo : 'Sin nombre' %>" fue creado por <%= (project && project.director_nombres) ? project.director_nombres : 'Director' %> <%= (project && project.director_apellidos) ? project.director_apellidos : '' %>.</p>
                                 <div class="timeline-meta">
                                     <span class="timeline-tag project-tag">Proyecto</span>
                                 </div>
@@ -2312,7 +2364,8 @@
                                     <span class="timeline-tag deadline-tag">Fecha Límite</span>
                                     <span class="days-remaining">
                                         <% 
-                                        const daysLeft = Math.ceil((new Date(project.fecha_limite) - new Date()) / (1000 * 60 * 60 * 24));
+                                        if (project && project.fecha_limite) {
+                                            const daysLeft = Math.ceil((new Date(project.fecha_limite) - new Date()) / (1000 * 60 * 60 * 24));
                                         %>
                                         <% if (daysLeft > 0) { %>
                                             <%= daysLeft %> días restantes
@@ -2320,6 +2373,9 @@
                                             ¡Hoy es la fecha límite!
                                         <% } else { %>
                                             <%= Math.abs(daysLeft) %> días de retraso
+                                        <% } %>
+                                        <% } else { %>
+                                            Sin fecha límite definida
                                         <% } %>
                                     </span>
                                 </div>
@@ -3019,127 +3075,98 @@
             }
         }
 
-        async function editMemberRole(userId) {
-            try {
-                // Obtener roles disponibles
-                const rolesResponse = await fetch('/admin/roles');
-                const rolesResult = await rolesResponse.json();
-                
-                if (!rolesResult.success) {
-                    showAlert('Error al cargar roles disponibles', 'danger');
-                    return;
-                }
-                
-                const roles = rolesResult.roles || [];
-                const roleOptions = roles.map(role => 
-                    `<option value="${role.id}">${role.nombre}</option>`
-                ).join('');
-                
-                const modalHtml = `
-                    <div class="modal fade" id="editRoleModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="fas fa-user-edit"></i>
-                                        Cambiar Rol del Miembro
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label class="form-label">Nuevo Rol</label>
-                                        <select class="form-control" id="newMemberRole">
-                                            ${roleOptions}
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="button" class="btn btn-primary" onclick="saveMemberRole(${userId})">
-                                        <i class="fas fa-save"></i> Guardar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Remover modal existente si existe
-                const existingModal = document.getElementById('editRoleModal');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                
-                // Agregar modal al DOM
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
-                // Mostrar modal
-                const modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
-                modal.show();
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error al cargar el formulario de edición', 'danger');
-            }
-        }
-
-        async function saveMemberRole(userId) {
-            try {
-                const newRoleId = document.getElementById('newMemberRole').value;
-                
-                if (!newRoleId) {
-                    showAlert('Debe seleccionar un rol', 'warning');
-                    return;
-                }
-                
-                const response = await fetch(`/admin/projects/<%= project.id %>/members/${userId}/role`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ role_id: newRoleId })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Rol actualizado exitosamente', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('editRoleModal')).hide();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showAlert(result.error || 'Error al cambiar el rol', 'danger');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error al cambiar el rol', 'danger');
-            }
-        }
-
         function removeMember(userId) {
+            console.log('🔍 removeMember llamada con userId:', userId);
+            console.log('🔍 Project ID:', '<%= project.id %>');
+            
             showConfirmDialog(
                 '¿Remover miembro?',
                 'Esta acción removerá al usuario del proyecto. ¿Estás seguro?',
                 async () => {
+                    console.log('✅ Usuario confirmó la eliminación');
                     try {
-                        const response = await fetch(`/admin/projects/<%= project.id %>/members/${userId}`, {
+                        const url = `/admin/projects/<%= project.id %>/members/${userId}`;
+                        console.log('🌐 Enviando petición DELETE a:', url);
+                        
+                        const response = await fetch(url, {
                             method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                         });
                         
+                        console.log('📡 Respuesta recibida:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            ok: response.ok
+                        });
+                        
                         const result = await response.json();
+                        console.log('📄 Resultado parseado:', result);
                         
                         if (result.success) {
+                            console.log('✅ Eliminación exitosa');
                             showAlert('Miembro removido exitosamente', 'success');
-                            setTimeout(() => location.reload(), 1000);
+                            setTimeout(() => {
+                                console.log('🔄 Recargando página...');
+                                location.reload();
+                            }, 1000);
                         } else {
-                            showAlert(result.error || 'Error al remover miembro', 'danger');
+                            console.log('❌ Error en eliminación:', result.message);
+                            showAlert(result.message || 'Error al remover miembro', 'danger');
                         }
                     } catch (error) {
-                        console.error('Error:', error);
+                        console.error('💥 Error en catch:', error);
                         showAlert('Error al remover miembro', 'danger');
+                    }
+                }
+            );
+        }
+
+        // Función para reactivar miembro
+        function reactivateMember(userId) {
+            console.log('🔍 reactivateMember llamada con userId:', userId);
+            console.log('🔍 Project ID:', '<%= project.id %>');
+            
+            showConfirmDialog(
+                '¿Reactivar miembro?',
+                'Esta acción reactivará al usuario en el proyecto. ¿Estás seguro?',
+                async () => {
+                    console.log('✅ Usuario confirmó la reactivación');
+                    try {
+                        const url = `/admin/projects/<%= project.id %>/members/${userId}/reactivate`;
+                        console.log('🌐 Enviando petición PUT a:', url);
+                        
+                        const response = await fetch(url, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        
+                        console.log('📡 Respuesta recibida:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            ok: response.ok
+                        });
+                        
+                        const result = await response.json();
+                        console.log('📄 Resultado parseado:', result);
+                        
+                        if (result.success) {
+                            console.log('✅ Reactivación exitosa');
+                            showAlert('Miembro reactivado exitosamente', 'success');
+                            setTimeout(() => {
+                                console.log('🔄 Recargando página...');
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            console.log('❌ Error en reactivación:', result.message);
+                            showAlert(result.message || 'Error al reactivar miembro', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('💥 Error en catch:', error);
+                        showAlert('Error al reactivar miembro', 'danger');
                     }
                 }
             );

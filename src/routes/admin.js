@@ -69,6 +69,9 @@ router.delete('/projects/:projectId', adminController.deleteProject.bind(adminCo
 // Página principal de gestión de roles
 router.get('/roles', adminController.roles.bind(adminController));
 
+// API para obtener roles disponibles (JSON)
+router.get('/api/roles', adminController.getRolesAPI.bind(adminController));
+
 // Crear nuevo rol
 router.post('/roles', adminController.createRole.bind(adminController));
 
@@ -136,6 +139,9 @@ router.get('/projects/:projectId/members', adminController.getProjectMembers.bin
 
 // API para remover miembro de un proyecto
 router.delete('/projects/:projectId/members/:userId', adminController.removeMember.bind(adminController));
+
+// API para reactivar miembro de un proyecto
+router.put('/projects/:projectId/members/:userId/reactivate', adminController.reactivateMember.bind(adminController));
 
 // =============================================
 // RUTAS DE GESTIÓN DE LÍNEAS DE INVESTIGACIÓN

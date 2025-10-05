@@ -220,6 +220,31 @@ class AdminController {
     }
   }
 
+  // API para obtener roles disponibles (JSON)
+  async getRolesAPI(req, res) {
+    try {
+      const user = req.session.user;
+      
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      // Obtener roles activos
+      const roles = await this.roleModel.findActive();
+      
+      res.json({ 
+        success: true, 
+        roles: roles 
+      });
+    } catch (error) {
+      console.error('Error getting roles API:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Error al obtener roles' 
+      });
+    }
+  }
+
   // Crear nuevo rol
   async createRole(req, res) {
     try {
@@ -1597,20 +1622,32 @@ class AdminController {
   // Remover miembro de un proyecto
   async removeMember(req, res) {
     try {
+      console.log('🔍 [BACKEND] removeMember llamado');
+      console.log('🔍 [BACKEND] Parámetros recibidos:', req.params);
+      console.log('🔍 [BACKEND] Usuario en sesión:', req.session.user ? req.session.user.id : 'No hay sesión');
+      
       const user = req.session.user;
       const { projectId, userId } = req.params;
       
+      console.log('🔍 [BACKEND] ProjectId:', projectId, 'UserId:', userId);
+
       // Verificar permisos
       if (!user || user.rol_nombre !== 'Administrador General') {
+        console.log('❌ [BACKEND] Permisos insuficientes:', user ? user.rol_nombre : 'Sin usuario');
         return res.status(403).json({ 
           success: false, 
           message: 'No tienes permisos para realizar esta acción.' 
         });
       }
 
+      console.log('✅ [BACKEND] Permisos verificados correctamente');
+
       // Verificar que el proyecto existe
       const project = await this.projectModel.findById(projectId);
+      console.log('🔍 [BACKEND] Proyecto encontrado:', project ? 'Sí' : 'No');
+      
       if (!project) {
+        console.log('❌ [BACKEND] Proyecto no encontrado');
         return res.status(404).json({ 
           success: false, 
           message: 'Proyecto no encontrado.' 
@@ -1618,34 +1655,120 @@ class AdminController {
       }
 
       // Verificar que el usuario es miembro del proyecto
+      console.log('🔍 [BACKEND] Verificando membresía del usuario...');
       const member = await this.projectModel.query(`
         SELECT * FROM proyecto_usuarios 
         WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'activo'
       `, [projectId, userId]);
 
+      console.log('🔍 [BACKEND] Resultado de búsqueda de miembro:', member);
+
       if (!member || member.length === 0) {
+        console.log('❌ [BACKEND] Usuario no es miembro activo');
         return res.status(404).json({ 
           success: false, 
           message: 'El usuario no es miembro activo de este proyecto.' 
         });
       }
 
+      console.log('✅ [BACKEND] Usuario es miembro activo, procediendo a desactivar...');
+
       // Desactivar la membresía en lugar de eliminarla
-      await this.projectModel.query(`
+      const updateResult = await this.projectModel.query(`
         UPDATE proyecto_usuarios 
         SET estado = 'inactivo'
         WHERE proyecto_id = ? AND usuario_id = ?
       `, [projectId, userId]);
+
+      console.log('🔍 [BACKEND] Resultado de actualización:', updateResult);
+      console.log('✅ [BACKEND] Miembro desactivado exitosamente');
 
       res.json({ 
         success: true, 
         message: 'Miembro removido exitosamente del proyecto.' 
       });
     } catch (error) {
-      console.error('Error removing project member:', error);
+      console.error('💥 [BACKEND] Error removing project member:', error);
       res.status(500).json({ 
         success: false, 
         message: 'Error al remover el miembro del proyecto.' 
+      });
+    }
+  }
+
+  // Reactivar miembro del proyecto (cambiar de inactivo a activo)
+  async reactivateMember(req, res) {
+    try {
+      console.log('🔍 [BACKEND] reactivateMember llamado');
+      console.log('🔍 [BACKEND] Parámetros recibidos:', req.params);
+      console.log('🔍 [BACKEND] Usuario en sesión:', req.session.user ? req.session.user.id : 'No hay sesión');
+      
+      const user = req.session.user;
+      const { projectId, userId } = req.params;
+      
+      console.log('🔍 [BACKEND] ProjectId:', projectId, 'UserId:', userId);
+
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        console.log('❌ [BACKEND] Permisos insuficientes:', user ? user.rol_nombre : 'Sin usuario');
+        return res.status(403).json({ 
+          success: false, 
+          message: 'No tienes permisos para realizar esta acción.' 
+        });
+      }
+
+      console.log('✅ [BACKEND] Permisos verificados correctamente');
+
+      // Verificar que el proyecto existe
+      const project = await this.projectModel.findById(projectId);
+      console.log('🔍 [BACKEND] Proyecto encontrado:', project ? 'Sí' : 'No');
+      
+      if (!project) {
+        console.log('❌ [BACKEND] Proyecto no encontrado');
+        return res.status(404).json({ 
+          success: false, 
+          message: 'Proyecto no encontrado.' 
+        });
+      }
+
+      // Verificar que el usuario es miembro inactivo del proyecto
+      console.log('🔍 [BACKEND] Verificando membresía inactiva del usuario...');
+      const member = await this.projectModel.query(`
+        SELECT * FROM proyecto_usuarios 
+        WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'inactivo'
+      `, [projectId, userId]);
+
+      console.log('🔍 [BACKEND] Resultado de búsqueda de miembro inactivo:', member);
+
+      if (!member || member.length === 0) {
+        console.log('❌ [BACKEND] Usuario no es miembro inactivo');
+        return res.status(404).json({ 
+          success: false, 
+          message: 'El usuario no es miembro inactivo de este proyecto.' 
+        });
+      }
+
+      console.log('✅ [BACKEND] Usuario es miembro inactivo, procediendo a reactivar...');
+
+      // Reactivar la membresía
+      const updateResult = await this.projectModel.query(`
+        UPDATE proyecto_usuarios 
+        SET estado = 'activo'
+        WHERE proyecto_id = ? AND usuario_id = ?
+      `, [projectId, userId]);
+
+      console.log('🔍 [BACKEND] Resultado de reactivación:', updateResult);
+      console.log('✅ [BACKEND] Miembro reactivado exitosamente');
+
+      res.json({ 
+        success: true, 
+        message: 'Miembro reactivado exitosamente en el proyecto.' 
+      });
+    } catch (error) {
+      console.error('💥 [BACKEND] Error reactivating project member:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error al reactivar el miembro del proyecto.' 
       });
     }
   }
@@ -1674,6 +1797,20 @@ class AdminController {
       
       // Obtener datos adicionales
       const members = await this.projectModel.getProjectMembers(projectId);
+      const inactiveMembers = await this.projectModel.query(`
+        SELECT 
+          pu.*,
+          u.nombres,
+          u.apellidos,
+          u.email,
+          u.codigo_usuario,
+          r.nombre as rol_nombre
+        FROM proyecto_usuarios pu
+        LEFT JOIN usuarios u ON pu.usuario_id = u.id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE pu.proyecto_id = ? AND pu.estado = 'inactivo'
+        ORDER BY pu.fecha_asignacion ASC
+      `, [projectId]);
       const invitations = await this.projectModel.getProjectInvitations(projectId);
       const tasksGrouped = await this.taskModel.getProjectTasksWithWorkflow(projectId);
       const tasks = [...tasksGrouped.todo, ...tasksGrouped.in_progress, ...tasksGrouped.done];
@@ -1684,6 +1821,7 @@ class AdminController {
         user,
         project,
         members,
+        inactiveMembers,
         invitations,
         tasks,
         tasksGrouped,
