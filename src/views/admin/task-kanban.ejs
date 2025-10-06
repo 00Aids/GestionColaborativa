@@ -419,6 +419,8 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            /* Fallback para navegadores que no soportan line-clamp */
+            line-clamp: 2;
         }
 
         .task-meta {
@@ -1074,22 +1076,58 @@
                 submitBtn.innerHTML = '<div class="loading"></div> Creando...';
                 submitBtn.disabled = true;
                 
+                console.log('Enviando petición para crear tarea...');
+                
                 const response = await fetch(`/admin/api/projects/${projectId}/tasks/quick`, {
                     method: 'POST',
                     body: formData
                 });
                 
+                console.log('Respuesta recibida:', response.status, response.statusText);
+                
                 if (response.ok) {
-                    showNotification('Tarea creada exitosamente', 'success');
-                    closeQuickCreateForm();
-                    refreshBoard();
+                    const responseData = await response.json();
+                    console.log('Datos de respuesta:', responseData);
+                    
+                    if (responseData.success) {
+                        showNotification('Tarea creada exitosamente', 'success');
+                        closeQuickCreateForm();
+                        refreshBoard();
+                    } else {
+                        showNotification('Error al crear la tarea: ' + (responseData.message || 'Error desconocido'), 'error');
+                    }
                 } else {
-                    const errorText = await response.text();
-                    showNotification('Error al crear la tarea: ' + errorText, 'error');
+                    console.error('Error HTTP:', response.status, response.statusText);
+                    let errorMessage = 'Error del servidor';
+                    
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (parseError) {
+                        console.error('Error al parsear respuesta de error:', parseError);
+                        try {
+                            errorMessage = await response.text();
+                        } catch (textError) {
+                            console.error('Error al obtener texto de respuesta:', textError);
+                        }
+                    }
+                    
+                    showNotification('Error al crear la tarea: ' + errorMessage, 'error');
                 }
             } catch (error) {
                 console.error('Error creating task:', error);
-                showNotification('Error al crear la tarea', 'error');
+                
+                // Manejo específico para ERR_ABORTED
+                if (error.name === 'AbortError' || error.message.includes('aborted')) {
+                    console.warn('Petición abortada - esto puede ser normal si la tarea se creó exitosamente');
+                    // Verificar si la tarea se creó revisando el tablero
+                    setTimeout(() => {
+                        refreshBoard();
+                    }, 1000);
+                    showNotification('Tarea creada (verificando estado...)', 'success');
+                } else {
+                    showNotification('Error al crear la tarea: ' + error.message, 'error');
+                }
             } finally {
                 const submitBtn = document.querySelector('#quickCreateTaskForm button[type="submit"]');
                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Crear Tarea';

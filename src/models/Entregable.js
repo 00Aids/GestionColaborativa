@@ -466,7 +466,8 @@ class Entregable extends BaseModel {
             const query = `
                 SELECT 
                     e.*,
-                    e.archivo_url,
+                    e.archivo_url as archivos_originales,
+                    e.archivos_adjuntos as archivos_entregados,
                     p.titulo as proyecto_titulo,
                     p.estado as proyecto_estado,
                     p.descripcion as proyecto_descripcion,
@@ -492,7 +493,89 @@ class Entregable extends BaseModel {
             `;
             
             const [rows] = await this.db.execute(query, [entregableId]);
-            return rows.length > 0 ? rows[0] : null;
+            
+            if (rows.length > 0) {
+                const entregable = rows[0];
+                
+                // Procesar archivos de referencia desde observaciones (archivos que se adjuntan al crear la tarea)
+                let archivos_referencia = [];
+                if (entregable.observaciones) {
+                    try {
+                        const observaciones = typeof entregable.observaciones === 'string' 
+                            ? JSON.parse(entregable.observaciones) 
+                            : entregable.observaciones;
+                        
+                        if (observaciones && observaciones.archivos_adjuntos && Array.isArray(observaciones.archivos_adjuntos)) {
+                            archivos_referencia = observaciones.archivos_adjuntos.map(archivo => ({
+                                ...archivo,
+                                tipo: 'referencia',
+                                url: `/uploads/deliverables/${archivo.nombre_archivo}`,
+                                nombre: archivo.nombre_original || archivo.nombre_archivo
+                            }));
+                        }
+                    } catch (error) {
+                        console.warn('Error procesando archivos de referencia desde observaciones:', error);
+                    }
+                }
+                
+                // Procesar archivos originales (archivo_url) - Archivos legacy o adicionales
+                if (entregable.archivos_originales) {
+                    try {
+                        // Si es una cadena separada por comas, convertir a array
+                        if (typeof entregable.archivos_originales === 'string') {
+                            const archivosLegacy = entregable.archivos_originales
+                                .split(',')
+                                .map(url => url.trim())
+                                .filter(url => url.length > 0)
+                                .map(url => ({
+                                    url: url,
+                                    nombre: url.split('/').pop(),
+                                    tipo: 'referencia'
+                                }));
+                            
+                            // Combinar con archivos de referencia
+                            archivos_referencia = [...archivos_referencia, ...archivosLegacy];
+                        }
+                    } catch (error) {
+                        console.warn('Error procesando archivos originales:', error);
+                    }
+                }
+                
+                // Asignar archivos de referencia
+                entregable.archivos_referencia = archivos_referencia;
+                entregable.archivos_originales = archivos_referencia; // Para compatibilidad
+                
+                // Procesar archivos entregados (archivos_adjuntos) - Los archivos que el estudiante subió como entrega
+                if (entregable.archivos_entregados) {
+                    try {
+                        // Si es una cadena JSON, parsear
+                        if (typeof entregable.archivos_entregados === 'string') {
+                            entregable.archivos_entregados = JSON.parse(entregable.archivos_entregados);
+                        }
+                        
+                        // Asegurar que sea un array y agregar tipo
+                        if (Array.isArray(entregable.archivos_entregados)) {
+                            entregable.archivos_entregados = entregable.archivos_entregados.map(archivo => ({
+                                ...archivo,
+                                tipo: 'entregado',
+                                url: `/uploads/deliverables/${archivo.nombre_archivo}`,
+                                nombre_original: archivo.nombre_original || archivo.nombre_archivo || archivo.nombre || 'Archivo sin nombre'
+                            }));
+                        } else {
+                            entregable.archivos_entregados = [];
+                        }
+                    } catch (error) {
+                        console.warn('Error procesando archivos entregados:', error);
+                        entregable.archivos_entregados = [];
+                    }
+                } else {
+                    entregable.archivos_entregados = [];
+                }
+                
+                return entregable;
+            }
+            
+            return null;
         } catch (error) {
             throw new Error(`Error finding entregable by ID with details: ${error.message}`);
         }

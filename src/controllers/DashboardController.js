@@ -1314,11 +1314,19 @@ class DashboardController {
         updateData.descripcion = content.trim();
       }
 
-      // Manejar archivos adjuntos
+      // Manejar archivos adjuntos - CORREGIDO: Los archivos del estudiante van a archivos_adjuntos
       if (req.files && req.files.length > 0) {
         const fileUrls = req.files.map(file => `/uploads/deliverables/${file.filename}`);
         
-        updateData.archivo_url = fileUrls.join(',');
+        // Los archivos del estudiante deben ir a archivos_adjuntos, no a archivo_url
+        const filesData = req.files.map(file => ({
+          url: `/uploads/deliverables/${file.filename}`,
+          nombre_original: file.originalname,
+          nombre_archivo: file.filename,
+          tipo: 'entregado'
+        }));
+        
+        updateData.archivos_adjuntos = JSON.stringify(filesData);
       }
 
       // Actualizar en la base de datos
