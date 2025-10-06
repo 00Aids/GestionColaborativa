@@ -1,25 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const EvaluatorController = require('../controllers/EvaluatorController');
-const auth = require('../middlewares/auth');
+const AuthMiddleware = require('../middlewares/auth');
 
 // Crear instancia del controlador
 const evaluatorController = new EvaluatorController();
 
-// Middleware para verificar que el usuario sea evaluador
-const checkEvaluatorRole = (req, res, next) => {
-  if (!req.session.user || req.session.user.rol !== 'Evaluador') {
-    return res.status(403).render('errors/403', {
-      title: 'Acceso Denegado',
-      message: 'No tienes permisos para acceder a esta sección'
-    });
-  }
-  next();
-};
-
 // Aplicar middlewares a todas las rutas
-router.use(auth);
-router.use(checkEvaluatorRole);
+router.use(AuthMiddleware.requireAuth);
+router.use(AuthMiddleware.requireRole('Evaluador'));
 
 // Rutas del evaluador
 

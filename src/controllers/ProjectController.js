@@ -175,7 +175,7 @@ class ProjectController {
         this.userModel.query('SELECT * FROM lineas_investigacion WHERE activo = 1'),
         this.userModel.query('SELECT * FROM ciclos_academicos WHERE activo = 1'),
         this.userModel.query(`
-          SELECT u.id, u.nombres, u.apellidos, u.area_trabajo_id, at.nombre as area_nombre
+          SELECT u.id, u.nombres, u.apellidos, u.area_trabajo_id, at.codigo as area_nombre
           FROM usuarios u
           LEFT JOIN areas_trabajo at ON u.area_trabajo_id = at.id
           WHERE u.rol_id = (SELECT id FROM roles WHERE nombre = 'Administrador General')

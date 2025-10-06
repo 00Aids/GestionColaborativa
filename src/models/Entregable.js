@@ -47,7 +47,7 @@ class Entregable extends BaseModel {
                     fp.nombre as fase_nombre,
                     fp.descripcion as fase_descripcion,
                     at.codigo as area_trabajo_codigo,
-                    at.nombre as area_trabajo_nombre,
+                    at.codigo as area_trabajo_nombre,
                     e.prioridad,
                     e.estado_workflow
                 FROM entregables e
@@ -476,7 +476,7 @@ class Entregable extends BaseModel {
                     fp.nombre as fase_nombre,
                     fp.descripcion as fase_descripcion,
                     at.codigo as area_trabajo_codigo,
-                    at.nombre as area_trabajo_nombre,
+                    at.codigo as area_trabajo_nombre,
                     DATEDIFF(e.fecha_limite, NOW()) as dias_restantes,
                     (SELECT COUNT(*) FROM entregable_comentarios ec WHERE ec.entregable_id = e.id) as total_comentarios
                 FROM entregables e

@@ -250,7 +250,7 @@ class Evaluation extends BaseModel {
         calificaciones: JSON.stringify(calificaciones),
         observaciones,
         nota_final: notaFinal,
-        estado: 'completada',
+        estado: 'finalizada',
         fecha_evaluacion: new Date(),
         updated_at: new Date()
       };

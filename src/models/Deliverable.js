@@ -429,7 +429,7 @@ class Deliverable extends BaseModel {
           u.apellidos as estudiante_apellidos,
           fp.nombre as fase_nombre,
           at.codigo as area_trabajo_codigo,
-          at.nombre as area_trabajo_nombre
+          at.codigo as area_trabajo_nombre
         FROM entregables e
         LEFT JOIN proyectos p ON e.proyecto_id = p.id
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
@@ -541,7 +541,7 @@ class Deliverable extends BaseModel {
           fp.nombre as fase_nombre,
           fp.descripcion as fase_descripcion,
           at.codigo as area_trabajo_codigo,
-          at.nombre as area_trabajo_nombre,
+          at.codigo as area_trabajo_nombre,
           DATEDIFF(e.fecha_limite, NOW()) as dias_restantes,
           (SELECT COUNT(*) FROM entregable_comentarios ec WHERE ec.entregable_id = e.id) as total_comentarios
         FROM entregables e
@@ -574,7 +574,7 @@ class Deliverable extends BaseModel {
           fp.nombre as fase_nombre,
           fp.descripcion as fase_descripcion,
           at.codigo as area_trabajo_codigo,
-          at.nombre as area_trabajo_nombre,
+          at.codigo as area_trabajo_nombre,
           DATEDIFF(e.fecha_limite, NOW()) as dias_restantes,
           (SELECT COUNT(*) FROM entregable_comentarios ce WHERE ce.entregable_id = e.id) as total_comentarios
         FROM entregables e

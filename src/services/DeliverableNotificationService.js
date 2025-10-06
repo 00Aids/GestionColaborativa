@@ -10,32 +10,28 @@ class DeliverableNotificationService {
     }
 
     // Notificar cuando un estudiante entrega un trabajo
-    async notifyDeliverableSubmitted(deliverableId, deliverableData) {
+    async notifyDeliverableSubmitted(projectId, deliverableId, studentName, titulo) {
         try {
-            const { proyecto_id, estudiante_id, titulo } = deliverableData;
-            
-            // Obtener información del proyecto y coordinador
-            const projectInfo = await this.projectModel.findByIdWithDetails(proyecto_id);
-            if (!projectInfo || !projectInfo.coordinador_id) {
-                console.log('No se encontró coordinador para el proyecto');
-                return;
+            const projectInfo = await this.projectModel.findByIdWithDetails(projectId);
+
+            // Notificar al coordinador si existe (no bloquear si no existe)
+            if (projectInfo && projectInfo.coordinador_id) {
+                const notificationData = {
+                    titulo: '📋 Nuevo Entregable Recibido',
+                    mensaje: `El estudiante ha entregado: "${titulo}" en el proyecto "${projectInfo.titulo}"`,
+                    tipo: 'info',
+                    url_accion: `/coordinator/deliverables?deliverable=${deliverableId}`
+                };
+
+                await this.notificationModel.createForUser(projectInfo.coordinador_id, notificationData);
+                console.log(`✅ Notificación enviada al coordinador ${projectInfo.coordinador_id} por entregable ${deliverableId}`);
             }
 
-            const notificationData = {
-                titulo: '📋 Nuevo Entregable Recibido',
-                mensaje: `El estudiante ha entregado: "${titulo}" en el proyecto "${projectInfo.nombre}"`,
-                tipo: 'info',
-                url_accion: `/coordinator/deliverables?deliverable=${deliverableId}`
-            };
-
-            await this.notificationModel.createForUser(projectInfo.coordinador_id, notificationData);
-            console.log(`✅ Notificación enviada al coordinador ${projectInfo.coordinador_id} por entregable ${deliverableId}`);
-
             // Crear notificación para el director si existe
-            if (projectInfo.director_id) {
+            if (projectInfo && projectInfo.director_id) {
                 const directorNotification = {
                     titulo: '📋 Nuevo Entregable para Evaluar',
-                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.nombre}"`,
+                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.titulo}"`,
                     tipo: 'info',
                     url_accion: `/director/deliverables?deliverable=${deliverableId}`
                 };
@@ -44,12 +40,12 @@ class DeliverableNotificationService {
             }
 
             // Crear notificación para el evaluador si existe
-            if (projectInfo.evaluador_id) {
+            if (projectInfo && projectInfo.evaluador_id) {
                 const evaluadorNotification = {
                     titulo: '📋 Nuevo Entregable para Evaluar',
-                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.nombre}"`,
+                    mensaje: `El estudiante ha enviado el entregable "${titulo}" para su evaluación en el proyecto "${projectInfo.titulo}"`,
                     tipo: 'info',
-                    url_accion: `/evaluator/deliverables?deliverable=${deliverableId}`
+                    url_accion: `/evaluator/evaluations?deliverable=${deliverableId}`
                 };
                 await this.notificationModel.createForUser(projectInfo.evaluador_id, evaluadorNotification);
                 console.log(`✅ Notificación enviada al evaluador ${projectInfo.evaluador_id} por entregable ${deliverableId}`);

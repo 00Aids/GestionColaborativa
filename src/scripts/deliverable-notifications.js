@@ -18,7 +18,7 @@ class DeliverableNotificationScript {
                     e.titulo,
                     e.fecha_limite,
                     p.estudiante_id,
-                    p.titulo as proyecto_nombre,
+                    p.titulo as proyecto_titulo,
                     p.director_id as coordinador_id,
                     DATEDIFF(e.fecha_limite, CURDATE()) as dias_restantes
                 FROM entregables e
@@ -35,7 +35,7 @@ class DeliverableNotificationScript {
                 const deliverableData = {
                     estudiante_id: deliverable.estudiante_id,
                     titulo: deliverable.titulo,
-                    proyecto_nombre: deliverable.proyecto_nombre,
+                    proyecto_titulo: deliverable.proyecto_titulo,
                     fecha_limite: deliverable.fecha_limite
                 };
 
@@ -65,7 +65,7 @@ class DeliverableNotificationScript {
                     e.titulo,
                     e.fecha_limite,
                     p.estudiante_id,
-                    p.titulo as proyecto_nombre,
+                    p.titulo as proyecto_titulo,
                     p.director_id as coordinador_id,
                     DATEDIFF(CURDATE(), e.fecha_limite) as dias_vencido
                 FROM entregables e
@@ -87,7 +87,7 @@ class DeliverableNotificationScript {
                 const deliverableData = {
                     estudiante_id: deliverable.estudiante_id,
                     titulo: deliverable.titulo,
-                    proyecto_nombre: deliverable.proyecto_nombre,
+                    proyecto_titulo: deliverable.proyecto_titulo,
                     coordinador_id: deliverable.coordinador_id
                 };
 
@@ -115,7 +115,7 @@ class DeliverableNotificationScript {
                     p.estudiante_id,
                     e.fecha_entrega,
                     p.id as proyecto_id,
-                    p.titulo as proyecto_nombre,
+                    p.titulo as proyecto_titulo,
                     p.director_id as coordinador_id,
                     DATEDIFF(CURDATE(), e.fecha_entrega) as dias_sin_revision
                 FROM entregables e
@@ -142,8 +142,10 @@ class DeliverableNotificationScript {
                     };
 
                     await this.notificationService.notifyDeliverableSubmitted(
+                        deliverable.proyecto_id,
                         deliverable.id,
-                        deliverableData
+                        null,
+                        deliverable.titulo
                     );
                 }
             }

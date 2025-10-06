@@ -118,11 +118,11 @@ class DeliverableNotificationTest {
       });
 
       this.testData = {
-        estudiante: { id: estudiante.insertId, nombres: 'Juan Carlos', apellidos: 'Pérez López' },
-        director: { id: director.insertId, nombres: 'María Elena', apellidos: 'García Rodríguez' },
-        evaluador: { id: evaluador.insertId, nombres: 'Carlos Alberto', apellidos: 'Martínez Silva' },
-        proyecto: { id: proyecto.insertId, titulo: 'Sistema de Gestión de Proyectos - Test' },
-        entregable: { id: entregable.insertId, titulo: 'Entregable de Prueba - Análisis de Requisitos' }
+        estudiante: { id: estudiante.id, nombres: 'Juan Carlos', apellidos: 'Pérez López' },
+        director: { id: director.id, nombres: 'María Elena', apellidos: 'García Rodríguez' },
+        evaluador: { id: evaluador.id, nombres: 'Carlos Alberto', apellidos: 'Martínez Silva' },
+        proyecto: { id: proyecto.id, titulo: 'Sistema de Gestión de Proyectos - Test' },
+        entregable: { id: entregable.id, titulo: 'Entregable de Prueba - Análisis de Requisitos' }
       };
 
       console.log('✅ Datos de prueba creados:', this.testData);

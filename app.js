@@ -9,7 +9,7 @@ require('dotenv').config();
 // Importar middlewares
 const AuthMiddleware = require('./src/middlewares/auth');
 const DashboardHelper = require('./src/helpers/dashboardHelper');
-const ActivityLoggerMiddleware = require('./src/middleware/activityLogger');
+const ActivityLoggerMiddleware = require('./src/middlewares/activityLogger');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

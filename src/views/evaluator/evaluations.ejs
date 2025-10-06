@@ -340,7 +340,7 @@
             <div class="logo">Sistema de Gestión de Proyectos</div>
             <div class="user-info">
                 <span><%= user.nombres %> <%= user.apellidos %></span>
-                <span class="role-badge"><%= user.rol %></span>
+                <span class="role-badge"><%= user.rol_nombre %></span>
                 <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
             </div>
         </div>
@@ -375,7 +375,7 @@
             </div>
             <div class="stat-card completed">
                 <div class="stat-number"><%= stats.completadas %></div>
-                <div class="stat-label">Completadas</div>
+                <div class="stat-label">Finalizadas</div>
             </div>
             <div class="stat-card overdue">
                 <div class="stat-number"><%= stats.vencidas %></div>
@@ -391,7 +391,7 @@
                     <select name="estado" id="estado">
                         <option value="">Todos los estados</option>
                         <option value="pendiente" <%= filters.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
-                        <option value="completada" <%= filters.estado === 'completada' ? 'selected' : '' %>>Completada</option>
+                        <option value="finalizada" <%= filters.estado === 'finalizada' ? 'selected' : '' %>>Finalizada</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -444,7 +444,7 @@
                                 const fechaLimite = new Date(evaluation.fecha_limite);
                                 const hoy = new Date();
                                 const isOverdue = evaluation.estado === 'pendiente' && fechaLimite < hoy;
-                                const statusClass = evaluation.estado === 'completada' ? 'status-completed' : 
+                                const statusClass = evaluation.estado === 'finalizada' ? 'status-completed' : 
                                                   isOverdue ? 'status-overdue' : 'status-pending';
                             %>
                             <tr>
@@ -465,7 +465,7 @@
                                 </td>
                                 <td>
                                     <span class="status-badge <%= statusClass %>">
-                                        <%= evaluation.estado === 'pendiente' ? 'Pendiente' : 'Completada' %>
+                                        <%= evaluation.estado === 'pendiente' ? 'Pendiente' : 'Finalizada' %>
                                     </span>
                                 </td>
                                 <td>

@@ -31,18 +31,16 @@ class EvaluatorController {
         );
       }
 
-      // Estadísticas (usando estados correctos: 'borrador' y 'finalizada')
+      // Estadísticas (usando estados correctos: 'pendiente' y 'finalizada')
       const stats = {
         total: evaluations.length,
-        pendientes: evaluations.filter(e => e.estado === 'borrador' || e.estado === null).length,
+        pendientes: evaluations.filter(e => e.estado === 'pendiente').length,
         completadas: evaluations.filter(e => e.estado === 'finalizada').length,
         vencidas: evaluations.filter(e => {
-          // Evaluaciones vencidas: en borrador, sin fecha_evaluacion y creadas hace más de 7 días
-          const createdDate = new Date(e.created_at);
-          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          return (e.estado === 'borrador' || e.estado === null) && 
-                 e.fecha_evaluacion === null && 
-                 createdDate < sevenDaysAgo;
+          // Evaluaciones vencidas: pendientes con fecha límite pasada
+          const fechaLimite = new Date(e.fecha_limite);
+          const hoy = new Date();
+          return e.estado === 'pendiente' && fechaLimite < hoy;
         }).length
       };
 
@@ -163,7 +161,7 @@ class EvaluatorController {
         observaciones: observaciones || '',
         nota_final: parseFloat(nota_final),
         estado_evaluacion,
-        estado: 'completada',
+        estado: 'finalizada',
         fecha_evaluacion: new Date(),
         updated_at: new Date()
       };
@@ -211,8 +209,8 @@ class EvaluatorController {
           u.nombres as estudiante_nombres,
           u.apellidos as estudiante_apellidos,
           COUNT(ev.id) as total_evaluaciones,
-          SUM(CASE WHEN ev.estado = 'pendiente' THEN 1 ELSE 0 END) as evaluaciones_pendientes,
-          SUM(CASE WHEN ev.estado = 'completada' THEN 1 ELSE 0 END) as evaluaciones_completadas
+          SUM(CASE WHEN ev.estado = 'borrador' THEN 1 ELSE 0 END) as evaluaciones_pendientes,
+          SUM(CASE WHEN ev.estado = 'finalizada' THEN 1 ELSE 0 END) as evaluaciones_completadas
         FROM proyectos p
         LEFT JOIN usuarios u ON p.estudiante_id = u.id
         LEFT JOIN evaluaciones ev ON p.id = ev.proyecto_id AND ev.evaluador_id = ?

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const ActivityLoggerMiddleware = require('../middleware/activityLogger');
+const ActivityLoggerMiddleware = require('../middlewares/activityLogger');
 const AuthMiddleware = require('../middlewares/auth');
 
 // Instanciar el middleware de logging

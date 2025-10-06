@@ -103,7 +103,7 @@ class Project extends BaseModel {
           ca.fecha_inicio as ciclo_fecha_inicio,
           ca.fecha_fin as ciclo_fecha_fin,
           at.codigo as area_trabajo_codigo,
-          at.nombre as area_trabajo_nombre,
+          at.codigo as area_trabajo_nombre,
           pu.fecha_asignacion as fecha_union
         FROM proyectos p
         INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
@@ -142,7 +142,7 @@ class Project extends BaseModel {
           ca.fecha_inicio as ciclo_fecha_inicio,
           ca.fecha_fin as ciclo_fecha_fin,
           at.codigo as area_trabajo_codigo,
-          at.nombre as area_trabajo_nombre,
+          at.codigo as area_trabajo_nombre,
           pu.fecha_asignacion as fecha_union
         FROM proyectos p
         INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id

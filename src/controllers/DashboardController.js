@@ -194,7 +194,7 @@ class DashboardController {
       const evaluationStats = {
         total: allEvaluations.length,
         pendientes: allEvaluations.filter(e => e.estado === 'pendiente').length,
-        completadas: allEvaluations.filter(e => e.estado === 'completada').length,
+        completadas: allEvaluations.filter(e => e.estado === 'finalizada').length,
         promedio: allEvaluations.length > 0 
           ? (allEvaluations.reduce((sum, e) => sum + (e.calificacion || 0), 0) / allEvaluations.length).toFixed(1)
           : 0
@@ -380,7 +380,7 @@ class DashboardController {
       const evaluationStats = {
         total: allEvaluations.length,
         pendientes: allEvaluations.filter(e => e.estado === 'pendiente').length,
-        completadas: allEvaluations.filter(e => e.estado === 'completada').length,
+        completadas: allEvaluations.filter(e => e.estado === 'finalizada').length,
         promedio: allEvaluations.length > 0 
           ? (allEvaluations.reduce((sum, e) => sum + (e.calificacion || 0), 0) / allEvaluations.length).toFixed(1)
           : 0
@@ -507,7 +507,7 @@ class DashboardController {
         totalProjects: myProjects.length,
         totalDeliverables: myDeliverables.length,
         pendingDeliverables: pendingDeliverables.length,
-        completedEvaluations: myEvaluations.filter(e => e.estado === 'completada').length,
+        completedEvaluations: myEvaluations.filter(e => e.estado === 'finalizada').length,
         pendingEvaluations: myEvaluations.filter(e => e.estado === 'pendiente').length
       };
 

@@ -102,4 +102,12 @@ router.post('/api/deliverables/:deliverableId/comments', entregableController.ad
 // API para revisar entregable (approve/reject/request_changes)
 router.post('/api/deliverables/:deliverableId/review', entregableController.updateDeliverableStatus.bind(entregableController));
 
+// API para obtener entregable por ID (detalles JSON)
+router.get('/api/deliverables/:deliverableId', async (req, res) => {
+  await entregableController.getDeliverableById(req, res);
+});
+
+// API para actualizar estado simple del entregable
+router.post('/api/deliverables/:deliverableId/status', entregableController.updateStatus.bind(entregableController));
+
 module.exports = router;
