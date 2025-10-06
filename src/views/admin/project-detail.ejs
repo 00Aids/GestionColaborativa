@@ -4155,6 +4155,21 @@
                             </div>
                         </div>
                         
+                        <!-- Sección de Archivos Adjuntos -->
+                        <div style="border-top: 2px solid #dee2e6; padding-top: 20px; margin-bottom: 20px;">
+                            <h5 style="color: #333; margin-bottom: 15px; display: flex; align-items: center;">
+                                <i class="fas fa-paperclip" style="margin-right: 8px; color: #007bff;"></i>
+                                Archivos Adjuntos
+                            </h5>
+                            <div id="taskAttachments" style="min-height: 50px;">
+                                <!-- Los archivos adjuntos se cargarán aquí dinámicamente -->
+                                <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                                    <i class="fas fa-file-alt" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                                    Cargando archivos adjuntos...
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div style="border-top: 2px solid #dee2e6; padding-top: 20px;">
                             <h5 style="color: #333; margin-bottom: 15px; display: flex; align-items: center;">
                                 <i class="fas fa-comments" style="margin-right: 8px; color: #007bff;"></i>
@@ -4188,6 +4203,9 @@
                 modalBody.innerHTML = htmlContent;
                 console.log('Content set successfully');
                 
+                // Renderizar archivos adjuntos después de establecer el contenido
+                renderTaskAttachments(task.archivos_adjuntos || []);
+                
                 // Mostrar modal con configuración explícita
                 console.log('Creating Bootstrap modal...');
                 const modal = new bootstrap.Modal(modalElement, {
@@ -4206,6 +4224,96 @@
                 console.error('Error stack:', error.stack);
                 alert('Error al crear el contenido del modal: ' + error.message);
             }
+        }
+
+        // Función para renderizar archivos adjuntos en el modal
+        function renderTaskAttachments(attachments) {
+            const attachmentsContainer = document.getElementById('taskAttachments');
+            if (!attachmentsContainer) {
+                console.warn('Attachments container not found');
+                return;
+            }
+
+            if (!attachments || attachments.length === 0) {
+                attachmentsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #6c757d; font-style: italic;">
+                        <i class="fas fa-file-alt" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                        No hay archivos adjuntos
+                    </div>
+                `;
+                return;
+            }
+
+            // Función para obtener el icono según el tipo de archivo
+            function getFileIcon(mimeType) {
+                if (!mimeType) return 'fas fa-file';
+                
+                if (mimeType.startsWith('image/')) return 'fas fa-file-image';
+                if (mimeType.includes('pdf')) return 'fas fa-file-pdf';
+                if (mimeType.includes('word') || mimeType.includes('document')) return 'fas fa-file-word';
+                if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel';
+                if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fas fa-file-powerpoint';
+                if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('compressed')) return 'fas fa-file-archive';
+                if (mimeType.includes('text')) return 'fas fa-file-alt';
+                
+                return 'fas fa-file';
+            }
+
+            // Función para formatear el tamaño del archivo
+            function formatFileSize(bytes) {
+                if (!bytes) return 'Tamaño desconocido';
+                
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                if (bytes === 0) return '0 Bytes';
+                
+                const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            // Renderizar cada archivo adjunto
+            const attachmentsHtml = attachments.map(file => `
+                <div style="display: flex; align-items: center; padding: 12px; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 10px; background: white; transition: all 0.2s ease;">
+                    <div style="margin-right: 15px; color: #007bff; font-size: 24px;">
+                        <i class="${getFileIcon(file.mimetype || file.tipo)}"></i>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: #333; margin-bottom: 4px; word-break: break-word;">
+                            ${file.originalname || file.nombre || 'Archivo sin nombre'}
+                        </div>
+                        <div style="font-size: 12px; color: #6c757d;">
+                            ${formatFileSize(file.size || file.tamaño)} • ${file.mimetype || file.tipo || 'Tipo desconocido'}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-left: 15px;">
+                        ${file.path || file.ruta ? `
+                            <a href="/uploads/tasks/${file.filename || file.nombre_archivo}" 
+                               target="_blank" 
+                               style="padding: 6px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; transition: background 0.2s ease;"
+                               onmouseover="this.style.background='#0056b3'"
+                               onmouseout="this.style.background='#007bff'">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                            <a href="/uploads/tasks/${file.filename || file.nombre_archivo}" 
+                               download="${file.originalname || file.nombre}"
+                               style="padding: 6px 12px; background: #28a745; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; transition: background 0.2s ease;"
+                               onmouseover="this.style.background='#1e7e34'"
+                               onmouseout="this.style.background='#28a745'">
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                        ` : `
+                            <span style="padding: 6px 12px; background: #6c757d; color: white; border-radius: 4px; font-size: 12px;">
+                                <i class="fas fa-exclamation-triangle"></i> No disponible
+                            </span>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+
+            attachmentsContainer.innerHTML = `
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${attachmentsHtml}
+                </div>
+            `;
         }
 
         // Obtener datos reales del proyecto

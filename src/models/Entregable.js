@@ -165,7 +165,7 @@ class Entregable extends BaseModel {
     async findByStudent(studentId) {
         try {
             const query = `
-                SELECT 
+                SELECT DISTINCT
                     e.*,
                     p.titulo as proyecto_titulo,
                     p.estado as proyecto_estado,
@@ -175,11 +175,13 @@ class Entregable extends BaseModel {
                 LEFT JOIN proyectos p ON e.proyecto_id = p.id
                 LEFT JOIN fases_proyecto fp ON e.fase_id = fp.id
                 LEFT JOIN areas_trabajo at ON e.area_trabajo_id = at.id
-                WHERE p.estudiante_id = ?
+                LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
+                WHERE (pu.usuario_id = ? AND pu.estado = 'activo') 
+                   OR e.asignado_a = ?
                 ORDER BY e.fecha_limite ASC, e.fecha_entrega ASC
             `;
             
-            const [rows] = await this.db.execute(query, [studentId]);
+            const [rows] = await this.db.execute(query, [studentId, studentId]);
             return rows;
         } catch (error) {
             throw new Error(`Error finding entregables by student: ${error.message}`);
@@ -464,6 +466,7 @@ class Entregable extends BaseModel {
             const query = `
                 SELECT 
                     e.*,
+                    e.archivo_url,
                     p.titulo as proyecto_titulo,
                     p.estado as proyecto_estado,
                     p.descripcion as proyecto_descripcion,

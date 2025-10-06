@@ -658,8 +658,8 @@
                         <i class="fas fa-user-tie"></i>
                     </div>
                     <div>
-                        <strong>Director</strong>
-                        <p><%= project.director_nombre || 'No asignado' %></p>
+                        <strong>Información del Equipo</strong>
+                        <p>Ver detalles completos del proyecto</p>
                     </div>
                 </div>
                 <div class="meta-item">
@@ -806,29 +806,10 @@
                         Equipo del Proyecto
                     </div>
                     
-                    <% if (project.estudiante_nombre) { %>
-                        <div class="team-member">
-                            <div class="member-avatar">
-                                <%= project.estudiante_nombre.charAt(0).toUpperCase() %>
-                            </div>
-                            <div class="member-info">
-                                <h4><%= project.estudiante_nombre %></h4>
-                                <p>Estudiante</p>
-                            </div>
-                        </div>
-                    <% } %>
-                    
-                    <% if (project.director_nombre) { %>
-                        <div class="team-member">
-                            <div class="member-avatar">
-                                <%= project.director_nombre.charAt(0).toUpperCase() %>
-                            </div>
-                            <div class="member-info">
-                                <h4><%= project.director_nombre %></h4>
-                                <p>Director del Proyecto</p>
-                            </div>
-                        </div>
-                    <% } %>
+                    <div class="team-info">
+                        <p>La información detallada del equipo está disponible para los miembros del proyecto.</p>
+                        <p>Para ver los participantes y roles específicos, accede con tu cuenta de usuario.</p>
+                    </div>
                 </div>
 
                 <!-- Recent Comments -->

@@ -9,10 +9,10 @@
 %>
 <div class="projects-container">
     <div class="projects-header">
-        <h2>Proyectos</h2>
+        <h2>Mis Proyectos</h2>
         <div class="projects-actions">
             <% if (canCreate) { %>
-                <a href="/projects/create" class="btn btn-primary">+ Nuevo Proyecto</a>
+                <a href="/admin/projects/new" class="btn btn-primary">+ Nuevo Proyecto</a>
             <% } %>
             <div class="view-toggle">
                 <button class="view-btn <%= viewMode === 'grid' ? 'active' : '' %>" onclick="setViewMode('grid')">⊞</button>
@@ -32,10 +32,11 @@
             <% }) %>
         <% } else { %>
             <div class="empty-state">
-                <h3>No hay proyectos disponibles</h3>
-                <p>Aún no se han creado proyectos en el sistema.</p>
+                <div class="empty-icon">📋</div>
+                <h3>No tienes proyectos aún</h3>
+                <p>Comienza creando tu primer proyecto para organizar tu trabajo.</p>
                 <% if (canCreate) { %>
-                    <a href="/projects/create" class="btn btn-primary">Crear Primer Proyecto</a>
+                    <a href="/admin/projects/new" class="btn btn-primary">Crear Primer Proyecto</a>
                 <% } %>
             </div>
         <% } %>

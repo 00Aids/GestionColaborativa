@@ -59,7 +59,7 @@
                 
                                <!-- BOTÓN CREAR PROYECTO - Visible para roles apropiados -->
                 <% if (user.rol_nombre === 'Director de Proyecto' || user.rol_nombre === 'Administrador General' || user.rol_nombre === 'Coordinador Académico') { %>
-                    <a href="/projects/create" class="nav-item nav-item-create">➕ Crear Proyecto</a>
+                    <a href="/admin/projects/new" class="nav-item nav-item-create">➕ Crear Proyecto</a>
                 <% } %>
                 <!-- DEBUG: Rol actual: '<%= user.rol_nombre %>' -->
             </div>

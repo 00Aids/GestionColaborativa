@@ -120,7 +120,7 @@ class Task extends BaseModel {
                 tipo_enfoque,
                 estimacion_horas,
                 etiquetas,
-                archivos_adjuntos
+                archivos_adjuntos: archivos_adjuntos || []
             };
             
             const [result] = await this.db.execute(query, [
@@ -529,9 +529,19 @@ class Task extends BaseModel {
             if (rows.length > 0) {
                 const task = rows[0];
                 
-                // Inicializar archivos adjuntos como array vacío ya que no existe la columna
-                // En el futuro, si se necesita esta funcionalidad, se puede agregar la columna
+                // Extraer archivos adjuntos del campo observaciones si existe
                 task.archivos_adjuntos = [];
+                if (task.observaciones) {
+                    try {
+                        const observaciones = JSON.parse(task.observaciones);
+                        if (observaciones.archivos_adjuntos && Array.isArray(observaciones.archivos_adjuntos)) {
+                            task.archivos_adjuntos = observaciones.archivos_adjuntos;
+                        }
+                    } catch (error) {
+                        console.log('Error parsing observaciones JSON:', error);
+                        task.archivos_adjuntos = [];
+                    }
+                }
                 
                 return task;
             }
@@ -588,6 +598,20 @@ class Task extends BaseModel {
             };
             
             rows.forEach(task => {
+                // Extraer archivos adjuntos del campo observaciones si existe
+                task.archivos_adjuntos = [];
+                if (task.observaciones) {
+                    try {
+                        const observaciones = JSON.parse(task.observaciones);
+                        if (observaciones.archivos_adjuntos && Array.isArray(observaciones.archivos_adjuntos)) {
+                            task.archivos_adjuntos = observaciones.archivos_adjuntos;
+                        }
+                    } catch (error) {
+                        console.log('Error parsing observaciones JSON:', error);
+                        task.archivos_adjuntos = [];
+                    }
+                }
+                
                 const workflowStatus = task.estado_workflow || 'todo';
                 if (groupedTasks[workflowStatus]) {
                     groupedTasks[workflowStatus].push(task);

@@ -786,11 +786,11 @@ class ProjectController {
   }
   
   // Agregar usuario al proyecto
-  async addUserToProject(projectId, userId) {
+  async addUserToProject(projectId, userId, roleOverride = null) {
       try {
           // Verificar si el usuario ya está en el proyecto
-          const query = 'SELECT * FROM proyecto_usuarios WHERE proyecto_id = ? AND usuario_id = ?';
-          const existing = await this.projectModel.query(query, [projectId, userId]);
+          const query = 'SELECT * FROM proyecto_usuarios WHERE proyecto_id = ? AND usuario_id = ? AND estado = ?';
+          const existing = await this.projectModel.query(query, [projectId, userId, 'activo']);
           
           if (existing.length === 0) {
               // Obtener información del proyecto para conseguir el area_trabajo_id
@@ -812,9 +812,50 @@ class ProjectController {
                   }
               }
               
-              // Agregar usuario al proyecto con rol por defecto
-              const insertQuery = 'INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion) VALUES (?, ?, ?, NOW())';
-              await this.projectModel.query(insertQuery, [projectId, userId, 'estudiante']);
+              // Determinar el rol basado en el tipo de usuario si no se especifica un rol
+              let rol = roleOverride || 'estudiante';
+              
+              if (!roleOverride) {
+                  // Obtener información del usuario para determinar el rol apropiado
+                  const userQuery = `
+                      SELECT u.id, r.nombre as rol_nombre 
+                      FROM usuarios u 
+                      JOIN roles r ON u.rol_id = r.id 
+                      WHERE u.id = ?
+                  `;
+                  const userResult = await this.projectModel.query(userQuery, [userId]);
+                  
+                  if (userResult.length > 0) {
+                      const userRole = userResult[0].rol_nombre;
+                      
+                      // Mapear roles del sistema a roles del proyecto
+                      switch (userRole) {
+                          case 'Estudiante':
+                              rol = 'estudiante';
+                              break;
+                          case 'Director de Proyecto':
+                          case 'Coordinador Académico':
+                              rol = 'coordinador';
+                              break;
+                          case 'Evaluador':
+                              rol = 'evaluador';
+                              break;
+                          case 'Administrador General':
+                              rol = 'administrador';
+                              break;
+                          default:
+                              rol = 'estudiante';
+                      }
+                  }
+              }
+              
+              // Agregar usuario al proyecto con el rol determinado
+              const insertQuery = 'INSERT INTO proyecto_usuarios (proyecto_id, usuario_id, rol, fecha_asignacion, estado) VALUES (?, ?, ?, NOW(), ?)';
+              await this.projectModel.query(insertQuery, [projectId, userId, rol, 'activo']);
+              
+              console.log(`Usuario ${userId} agregado al proyecto ${projectId} con rol: ${rol}`);
+          } else {
+              console.log(`Usuario ${userId} ya está asignado al proyecto ${projectId}`);
           }
       } catch (error) {
           throw new Error(`Error adding user to project: ${error.message}`);

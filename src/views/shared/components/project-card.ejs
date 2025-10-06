@@ -14,26 +14,6 @@
     </div>
     
     <div class="project-info">
-        <% if (project.estudiante_nombres || project.student_name) { %>
-            <div class="info-item">
-                <span class="info-label">Estudiante:</span>
-                <span class="info-value">
-                    <%= project.estudiante_nombres || project.student_name %> 
-                    <%= project.estudiante_apellidos || '' %>
-                </span>
-            </div>
-        <% } %>
-        
-        <% if (project.director_nombres || project.director_name) { %>
-            <div class="info-item">
-                <span class="info-label">Director:</span>
-                <span class="info-value">
-                    <%= project.director_nombres || project.director_name %> 
-                    <%= project.director_apellidos || '' %>
-                </span>
-            </div>
-        <% } %>
-        
         <% if (project.linea_investigacion_nombre || project.research_line) { %>
             <div class="info-item">
                 <span class="info-label">Línea:</span>

@@ -74,11 +74,39 @@ class Project extends BaseModel {
     }
   }
 
-  // Obtener proyectos por estudiante (método original - mantener para compatibilidad)
+  // Obtener proyectos por estudiante (incluye tanto estudiante_id como proyecto_usuarios)
   async findByStudent(studentId, additionalConditions = {}) {
     try {
-      const conditions = { estudiante_id: studentId, ...additionalConditions };
-      return await this.findWithDetails(conditions);
+      const query = `
+        SELECT DISTINCT
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          li.nombre as linea_investigacion,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin,
+          at.codigo as area_trabajo_codigo,
+          at.codigo as area_trabajo_nombre
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        LEFT JOIN areas_trabajo at ON p.area_trabajo_id = at.id
+        LEFT JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
+        WHERE (p.estudiante_id = ? OR (pu.usuario_id = ? AND pu.estado = 'activo'))
+        ORDER BY p.created_at DESC
+      `;
+      
+      const [rows] = await this.db.execute(query, [studentId, studentId]);
+      return rows;
     } catch (error) {
       throw new Error(`Error finding projects by student: ${error.message}`);
     }
@@ -416,9 +444,14 @@ class Project extends BaseModel {
         return { success: false, message: 'Código de invitación no encontrado' };
       }
 
-      // Verificar si el usuario ya es miembro del proyecto
-      const existingMember = await this.findProjectMember(invitation.proyecto_id, userId);
-      if (existingMember) {
+      // Verificar si el usuario ya es miembro del proyecto (activo)
+      const existingQuery = `
+        SELECT * FROM proyecto_usuarios 
+        WHERE proyecto_id = ? AND usuario_id = ? AND estado = 'activo'
+      `;
+      const [existingMembers] = await this.db.execute(existingQuery, [invitation.proyecto_id, userId]);
+      
+      if (existingMembers.length > 0) {
         return { success: false, message: 'Ya eres miembro de este proyecto' };
       }
 
@@ -428,27 +461,52 @@ class Project extends BaseModel {
         return { success: false, message: 'Proyecto no encontrado' };
       }
 
-      // Agregar usuario como miembro del proyecto
-      const memberData = {
-        proyecto_id: invitation.proyecto_id,
-        usuario_id: userId,
-        rol: 'estudiante',
-        estado: 'activo',
-        fecha_asignacion: new Date()
-      };
+      // Determinar el rol basado en el tipo de usuario
+      let rol = 'estudiante'; // rol por defecto
+      
+      // Obtener información del usuario para determinar el rol apropiado
+      const userQuery = `
+        SELECT u.id, r.nombre as rol_nombre 
+        FROM usuarios u 
+        JOIN roles r ON u.rol_id = r.id 
+        WHERE u.id = ?
+      `;
+      const [userResult] = await this.db.execute(userQuery, [userId]);
+      
+      if (userResult.length > 0) {
+        const userRole = userResult[0].rol_nombre;
+        
+        // Mapear roles del sistema a roles del proyecto
+        switch (userRole) {
+          case 'Estudiante':
+            rol = 'estudiante';
+            break;
+          case 'Director de Proyecto':
+          case 'Coordinador Académico':
+            rol = 'coordinador';
+            break;
+          case 'Evaluador':
+            rol = 'evaluador';
+            break;
+          case 'Administrador General':
+            rol = 'administrador';
+            break;
+          default:
+            rol = 'estudiante';
+        }
+      }
 
+      // Agregar usuario como miembro del proyecto con el rol determinado
       const insertQuery = `
         INSERT INTO proyecto_usuarios 
         (proyecto_id, usuario_id, rol, estado, fecha_asignacion)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, 'activo', NOW())
       `;
 
       await this.db.execute(insertQuery, [
-        memberData.proyecto_id,
-        memberData.usuario_id,
-        memberData.rol,
-        memberData.estado,
-        memberData.fecha_asignacion
+        invitation.proyecto_id,
+        userId,
+        rol
       ]);
 
       // Asignar automáticamente el usuario al área de trabajo del proyecto
@@ -471,6 +529,8 @@ class Project extends BaseModel {
 
       // Incrementar contador de usos de la invitación usando el modelo Invitation
       await invitationModel.incrementUsage(invitation.id);
+
+      console.log(`Usuario ${userId} se unió al proyecto ${invitation.proyecto_id} con rol: ${rol}`);
 
       return { 
         success: true, 

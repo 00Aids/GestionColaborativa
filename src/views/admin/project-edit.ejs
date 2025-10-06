@@ -178,35 +178,7 @@
                 <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required><%= project.descripcion %></textarea>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="estudiante_id">Estudiante *</label>
-                    <select class="form-control" id="estudiante_id" name="estudiante_id" required>
-                        <option value="">Seleccionar estudiante</option>
-                        <% if (estudiantes && estudiantes.length > 0) { %>
-                            <% estudiantes.forEach(estudiante => { %>
-                                <option value="<%= estudiante.id %>" <%= project.estudiante_id == estudiante.id ? 'selected' : '' %>>
-                                    <%= estudiante.nombres %> <%= estudiante.apellidos %>
-                                </option>
-                            <% }); %>
-                        <% } %>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="director_id">Director *</label>
-                    <select class="form-control" id="director_id" name="director_id" required>
-                        <option value="">Seleccionar director</option>
-                        <% if (directores && directores.length > 0) { %>
-                            <% directores.forEach(director => { %>
-                                <option value="<%= director.id %>" <%= project.director_id == director.id ? 'selected' : '' %>>
-                                    <%= director.nombres %> <%= director.apellidos %>
-                                </option>
-                            <% }); %>
-                        <% } %>
-                    </select>
-                </div>
-            </div>
+
             
             <div class="form-row">
                 <div class="form-group">
@@ -294,8 +266,6 @@
             const projectData = {
                 titulo: formData.get('titulo'),
                 descripcion: formData.get('descripcion'),
-                estudiante_id: formData.get('estudiante_id'),
-                director_id: formData.get('director_id'),
                 linea_investigacion_id: formData.get('linea_investigacion_id'),
                 ciclo_academico_id: formData.get('ciclo_academico_id'),
                 fecha_inicio: formData.get('fecha_inicio'),

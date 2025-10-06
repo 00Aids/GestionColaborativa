@@ -1,0 +1,74 @@
+<!-- Partial para mostrar archivos adjuntos -->
+<% if (archivos_adjuntos && archivos_adjuntos.length > 0) { %>
+  <div class="attachments-section mt-3">
+    <h6 class="text-muted mb-2">
+      <i class="fas fa-paperclip"></i> Archivos Adjuntos (<%= archivos_adjuntos.length %>)
+    </h6>
+    <div class="attachments-list">
+      <% archivos_adjuntos.forEach(function(archivo, index) { %>
+        <div class="attachment-item d-flex align-items-center mb-2 p-2 border rounded">
+          <div class="attachment-icon me-2">
+            <% 
+              let iconClass = 'fas fa-file';
+              if (archivo.tipo_mime) {
+                if (archivo.tipo_mime.includes('image/')) {
+                  iconClass = 'fas fa-image text-success';
+                } else if (archivo.tipo_mime.includes('pdf')) {
+                  iconClass = 'fas fa-file-pdf text-danger';
+                } else if (archivo.tipo_mime.includes('word') || archivo.tipo_mime.includes('document')) {
+                  iconClass = 'fas fa-file-word text-primary';
+                } else if (archivo.tipo_mime.includes('excel') || archivo.tipo_mime.includes('sheet')) {
+                  iconClass = 'fas fa-file-excel text-success';
+                } else if (archivo.tipo_mime.includes('powerpoint') || archivo.tipo_mime.includes('presentation')) {
+                  iconClass = 'fas fa-file-powerpoint text-warning';
+                } else if (archivo.tipo_mime.includes('zip') || archivo.tipo_mime.includes('rar')) {
+                  iconClass = 'fas fa-file-archive text-info';
+                } else if (archivo.tipo_mime.includes('text/')) {
+                  iconClass = 'fas fa-file-alt text-secondary';
+                }
+              }
+            %>
+            <i class="<%= iconClass %>"></i>
+          </div>
+          <div class="attachment-info flex-grow-1">
+            <div class="attachment-name">
+              <strong><%= archivo.nombre_original || archivo.nombre_archivo %></strong>
+            </div>
+            <div class="attachment-details text-muted small">
+              <% if (archivo.tamaño) { %>
+                <span class="file-size">
+                  <%= (archivo.tamaño / 1024 / 1024).toFixed(2) %> MB
+                </span>
+              <% } %>
+              <% if (archivo.tipo_mime) { %>
+                <span class="file-type ms-2">
+                  <%= archivo.tipo_mime.split('/')[1].toUpperCase() %>
+                </span>
+              <% } %>
+            </div>
+          </div>
+          <div class="attachment-actions">
+            <% if (archivo.nombre_archivo) { %>
+              <a href="/uploads/deliverables/<%= archivo.nombre_archivo %>" 
+                 target="_blank" 
+                 class="btn btn-sm btn-outline-primary me-1"
+                 title="Ver archivo">
+                <i class="fas fa-eye"></i>
+              </a>
+              <a href="/uploads/deliverables/<%= archivo.nombre_archivo %>" 
+                 download="<%= archivo.nombre_original || archivo.nombre_archivo %>"
+                 class="btn btn-sm btn-outline-success"
+                 title="Descargar archivo">
+                <i class="fas fa-download"></i>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="no-attachments text-muted">
+    <i class="fas fa-paperclip"></i> Sin archivos adjuntos
+  </div>
+<% } %>

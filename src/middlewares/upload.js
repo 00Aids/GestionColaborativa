@@ -5,7 +5,7 @@ const fs = require('fs');
 // Configuración de almacenamiento
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, '../../public/uploads/comments');
+    const uploadPath = path.join(__dirname, '../../public/uploads/deliverables');
     
     // Crear directorio si no existe
     if (!fs.existsSync(uploadPath)) {
@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
     // Generar nombre único para el archivo
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const extension = path.extname(file.originalname);
-    const filename = `comment-${uniqueSuffix}${extension}`;
+    const filename = `attachment-${uniqueSuffix}${extension}`;
     cb(null, filename);
   }
 });

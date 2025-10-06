@@ -898,18 +898,14 @@
                                 </td>
                                 <td>
                                     <div class="participant-info">
-                                        <span class="participant-name">
-                                            <%= project.estudiante_nombre || 'No asignado' %>
-                                        </span>
-                                        <span class="participant-role">Estudiante</span>
+                                        <span class="participant-name">Ver detalles</span>
+                                        <span class="participant-role">Equipo</span>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="participant-info">
-                                        <span class="participant-name">
-                                            <%= project.director_nombre || 'No asignado' %>
-                                        </span>
-                                        <span class="participant-role">Director</span>
+                                        <span class="participant-name">Ver detalles</span>
+                                        <span class="participant-role">Dirección</span>
                                     </div>
                                 </td>
                                 <td>
@@ -978,12 +974,8 @@
                         <div class="project-footer">
                             <div class="project-participants">
                                 <div>
-                                    <i class="fas fa-user-graduate"></i>
-                                    <strong>Estudiante:</strong> <%= project.estudiante_nombre || 'No asignado' %>
-                                </div>
-                                <div>
-                                    <i class="fas fa-user-tie"></i>
-                                    <strong>Director:</strong> <%= project.director_nombre || 'No asignado' %>
+                                    <i class="fas fa-calendar"></i>
+                                    <strong>Fecha:</strong> <%= new Date(project.fecha_creacion).toLocaleDateString() %>
                                 </div>
                             </div>
                             <a href="/projects/<%= project.id %>" class="action-btn btn-view">

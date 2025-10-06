@@ -1064,7 +1064,7 @@
                             <div class="project-item">
                                 <div class="project-info">
                                     <h4><%= project.titulo || project.title || 'Sin título' %></h4>
-                                    <p>Estudiante: <%= project.student_name || project.estudiante_nombre || 'No asignado' %> | Director: <%= project.director_name || project.director_nombre || 'No asignado' %></p>
+                                    <p>Fecha: <%= new Date(project.fecha_creacion || project.created_at).toLocaleDateString() %></p>
                                 </div>
                                 <span class="project-status status-<%= project.estado || project.status || 'propuesta' %>">
                                     <%= project.estado || project.status || 'propuesta' %>

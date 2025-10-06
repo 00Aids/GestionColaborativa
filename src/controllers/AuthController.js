@@ -104,9 +104,8 @@ class AuthController {
       // Línea 86 - Cambiar el rol hardcodeado
       const roles = [
         { id: 1, nombre: 'Administrador General' },
-        { id: 2, nombre: 'Director de Proyecto' }, // ← CAMBIO AQUÍ
-        { id: 3, nombre: 'Coordinador Académico' }, // ← CAMBIO AQUÍ
-        { id: 4, nombre: 'Evaluador' },
+        { id: 3, nombre: 'Director de Proyecto' }, // ← CORREGIDO: ID 3 para Director
+        { id: 2, nombre: 'Coordinador Académico' }, // ← CORREGIDO: ID 2 para Coordinador
         { id: 5, nombre: 'Estudiante' }
       ];
       

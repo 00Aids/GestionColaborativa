@@ -5,6 +5,7 @@ const Entregable = require('../models/Entregable');
 const BaseModel = require('../models/BaseModel');
 const Task = require('../models/Task');
 const DashboardHelper = require('../helpers/dashboardHelper');
+const FileHelper = require('../helpers/fileHelper');
 
 class AdminController {
   constructor() {
@@ -952,7 +953,7 @@ class AdminController {
         return res.status(403).json({ success: false, message: 'No tienes permisos para realizar esta acción.' });
       }
 
-      const { projectId } = req.params; // Cambiar de 'id' a 'projectId'
+      const { projectId } = req.params;
       
       // Verificar que el ID no sea undefined
       if (!projectId) {
@@ -965,19 +966,36 @@ class AdminController {
         return res.status(404).json({ success: false, message: 'Proyecto no encontrado.' });
       }
 
-      // Verificar que el proyecto no tenga entregables asociados
-      const deliverables = await this.entregableModel.findByProject(projectId); // Cambiar método
+      // Obtener entregables asociados
+      const deliverables = await this.entregableModel.findByProject(projectId);
+      
+      // Eliminar entregables asociados primero
       if (deliverables && deliverables.length > 0) {
-        return res.status(400).json({ 
-          success: false, 
-          message: 'No se puede eliminar el proyecto porque tiene entregables asociados.' 
-        });
+        console.log(`Eliminando ${deliverables.length} entregables del proyecto ${projectId}`);
+        for (const deliverable of deliverables) {
+          await this.entregableModel.delete(deliverable.id);
+        }
       }
 
-      // Eliminar el proyecto
+      // Eliminar otras dependencias del proyecto
+      const db = this.projectModel.db;
+      
+      // Eliminar asignaciones de usuarios
+      await db.execute('DELETE FROM proyecto_usuarios WHERE proyecto_id = ?', [projectId]);
+      
+      // Eliminar invitaciones
+      await db.execute('DELETE FROM invitaciones WHERE proyecto_id = ?', [projectId]);
+      
+      // Eliminar comentarios del proyecto
+      await db.execute('DELETE FROM proyecto_comentarios WHERE proyecto_id = ?', [projectId]);
+
+      // Finalmente eliminar el proyecto
       await this.projectModel.delete(projectId);
 
-      res.json({ success: true, message: 'Proyecto eliminado exitosamente.' });
+      res.json({ 
+        success: true, 
+        message: `Proyecto eliminado exitosamente junto con ${deliverables.length} entregables asociados.` 
+      });
     } catch (error) {
       console.error('Error deleting project:', error);
       res.status(500).json({ success: false, message: 'Error al eliminar el proyecto.' });
@@ -2102,24 +2120,40 @@ class AdminController {
         return res.redirect(`/admin/projects/${projectId}/tasks/new`);
       }
 
-      // Manejar archivos adjuntos si existen
+      // Validar y procesar archivos adjuntos usando FileHelper
       let archivos_adjuntos = [];
       if (req.files && req.files.length > 0) {
-        archivos_adjuntos = req.files.map(file => ({
-          nombre_original: file.originalname,
-          nombre_archivo: file.filename,
-          ruta: file.path,
-          tipo_mime: file.mimetype,
-          tamaño: file.size
-        }));
-      }
+        // Validar tipos de archivo
+        const typeValidation = FileHelper.validateFileTypes(req.files);
+        if (!typeValidation.valid) {
+          req.flash('error', `Tipos de archivo no permitidos: ${typeValidation.invalidFiles.map(f => f.nombre).join(', ')}`);
+          return res.redirect(`/admin/projects/${projectId}/tasks/new`);
+        }
 
-      const taskData = {
-        proyecto_id: parseInt(projectId),
-        fase_id: fase_id ? parseInt(fase_id) : 1,
-        titulo: titulo.trim(),
-        descripcion: descripcion ? descripcion.trim() : '',
-        fecha_limite: fecha_limite || null,
+        // Validar tamaños de archivo
+        const sizeValidation = FileHelper.validateFileSizes(req.files);
+        if (!sizeValidation.valid) {
+          let errorMsg = 'Error en archivos: ';
+          if (sizeValidation.oversizedFiles.length > 0) {
+            errorMsg += `Archivos muy grandes: ${sizeValidation.oversizedFiles.map(f => f.nombre).join(', ')}. `;
+          }
+          if (sizeValidation.exceedsTotalLimit) {
+            errorMsg += `Tamaño total excede el límite permitido.`;
+          }
+          req.flash('error', errorMsg);
+          return res.redirect(`/admin/projects/${projectId}/tasks/new`);
+        }
+
+        // Procesar archivos con FileHelper
+      archivos_adjuntos = FileHelper.processUploadedFiles(req.files);
+    }
+
+    const taskData = {
+      proyecto_id: parseInt(projectId),
+      fase_id: fase_id ? parseInt(fase_id) : 1,
+      titulo: titulo.trim(),
+      descripcion: descripcion ? descripcion.trim() : '',
+      fecha_limite: fecha_limite || null,
         prioridad: prioridad || 'medium',
         asignado_a: asignado_a || null,
         estimacion_horas: estimacion_horas ? parseFloat(estimacion_horas) : null,
@@ -2288,23 +2322,43 @@ class AdminController {
         return res.status(401).json({ error: 'No autorizado' });
       }
 
-      // Manejar archivos adjuntos si existen
+      // Validar y procesar archivos adjuntos usando FileHelper
       let archivos_adjuntos = [];
       if (req.files && req.files.length > 0) {
-        archivos_adjuntos = req.files.map(file => ({
-          nombre_original: file.originalname,
-          nombre_archivo: file.filename,
-          ruta: file.path,
-          tipo_mime: file.mimetype,
-          tamaño: file.size
-        }));
-      }
+        // Validar tipos de archivo
+        const typeValidation = FileHelper.validateFileTypes(req.files);
+        if (!typeValidation.valid) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Tipos de archivo no permitidos: ${typeValidation.invalidFiles.map(f => f.nombre).join(', ')}` 
+          });
+        }
 
-      const completionData = {
-        desarrollo_descripcion,
-        archivos_adjuntos,
-        horas_trabajadas: parseFloat(horas_trabajadas) || 0
-      };
+        // Validar tamaños de archivo
+        const sizeValidation = FileHelper.validateFileSizes(req.files);
+        if (!sizeValidation.valid) {
+          let errorMsg = 'Error en archivos: ';
+          if (sizeValidation.oversizedFiles.length > 0) {
+            errorMsg += `Archivos muy grandes: ${sizeValidation.oversizedFiles.map(f => f.nombre).join(', ')}. `;
+          }
+          if (sizeValidation.exceedsTotalLimit) {
+            errorMsg += `Tamaño total excede el límite permitido.`;
+          }
+          return res.status(400).json({ 
+            success: false, 
+            message: errorMsg 
+          });
+        }
+
+        // Procesar archivos con FileHelper
+      archivos_adjuntos = FileHelper.processUploadedFiles(req.files);
+    }
+
+    const completionData = {
+      desarrollo_descripcion,
+      archivos_adjuntos,
+      horas_trabajadas: parseFloat(horas_trabajadas) || 0
+    };
 
       const success = await this.taskModel.completeTask(taskId, completionData, user.id);
       

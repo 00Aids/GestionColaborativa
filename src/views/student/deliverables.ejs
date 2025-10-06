@@ -810,11 +810,7 @@
                                     <div class="upload-actions">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-paper-plane"></i>
-                                            Entregar Trabajo
-                                        </button>
-                                        <button type="button" class="btn btn-outline" onclick="saveDraft(<%= deliverable.id %>)">
-                                            <i class="fas fa-save"></i>
-                                            Guardar Borrador
+                                            Enviar
                                         </button>
                                     </div>
                                 </form>
@@ -822,12 +818,6 @@
                         <% } %>
 
                         <div class="deliverable-actions">
-                            <% if (deliverable.estado === 'pendiente' || isOverdue) { %>
-                                <button class="btn btn-success" onclick="submitDeliverable(<%= deliverable.id %>)">
-                                    <i class="fas fa-paper-plane"></i>
-                                    Entregar
-                                </button>
-                            <% } %>
                             <a href="/student/deliverables/<%= deliverable.id %>" class="btn btn-outline">
                                 <i class="fas fa-eye"></i>
                                 Ver Detalles

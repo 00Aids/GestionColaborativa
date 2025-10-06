@@ -5,6 +5,7 @@ const DashboardController = require('../controllers/DashboardController'); // Ag
 const AuthMiddleware = require('../middlewares/auth');
 const { loadUserAreas } = require('../middlewares/areaAuth');
 const uploadMiddleware = require('../middlewares/upload');
+const { uploadTasks, handleTaskMulterError } = require('../middlewares/uploadTasks');
 
 // Instanciar los controladores
 const adminController = new AdminController();
@@ -198,8 +199,8 @@ router.post('/deliverables/:deliverableId/status', adminController.updateDeliver
 // Mostrar formulario para crear nueva tarea
 router.get('/projects/:projectId/tasks/new', adminController.showNewTask.bind(adminController));
 
-// Crear nueva tarea
-router.post('/projects/:projectId/tasks', uploadMiddleware.array('archivos', 10), adminController.createTask.bind(adminController));
+// Crear nuevo proyecto
+router.post('/projects/:projectId/tasks', uploadTasks, handleTaskMulterError, adminController.createTask.bind(adminController));
 
 // Obtener vista Kanban de tareas de un proyecto
 router.get('/projects/:projectId/tasks/kanban', adminController.showTaskKanban.bind(adminController));
@@ -236,8 +237,8 @@ router.put('/api/tasks/:taskId', adminController.updateTask.bind(adminController
 // Eliminar tarea
 router.delete('/api/tasks/:taskId', adminController.deleteTask.bind(adminController));
 
-// API para crear tarea rápida desde Kanban
-router.post('/api/projects/:projectId/tasks/quick', uploadMiddleware.array('archivos', 10), adminController.createQuickTask.bind(adminController));
+// Crear tarea rápida desde Kanban
+router.post('/api/projects/:projectId/tasks/quick', uploadTasks, handleTaskMulterError, adminController.createQuickTask.bind(adminController));
 
 // =============================================
 // API ENDPOINTS PARA CREACIÓN RÁPIDA

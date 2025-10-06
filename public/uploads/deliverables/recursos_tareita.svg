@@ -1,0 +1,32 @@
+<svg width="250" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="250" height="200" fill="#fff3cd" stroke="#ffeaa7" stroke-width="2"/>
+  <rect x="10" y="10" width="230" height="40" fill="#fdcb6e"/>
+  <text x="125" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#2d3436" font-weight="bold">
+    📦 RECURSOS_TAREITA.ZIP
+  </text>
+  
+  <text x="20" y="70" font-family="Arial, sans-serif" font-size="12" fill="#636e72">
+    📁 Contenido del archivo:
+  </text>
+  
+  <text x="30" y="90" font-family="Arial, sans-serif" font-size="11" fill="#74b9ff">
+    📄 plantilla_proyecto.docx
+  </text>
+  <text x="30" y="105" font-family="Arial, sans-serif" font-size="11" fill="#74b9ff">
+    📄 ejemplos_codigo.js
+  </text>
+  <text x="30" y="120" font-family="Arial, sans-serif" font-size="11" fill="#74b9ff">
+    📄 guia_estilo.css
+  </text>
+  <text x="30" y="135" font-family="Arial, sans-serif" font-size="11" fill="#74b9ff">
+    📁 imagenes/
+  </text>
+  <text x="40" y="150" font-family="Arial, sans-serif" font-size="10" fill="#a29bfe">
+    └── logo.png, banner.jpg
+  </text>
+  
+  <rect x="20" y="165" width="210" height="25" fill="#00b894" rx="5"/>
+  <text x="125" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">
+    ✓ Archivo comprimido - Listo para descargar
+  </text>
+</svg>
