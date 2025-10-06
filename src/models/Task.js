@@ -602,12 +602,31 @@ class Task extends BaseModel {
                 task.archivos_adjuntos = [];
                 if (task.observaciones) {
                     try {
-                        const observaciones = JSON.parse(task.observaciones);
-                        if (observaciones.archivos_adjuntos && Array.isArray(observaciones.archivos_adjuntos)) {
+                        // Verificar si observaciones es ya un objeto o una cadena JSON válida
+                        let observaciones;
+                        if (typeof task.observaciones === 'string') {
+                            // Verificar que la cadena no esté vacía o corrupta
+                            if (task.observaciones.trim().length === 0 || 
+                                task.observaciones.trim() === 'no c' || 
+                                !task.observaciones.trim().startsWith('{')) {
+                                observaciones = {};
+                            } else {
+                                observaciones = JSON.parse(task.observaciones);
+                            }
+                        } else {
+                            observaciones = task.observaciones;
+                        }
+                        
+                        if (observaciones && observaciones.archivos_adjuntos && Array.isArray(observaciones.archivos_adjuntos)) {
                             task.archivos_adjuntos = observaciones.archivos_adjuntos;
                         }
                     } catch (error) {
-                        console.log('Error parsing observaciones JSON:', error);
+                        // Log más detallado para debugging
+                        console.warn(`Error parsing observaciones JSON for task ${task.id}:`, {
+                            error: error.message,
+                            observaciones: task.observaciones,
+                            type: typeof task.observaciones
+                        });
                         task.archivos_adjuntos = [];
                     }
                 }

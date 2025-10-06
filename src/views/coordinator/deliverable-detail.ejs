@@ -422,6 +422,198 @@
             color: #742a2a;
             border-left: 4px solid #e53e3e;
         }
+
+        /* ===== FILES SECTION ===== */
+        .files-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .files-section h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .file-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .original-file {
+            border-left: 4px solid #38a169;
+        }
+
+        .submitted-file {
+            border-left: 4px solid #3182ce;
+        }
+
+        /* Estilos específicos para archivos de referencia */
+        .reference-file {
+            border-left: 4px solid #007bff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .reference-file:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+        }
+
+        .reference-file .file-icon i {
+            color: #007bff;
+        }
+
+        /* Descripción de sección */
+        .section-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            color: #667eea;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .file-icon .fa-file-pdf {
+            color: #e53e3e;
+        }
+
+        .file-icon .fa-file-word {
+            color: #2b6cb0;
+        }
+
+        .file-icon .fa-file-excel {
+            color: #38a169;
+        }
+
+        .file-icon .fa-file-powerpoint {
+            color: #dd6b20;
+        }
+
+        .file-icon .fa-file-image {
+            color: #805ad5;
+        }
+
+        .file-icon .fa-file-archive {
+            color: #d69e2e;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .file-type {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .file-size {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        .file-date {
+            font-size: 11px;
+            color: #a0aec0;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .file-action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #5a67d8;
+        }
+
+        .download-btn {
+            background: #38a169;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #2f855a;
+        }
+
+        .no-files-message {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 40px;
+            background: #f7fafc;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .no-files-message i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            display: block;
+            color: #cbd5e0;
+        }
+
+        .no-files-message p {
+            margin: 0;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -496,6 +688,102 @@
                 <div class="deliverable-description">
                     <h4><i class="fas fa-file-text"></i> Descripción</h4>
                     <p><%= deliverable.descripcion %></p>
+                </div>
+            <% } %>
+
+            <!-- Archivos Originales del Entregable (Proporcionados al estudiante) -->
+            <% if (deliverable.archivos_originales && deliverable.archivos_originales.length > 0) { %>
+                <div class="files-section">
+                    <h4><i class="fas fa-file-text"></i> Archivos de Referencia (Proporcionados al Estudiante)</h4>
+                    <p class="section-description">Estos son los archivos que se proporcionaron al estudiante como guía o material de referencia para completar el entregable.</p>
+                    <div class="files-grid">
+                        <% deliverable.archivos_originales.forEach(archivo => { %>
+                            <div class="file-item reference-file">
+                                <div class="file-icon">
+                                    <% 
+                                    const extension = archivo.nombre.split('.').pop().toLowerCase();
+                                    let iconClass = 'fas fa-file';
+                                    if (['pdf'].includes(extension)) iconClass = 'fas fa-file-pdf';
+                                    else if (['doc', 'docx'].includes(extension)) iconClass = 'fas fa-file-word';
+                                    else if (['xls', 'xlsx'].includes(extension)) iconClass = 'fas fa-file-excel';
+                                    else if (['ppt', 'pptx'].includes(extension)) iconClass = 'fas fa-file-powerpoint';
+                                    else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) iconClass = 'fas fa-file-image';
+                                    else if (['zip', 'rar', '7z'].includes(extension)) iconClass = 'fas fa-file-archive';
+                                    %>
+                                    <i class="<%= iconClass %>"></i>
+                                </div>
+                                <div class="file-info">
+                                    <div class="file-name"><%= archivo.nombre %></div>
+                                    <div class="file-type">Material de referencia</div>
+                                </div>
+                                <div class="file-actions">
+                                    <a href="<%= archivo.url %>" target="_blank" class="file-action-btn view-btn">
+                                        <i class="fas fa-eye"></i>
+                                        Ver
+                                    </a>
+                                    <a href="<%= archivo.url %>" download class="file-action-btn download-btn">
+                                        <i class="fas fa-download"></i>
+                                        Descargar
+                                    </a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Archivos Entregados por el Estudiante -->
+            <% if (deliverable.archivos_entregados && deliverable.archivos_entregados.length > 0) { %>
+                <div class="files-section">
+                    <h4><i class="fas fa-upload"></i> Archivos Entregados por el Estudiante</h4>
+                    <div class="files-grid">
+                        <% deliverable.archivos_entregados.forEach(archivo => { %>
+                            <div class="file-item submitted-file">
+                                <div class="file-icon">
+                                    <% 
+                                    const extension = archivo.nombre_original ? archivo.nombre_original.split('.').pop().toLowerCase() : 'file';
+                                    let iconClass = 'fas fa-file';
+                                    if (['pdf'].includes(extension)) iconClass = 'fas fa-file-pdf';
+                                    else if (['doc', 'docx'].includes(extension)) iconClass = 'fas fa-file-word';
+                                    else if (['xls', 'xlsx'].includes(extension)) iconClass = 'fas fa-file-excel';
+                                    else if (['ppt', 'pptx'].includes(extension)) iconClass = 'fas fa-file-powerpoint';
+                                    else if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) iconClass = 'fas fa-file-image';
+                                    else if (['zip', 'rar', '7z'].includes(extension)) iconClass = 'fas fa-file-archive';
+                                    %>
+                                    <i class="<%= iconClass %>"></i>
+                                </div>
+                                <div class="file-info">
+                                    <div class="file-name"><%= archivo.nombre_original || archivo.nombre || 'Archivo sin nombre' %></div>
+                                    <div class="file-type">Entregado por estudiante</div>
+                                    <% if (archivo.tamano) { %>
+                                        <div class="file-size"><%= (archivo.tamano / 1024 / 1024).toFixed(2) %> MB</div>
+                                    <% } %>
+                                    <% if (archivo.fecha_subida) { %>
+                                        <div class="file-date">Subido: <%= new Date(archivo.fecha_subida).toLocaleDateString('es-ES') %></div>
+                                    <% } %>
+                                </div>
+                                <div class="file-actions">
+                                    <a href="<%= archivo.url || archivo.ruta %>" target="_blank" class="file-action-btn view-btn">
+                                        <i class="fas fa-eye"></i>
+                                        Ver
+                                    </a>
+                                    <a href="<%= archivo.url || archivo.ruta %>" download class="file-action-btn download-btn">
+                                        <i class="fas fa-download"></i>
+                                        Descargar
+                                    </a>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Mensaje si no hay archivos -->
+            <% if ((!deliverable.archivos_originales || deliverable.archivos_originales.length === 0) && 
+                   (!deliverable.archivos_entregados || deliverable.archivos_entregados.length === 0)) { %>
+                <div class="no-files-message">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No hay archivos adjuntos en este entregable</p>
                 </div>
             <% } %>
 

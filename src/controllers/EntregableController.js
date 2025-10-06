@@ -489,12 +489,25 @@ class EntregableController {
       const { deliverableId } = req.params;
       const user = req.session.user;
 
-      // Obtener entregable con detalles
-      const deliverable = await this.entregableModel.findById(deliverableId);
+      // Obtener entregable con detalles completos incluyendo archivos procesados
+      const deliverable = await this.entregableModel.findByIdWithDetails(deliverableId);
       if (!deliverable) {
         req.flash('error', 'Entregable no encontrado');
         return res.redirect('/coordinator/deliverables');
       }
+
+      // DEBUG: Log para verificar qué archivos se están procesando
+      console.log('🔍 DEBUG - Datos del entregable:', {
+        id: deliverable.id,
+        titulo: deliverable.titulo,
+        archivos_originales: deliverable.archivos_originales,
+        archivos_entregados: deliverable.archivos_entregados
+      });
+      
+      console.log('🔍 DEBUG - Datos RAW de la BD:', {
+        archivo_url: deliverable.archivo_url,
+        archivos_adjuntos: deliverable.archivos_adjuntos
+      });
 
       // Obtener información del proyecto primero para verificar permisos
       const project = await this.projectModel.findById(deliverable.proyecto_id);

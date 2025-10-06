@@ -331,10 +331,44 @@
             <div class="detail-section files-section">
                 <h3 class="section-title">
                     <i class="fas fa-paperclip"></i>
-                    Archivos Adjuntos
+                    Archivos de Referencia
                 </h3>
                 
-                <% if (deliverable.archivo_url && deliverable.archivo_url.trim()) { %>
+                <% if (deliverable.archivos_referencia && deliverable.archivos_referencia.length > 0) { %>
+                    <div class="files-grid">
+                        <% deliverable.archivos_referencia.forEach(archivo => {
+                            const fileName = archivo.nombre || archivo.nombre_original || 'archivo';
+                            const fileExtension = fileName.split('.').pop().toLowerCase();
+                            let fileIcon = 'fas fa-file';
+                            
+                            // Determinar el icono según la extensión
+                            if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-image';
+                            } else if (['pdf'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-pdf';
+                            } else if (['doc', 'docx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-word';
+                            } else if (['xls', 'xlsx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-excel';
+                            } else if (['ppt', 'pptx'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-powerpoint';
+                            } else if (['zip', 'rar', '7z'].includes(fileExtension)) {
+                                fileIcon = 'fas fa-file-archive';
+                            }
+                        %>
+                            <div class="file-item" onclick="window.open('<%= archivo.url %>', '_blank')">
+                                <div class="file-icon">
+                                    <i class="<%= fileIcon %>"></i>
+                                </div>
+                                <div class="file-name"><%= fileName %></div>
+                                <div class="file-size">
+                                    <i class="fas fa-download"></i> Descargar
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else if (deliverable.archivo_url && deliverable.archivo_url.trim()) { %>
+                    <!-- Fallback para archivos legacy -->
                     <div class="files-grid">
                         <% 
                         const files = deliverable.archivo_url.split(',').filter(file => file.trim());
@@ -372,7 +406,7 @@
                 <% } else { %>
                     <div class="no-files">
                         <i class="fas fa-folder-open" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
-                        <p>No hay archivos adjuntos en este entregable</p>
+                        <p>No hay archivos de referencia en este entregable</p>
                     </div>
                 <% } %>
             </div>
