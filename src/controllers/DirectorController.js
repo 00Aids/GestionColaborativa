@@ -22,32 +22,55 @@ class DirectorController {
       const limit = 10;
       const offset = (page - 1) * limit;
 
-      // Obtener proyectos dirigidos por este director
-      let conditions = { director_id: user.id };
+      // Obtener proyectos donde este usuario es miembro con rol de director
+      let query = `
+        SELECT DISTINCT
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        INNER JOIN project_members pm ON p.id = pm.proyecto_id
+        WHERE pm.usuario_id = ? AND pm.rol_en_proyecto = 'director' AND pm.activo = 1
+      `;
       
-      // Aplicar filtros
-      if (estado) conditions.estado = estado;
+      const values = [user.id];
       
-      let directedProjects = await this.projectModel.findByDirector(user.id, conditions);
+      // Aplicar filtro de estado si existe
+      if (estado) {
+        query += ` AND p.estado = ?`;
+        values.push(estado);
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const [directedProjects] = await this.projectModel.db.execute(query, values);
 
       // Aplicar búsqueda por título si se especifica
+      let filteredProjects = directedProjects;
       if (search) {
-        directedProjects = directedProjects.filter(project => 
+        filteredProjects = directedProjects.filter(project => 
           project.titulo.toLowerCase().includes(search.toLowerCase())
         );
       }
 
       // Calcular estadísticas
       const stats = {
-        total: directedProjects.length,
-        activos: directedProjects.filter(p => ['en_desarrollo', 'en_revision'].includes(p.estado)).length,
-        finalizados: directedProjects.filter(p => p.estado === 'finalizado').length,
-        pendientes: directedProjects.filter(p => p.estado === 'borrador').length
+        total: filteredProjects.length,
+        activos: filteredProjects.filter(p => ['en_desarrollo', 'en_revision'].includes(p.estado)).length,
+        finalizados: filteredProjects.filter(p => p.estado === 'finalizado').length,
+        pendientes: filteredProjects.filter(p => p.estado === 'borrador').length
       };
 
       // Paginación
-      const totalProjects = directedProjects.length;
-      const paginatedProjects = directedProjects.slice(offset, offset + limit);
+      const totalProjects = filteredProjects.length;
+      const paginatedProjects = filteredProjects.slice(offset, offset + limit);
       const totalPages = Math.ceil(totalProjects / limit);
 
       res.render('director/projects', {
