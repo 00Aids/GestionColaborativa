@@ -24,8 +24,6 @@ router.get('/projects', directorController.projects.bind(directorController));
 // Listar entregables de proyectos dirigidos
 router.get('/deliverables', directorController.deliverables.bind(directorController));
 
-// Listar evaluaciones de proyectos dirigidos
-router.get('/evaluations', directorController.evaluations.bind(directorController));
 
 // ===== RUTAS DE DETALLE DE PROYECTO =====
 router.get('/projects/:projectId', async (req, res) => {
@@ -43,14 +41,10 @@ router.get('/projects/:projectId', async (req, res) => {
     // Obtener entregables del proyecto
     const deliverables = await directorController.getDeliverablesByProject(projectId);
     
-    // Obtener evaluaciones del proyecto
-    const evaluations = await directorController.getEvaluationsByProject(projectId);
-    
     res.render('director/project-detail', {
       title: `Proyecto: ${project.titulo}`,
       project: project,
       deliverables: deliverables || [],
-      evaluations: evaluations || [],
       user: user,
       success: req.flash('success'),
       error: req.flash('error')

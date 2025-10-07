@@ -323,37 +323,13 @@
                         <a href="/projects" class="action-btn">Ver Todos los Proyectos</a>
                         <a href="/admin/projects/new" class="action-btn">Crear Proyecto</a>
                         <a href="/reports" class="action-btn">Generar Reportes</a>
-                        <a href="/director/evaluations" class="action-btn">Gestionar Evaluaciones</a>
+                        <a href="/director/deliverables" class="action-btn">Revisar Entregables</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pending Evaluations -->
-        <div class="card">
-            <div class="card-header">
-                <h3>Evaluaciones Pendientes</h3>
-            </div>
-            <div class="card-content">
-                <% if (pendingEvaluations && pendingEvaluations.length > 0) { %>
-                    <% pendingEvaluations.forEach(evaluation => { %>
-                        <div class="project-item">
-                            <div class="project-info">
-                                <h4><%= evaluation.project_title %></h4>
-                                <div class="project-meta">
-                                    Estudiante: <%= evaluation.student_name %> | 
-                                    Tipo: <%= evaluation.type %> | 
-                                    Fecha límite: <%= evaluation.due_date ? new Date(evaluation.due_date).toLocaleDateString() : 'N/A' %>
-                                </div>
-                            </div>
-                            <span class="status-badge status-pending">Pendiente</span>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <p>No hay evaluaciones pendientes.</p>
-                <% } %>
-            </div>
-        </div>
+
     </div>
 </body>
 </html>
