@@ -67,12 +67,25 @@
             padding: 2rem;
         }
         .dashboard-header {
-            text-align: center;
             margin-bottom: 2rem;
+        }
+        .dashboard-header .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .dashboard-header .header-text {
+            flex: 1;
         }
         .dashboard-header h1 {
             color: #2d3748;
             margin-bottom: 0.5rem;
+        }
+        .dashboard-header .header-actions {
+            display: flex;
+            gap: 1rem;
         }
         .text-muted {
             color: #6c757d;
@@ -443,6 +456,50 @@
             padding-top: 1rem;
             border-top: 1px solid #e2e8f0;
         }
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .modal-body {
+            margin-bottom: 1rem;
+        }
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .half-width {
+            flex: 1;
+        }
+        .form-help {
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
     </style>
 </head>
 <body>
@@ -489,8 +546,17 @@
         <% } %>
 
         <div class="dashboard-header">
-            <h1><i class="fas fa-file-alt"></i> <%= title %></h1>
-            <p class="text-muted">Supervisa y revisa los entregables de tus proyectos dirigidos</p>
+            <div class="header-content">
+                <div class="header-text">
+                    <h1><i class="fas fa-file-alt"></i> <%= title %></h1>
+                    <p class="text-muted">Supervisa y revisa los entregables de tus proyectos dirigidos</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="btn btn-success" onclick="showCreateDeliverableModal()">
+                        <i class="fas fa-plus"></i> Crear Entregable
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Filtros -->
@@ -676,6 +742,11 @@
                                 <i class="fas fa-eye"></i> Ver Detalles
                             </a>
                             
+                            <!-- Botón de asignación de entregables -->
+                            <button class="btn btn-info btn-sm" onclick="showAssignModal('<%= deliverable.id %>', '<%= deliverable.proyecto_id %>')">
+                                <i class="fas fa-user-plus"></i> Asignar
+                            </button>
+                            
                             <% if (deliverable.archivo_url) { %>
                                 <% 
                                 const files = deliverable.archivo_url.split(',').filter(file => file.trim());
@@ -740,6 +811,91 @@
         <% } %>
     </div>
 
+    <!-- Modal para crear entregable (formulario completo como en las imágenes) -->
+    <div id="createDeliverableModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-plus-circle"></i> Nueva Tarea</h3>
+                <span class="close" onclick="closeModal('createDeliverableModal')">&times;</span>
+            </div>
+            <form id="deliverableForm">
+                <input type="hidden" id="deliverableId" name="deliverableId">
+                
+                <div class="form-group">
+                    <label for="titulo">Título de la tarea <span style="color: red;">*</span></label>
+                    <input type="text" id="titulo" name="titulo" placeholder="Ingresa el título de la tarea" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" placeholder="Describe los detalles de la tarea"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fase_id">Fase del Proyecto</label>
+                    <select id="fase_id" name="fase_id" required>
+                        <option value="">Sin fase específica</option>
+                        <option value="1">Propuesta</option>
+                        <option value="2">Desarrollo</option>
+                        <option value="3">Revisión</option>
+                        <option value="4">Entrega Final</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="asignado_a">Asignar a</label>
+                        <select id="asignado_a" name="asignado_a">
+                            <option value="">Sin asignar</option>
+                            <!-- Los usuarios se cargarán dinámicamente -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label for="fecha_limite">Fecha Límite</label>
+                        <input type="date" id="fecha_limite" name="fecha_limite" placeholder="dd/mm/aaaa" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group half-width">
+                        <label for="estimacion_horas">Estimación (horas)</label>
+                        <input type="number" id="estimacion_horas" name="estimacion_horas" placeholder="Ej. 8" min="1">
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label for="estado">Estado Inicial</label>
+                        <select id="estado" name="estado">
+                            <option value="pendiente">Por Hacer</option>
+                            <option value="en_progreso">En Progreso</option>
+                            <option value="completado">Completado</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="etiquetas">Etiquetas</label>
+                    <input type="text" id="etiquetas" name="etiquetas" placeholder="frontend, backend, diseño (separadas por comas)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="archivos">Archivos Adjuntos</label>
+                    <input type="file" id="archivos" name="archivos" multiple>
+                    <small class="form-help">Puedes adjuntar múltiples archivos relacionados con la tarea</small>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('createDeliverableModal')">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus"></i> Crear Tarea
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal para comentarios -->
     <div id="commentModal" class="modal">
         <div class="modal-content">
@@ -769,6 +925,62 @@
                 <button class="close" onclick="closeModal('filesModal')">&times;</button>
             </div>
             <div id="filesList"></div>
+        </div>
+    </div>
+
+    <!-- Modal para asignación de entregables -->
+    <div id="assignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Asignar Entregable</h3>
+                <button class="close" onclick="closeModal('assignModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo de Asignación</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="assignType" value="user" checked onchange="toggleAssignType()">
+                            Asignar a Usuario Específico
+                        </label>
+                        <label>
+                            <input type="radio" name="assignType" value="role" onchange="toggleAssignType()">
+                            Asignar a Rol
+                        </label>
+                    </div>
+                </div>
+
+                <div id="userAssignSection">
+                    <div class="form-group">
+                        <label for="assignUser">Seleccionar Usuario</label>
+                        <select id="assignUser" class="form-control">
+                            <option value="">Cargando usuarios...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="roleAssignSection" style="display: none;">
+                    <div class="form-group">
+                        <label for="assignRole">Seleccionar Rol</label>
+                        <select id="assignRole" class="form-control">
+                            <option value="">Selecciona un rol</option>
+                            <option value="estudiante">Estudiante</option>
+                            <option value="coordinador">Coordinador</option>
+                            <option value="director">Director</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="assignObservations">Observaciones (opcional)</label>
+                    <textarea id="assignObservations" class="form-control" 
+                              placeholder="Observaciones sobre la asignación..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="closeModal('assignModal')">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="assignDeliverable()">Asignar</button>
+            </div>
         </div>
     </div>
 
@@ -893,16 +1105,302 @@
             });
         });
 
+        // Variables globales para asignación
+        let currentAssignDeliverableId = null;
+        let currentAssignProjectId = null;
+
+        // Función para mostrar modal de asignación
+        function showAssignModal(deliverableId, projectId) {
+            currentAssignDeliverableId = deliverableId;
+            currentAssignProjectId = projectId;
+            
+            // Cargar usuarios del proyecto
+            loadProjectUsers(projectId);
+            
+            document.getElementById('assignModal').style.display = 'block';
+        }
+
+        // Función para alternar tipo de asignación
+        function toggleAssignType() {
+            const assignType = document.querySelector('input[name="assignType"]:checked').value;
+            const userSection = document.getElementById('userAssignSection');
+            const roleSection = document.getElementById('roleAssignSection');
+            
+            if (assignType === 'user') {
+                userSection.style.display = 'block';
+                roleSection.style.display = 'none';
+            } else {
+                userSection.style.display = 'none';
+                roleSection.style.display = 'block';
+            }
+        }
+
+        // Función para cargar usuarios del proyecto
+        function loadProjectUsers(projectId) {
+            const userSelect = document.getElementById('assignUser');
+            userSelect.innerHTML = '<option value="">Cargando usuarios...</option>';
+            
+            fetch(`/director/api/projects/${projectId}/users`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        userSelect.innerHTML = '<option value="">Selecciona un usuario</option>';
+                        data.users.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = `${user.nombres} ${user.apellidos} (${user.rol})`;
+                            userSelect.appendChild(option);
+                        });
+                    } else {
+                        userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
+                });
+        }
+
+        // Función para asignar entregable
+        function assignDeliverable() {
+            const assignType = document.querySelector('input[name="assignType"]:checked').value;
+            const observations = document.getElementById('assignObservations').value;
+            
+            let assignData = {
+                deliverable_id: currentAssignDeliverableId,
+                observaciones: observations
+            };
+            
+            if (assignType === 'user') {
+                const userId = document.getElementById('assignUser').value;
+                if (!userId) {
+                    alert('Por favor, selecciona un usuario');
+                    return;
+                }
+                assignData.usuario_id = userId;
+            } else {
+                const role = document.getElementById('assignRole').value;
+                if (!role) {
+                    alert('Por favor, selecciona un rol');
+                    return;
+                }
+                assignData.rol = role;
+            }
+            
+            fetch('/director/api/deliverables/assign', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(assignData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('assignModal');
+                    alert('Entregable asignado exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'No se pudo asignar el entregable'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al asignar el entregable');
+            });
+        }
+
+        // Función para mostrar modal de creación de entregables
+        function showCreateDeliverableModal() {
+            // Configurar fecha mínima como mañana
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const minDate = tomorrow.toISOString().split('T')[0];
+            document.getElementById('fecha_limite').min = minDate;
+            
+            // Cargar usuarios disponibles para asignación
+            loadUsersForAssignment();
+            
+            // Limpiar formulario
+            document.getElementById('deliverableForm').reset();
+            
+            // Mostrar modal
+            document.getElementById('createDeliverableModal').style.display = 'block';
+        }
+
+        // Función para cargar usuarios disponibles
+        function loadUsersForAssignment() {
+            const userSelect = document.getElementById('asignado_a');
+            userSelect.innerHTML = '<option value="">Cargando usuarios...</option>';
+            
+            // Obtener el proyecto seleccionado actualmente (del filtro)
+            const projectSelect = document.getElementById('proyecto');
+            const projectId = projectSelect.value;
+            
+            if (projectId) {
+                // Si hay un proyecto seleccionado, obtener usuarios específicos del proyecto
+                fetch(`/director/api/projects/${projectId}/users`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            userSelect.innerHTML = '<option value="">Sin asignar</option>';
+                            
+                            // Agregar miembros del proyecto
+                            if (data.projectMembers && data.projectMembers.length > 0) {
+                                const projectGroup = document.createElement('optgroup');
+                                projectGroup.label = 'Miembros del proyecto';
+                                data.projectMembers.forEach(user => {
+                                    const option = document.createElement('option');
+                                    option.value = user.id;
+                                    option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
+                                    projectGroup.appendChild(option);
+                                });
+                                userSelect.appendChild(projectGroup);
+                            }
+                            
+                            // Agregar todos los usuarios disponibles
+                            if (data.allUsers && data.allUsers.length > 0) {
+                                const allUsersGroup = document.createElement('optgroup');
+                                allUsersGroup.label = 'Todos los usuarios';
+                                data.allUsers.forEach(user => {
+                                    const option = document.createElement('option');
+                                    option.value = user.id;
+                                    option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
+                                    allUsersGroup.appendChild(option);
+                                });
+                                userSelect.appendChild(allUsersGroup);
+                            }
+                        } else {
+                            userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        userSelect.innerHTML = '<option value="">Sin asignar</option>';
+                    });
+            } else {
+                // Si no hay proyecto seleccionado, obtener todos los usuarios disponibles
+                fetch('/director/api/users')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            userSelect.innerHTML = '<option value="">Sin asignar</option>';
+                            data.users.forEach(user => {
+                                const option = document.createElement('option');
+                                option.value = user.id;
+                                option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
+                                userSelect.appendChild(option);
+                            });
+                        } else {
+                            userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        userSelect.innerHTML = '<option value="">Sin asignar</option>';
+                    });
+            }
+        }
+
+        // Función para manejar el envío del formulario
+        document.getElementById('deliverableForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener el proyecto seleccionado actualmente (del filtro)
+            const projectSelect = document.getElementById('proyecto');
+            const projectId = projectSelect.value;
+            
+            if (!projectId) {
+                alert('Por favor, selecciona un proyecto en el filtro antes de crear un entregable');
+                return;
+            }
+            
+            const title = document.getElementById('titulo').value;
+            const description = document.getElementById('descripcion').value;
+            const dueDate = document.getElementById('fecha_limite').value;
+            const phase = document.getElementById('fase_id').value;
+            const assignedTo = document.getElementById('asignado_a').value;
+            const estimationHours = document.getElementById('estimacion_horas').value;
+            const status = document.getElementById('estado').value;
+            const tags = document.getElementById('etiquetas').value;
+            
+            if (!title || !dueDate) {
+                alert('Por favor, completa todos los campos obligatorios (Título y Fecha Límite)');
+                return;
+            }
+            
+            // Validar que la fecha sea futura
+            const today = new Date();
+            const selectedDate = new Date(dueDate);
+            if (selectedDate <= today) {
+                alert('La fecha de entrega debe ser posterior a hoy');
+                return;
+            }
+            
+            const deliverableData = {
+                titulo: title,
+                descripcion: description,
+                fecha_entrega: dueDate,
+                fase_id: phase || null,
+                asignado_a: assignedTo || null,
+                estimacion_horas: estimationHours || null,
+                estado: status,
+                etiquetas: tags || null
+            };
+            
+            // Manejar archivos adjuntos si existen
+            const formData = new FormData();
+            Object.keys(deliverableData).forEach(key => {
+                if (deliverableData[key] !== null) {
+                    formData.append(key, deliverableData[key]);
+                }
+            });
+            
+            const fileInput = document.getElementById('archivos');
+            if (fileInput.files.length > 0) {
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('archivos', fileInput.files[i]);
+                }
+            }
+            
+            fetch(`/director/api/projects/${projectId}/deliverables`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeModal('createDeliverableModal');
+                    alert('Entregable creado exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo crear el entregable'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al crear el entregable');
+            });
+        });
+
         // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
             const commentModal = document.getElementById('commentModal');
             const filesModal = document.getElementById('filesModal');
+            const assignModal = document.getElementById('assignModal');
+            const createModal = document.getElementById('createDeliverableModal');
             
             if (event.target === commentModal) {
                 closeModal('commentModal');
             }
             if (event.target === filesModal) {
                 closeModal('filesModal');
+            }
+            if (event.target === assignModal) {
+                closeModal('assignModal');
+            }
+            if (event.target === createModal) {
+                closeModal('createDeliverableModal');
             }
         }
 

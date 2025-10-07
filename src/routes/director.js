@@ -58,6 +58,9 @@ router.get('/projects/:projectId', async (req, res) => {
 
 // ===== API ENDPOINTS =====
 
+// Crear nuevo entregable
+router.post('/api/projects/:projectId/deliverables', directorController.createDeliverable.bind(directorController));
+
 // API para obtener proyectos dirigidos
 router.get('/api/projects', async (req, res) => {
   try {
@@ -103,5 +106,66 @@ router.get('/api/deliverables/:deliverableId', async (req, res) => {
 
 // API para actualizar estado simple del entregable
 router.post('/api/deliverables/:deliverableId/status', entregableController.updateStatus.bind(entregableController));
+
+// ===== RUTAS DE ASIGNACIÓN DE ENTREGABLES =====
+
+// API para asignar entregable a usuario específico
+router.post('/api/deliverables/:deliverableId/assign-user', directorController.assignDeliverableToUser.bind(directorController));
+
+// API para asignar entregable a todos los usuarios de un rol
+router.post('/api/deliverables/:deliverableId/assign-role', directorController.assignDeliverableToRole.bind(directorController));
+
+// API para obtener usuarios disponibles para asignación en un proyecto
+router.get('/api/projects/:projectId/available-users', directorController.getAvailableUsersForAssignment.bind(directorController));
+
+// API para obtener todos los usuarios disponibles (sin requerir proyecto específico)
+router.get('/api/users', directorController.getAllAvailableUsers.bind(directorController));
+
+// Ruta para obtener usuarios del proyecto
+router.get('/api/projects/:projectId/users', directorController.getAvailableUsersForAssignment.bind(directorController));
+
+// Ruta para asignar entregables
+router.post('/api/deliverables/assign', async (req, res) => {
+    try {
+        const { deliverable_id, usuario_id, rol, observaciones } = req.body;
+        const directorId = req.session.user.id;
+        
+        let result;
+        if (usuario_id) {
+            // Asignar a usuario específico
+            result = await directorController.assignDeliverableToUser(
+                deliverable_id, 
+                usuario_id, 
+                directorId, 
+                observaciones
+            );
+        } else if (rol) {
+            // Asignar a rol
+            result = await directorController.assignDeliverableToRole(
+                deliverable_id, 
+                rol, 
+                directorId, 
+                observaciones
+            );
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Debes especificar un usuario o un rol' 
+            });
+        }
+        
+        if (result.success) {
+            res.json({ success: true, message: 'Entregable asignado exitosamente' });
+        } else {
+            res.status(400).json({ success: false, message: result.message });
+        }
+    } catch (error) {
+        console.error('Error al asignar entregable:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error interno del servidor' 
+        });
+    }
+});
 
 module.exports = router;

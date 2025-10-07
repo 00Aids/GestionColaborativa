@@ -212,11 +212,23 @@ class DirectorController {
       const projects = await this.projectModel.findWithDetails({ id: projectId });
       const project = projects[0];
       
-      if (!project || project.director_id !== directorId) {
+      if (!project) {
         return null;
       }
       
-      return project;
+      // Verificar si el director es el director asignado O es miembro con rol de director
+      const isAssignedDirector = project.director_id === directorId;
+      if (isAssignedDirector) {
+        return project;
+      }
+      
+      // Verificar si es miembro con rol de director
+      const isProjectMember = await this.projectModel.findProjectMember(projectId, directorId);
+      if (isProjectMember && isProjectMember.rol_en_proyecto === 'director') {
+        return project;
+      }
+      
+      return null;
     } catch (error) {
       console.error('Error getting project by ID:', error);
       throw error;
@@ -230,6 +242,229 @@ class DirectorController {
     } catch (error) {
       console.error('Error getting deliverables by project:', error);
       throw error;
+    }
+  }
+
+  // ===== ASIGNACIÓN DE ENTREGABLES =====
+
+  // Crear nuevo entregable
+  async createDeliverable(req, res) {
+    try {
+      const { projectId } = req.params;
+      const director = req.session.user;
+      const { titulo, descripcion, fecha_entrega, fase_id } = req.body;
+
+      // Verificar que el director tiene acceso al proyecto
+      const hasAccess = await this.getProjectById(projectId, director.id);
+      if (!hasAccess) {
+        return res.status(403).json({ 
+          success: false,
+          error: 'No tienes acceso a este proyecto' 
+        });
+      }
+
+      // Validaciones
+      if (!titulo || !fecha_entrega) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'El título y la fecha de entrega son obligatorios' 
+        });
+      }
+
+      // Verificar que la fecha de entrega sea futura
+      const dueDate = new Date(fecha_entrega);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+      
+      if (dueDate <= today) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'La fecha de entrega debe ser posterior a hoy' 
+        });
+      }
+
+      // Crear el entregable
+      const deliverableData = {
+        titulo: titulo.trim(),
+        descripcion: descripcion ? descripcion.trim() : null,
+        proyecto_id: projectId,
+        fase_id: fase_id || 1, // Por defecto fase 1 (Propuesta)
+        fecha_entrega: fecha_entrega,
+        estado: 'pendiente',
+        created_by: director.id
+      };
+
+      const newDeliverable = await this.entregableModel.create(deliverableData);
+
+      res.json({
+        success: true,
+        message: 'Entregable creado exitosamente',
+        deliverable: newDeliverable
+      });
+
+    } catch (error) {
+      console.error('Error creating deliverable:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error interno del servidor' 
+      });
+    }
+  }
+
+  // Asignar entregable a usuario específico
+  async assignDeliverableToUser(req, res) {
+    try {
+      const { deliverableId } = req.params;
+      const { userId } = req.body;
+      const director = req.session.user;
+
+      // Verificar que el entregable existe y obtener información del proyecto
+      const deliverable = await this.entregableModel.findByIdWithDetails(deliverableId);
+      if (!deliverable) {
+        return res.status(404).json({
+          success: false,
+          message: 'Entregable no encontrado'
+        });
+      }
+
+      // Verificar que el director tiene permisos sobre el proyecto
+      const hasAccess = await this.getProjectById(deliverable.proyecto_id, director.id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para asignar entregables de este proyecto'
+        });
+      }
+
+      // Verificar que el usuario a asignar existe
+      const targetUser = await this.userModel.findById(userId);
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'Usuario no encontrado'
+        });
+      }
+
+      // Realizar la asignación
+      const assigned = await this.entregableModel.assignToUser(deliverableId, userId, director.id);
+      
+      if (assigned) {
+        res.json({
+          success: true,
+          message: `Entregable asignado exitosamente a ${targetUser.nombres} ${targetUser.apellidos}`
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Error al asignar el entregable'
+        });
+      }
+
+    } catch (error) {
+      console.error('Error assigning deliverable to user:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Asignar entregable a todos los usuarios de un rol específico
+  async assignDeliverableToRole(req, res) {
+    try {
+      const { deliverableId } = req.params;
+      const { roleId } = req.body;
+      const director = req.session.user;
+
+      // Verificar que el entregable existe y obtener información del proyecto
+      const deliverable = await this.entregableModel.findByIdWithDetails(deliverableId);
+      if (!deliverable) {
+        return res.status(404).json({
+          success: false,
+          message: 'Entregable no encontrado'
+        });
+      }
+
+      // Verificar que el director tiene permisos sobre el proyecto
+      const hasAccess = await this.getProjectById(deliverable.proyecto_id, director.id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para asignar entregables de este proyecto'
+        });
+      }
+
+      // Realizar la asignación por rol
+      const assignments = await this.entregableModel.assignToRole(deliverableId, roleId, director.id);
+      
+      res.json({
+        success: true,
+        message: `Entregable asignado exitosamente a ${assignments.length} usuarios`,
+        assignments: assignments
+      });
+
+    } catch (error) {
+      console.error('Error assigning deliverable to role:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Obtener usuarios disponibles para asignación en un proyecto
+  async getAvailableUsersForAssignment(req, res) {
+    try {
+      const { projectId } = req.params;
+      const director = req.session.user;
+
+      // Verificar que el director tiene permisos sobre el proyecto
+      const hasAccess = await this.getProjectById(projectId, director.id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tienes permisos para ver este proyecto'
+        });
+      }
+
+      // Obtener miembros del proyecto
+      const projectMembers = await this.projectModel.getProjectMembers(projectId);
+      
+      // Obtener todos los usuarios activos (opcional, para asignaciones más amplias)
+      const allUsers = await this.userModel.findAll({ activo: 1 });
+
+      res.json({
+        success: true,
+        projectMembers: projectMembers || [],
+        allUsers: allUsers || []
+      });
+
+    } catch (error) {
+      console.error('Error getting available users for assignment:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
+    }
+  }
+
+  // Obtener todos los usuarios disponibles (sin requerir proyecto específico)
+  async getAllAvailableUsers(req, res) {
+    try {
+      // Obtener todos los usuarios activos
+      const allUsers = await this.userModel.findAll({ activo: 1 });
+
+      res.json({
+        success: true,
+        users: allUsers || []
+      });
+
+    } catch (error) {
+      console.error('Error getting all available users:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor'
+      });
     }
   }
 

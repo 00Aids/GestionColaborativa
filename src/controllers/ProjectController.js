@@ -353,8 +353,12 @@ class ProjectController {
           return res.redirect('/student/projects');
         }
       } else if (user.rol_nombre === 'Director de Proyecto') {
-        // Los directores pueden ver cualquier proyecto donde sean directores, independientemente del área
-        if (project.director_id !== user.id) {
+        // Los directores pueden ver proyectos donde sean el director asignado O sean miembros con rol de director
+        const isAssignedDirector = project.director_id === user.id;
+        const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+        const isDirectorMember = isProjectMember && isProjectMember.rol_en_proyecto === 'director';
+        
+        if (!isAssignedDirector && !isDirectorMember) {
           req.flash('error', 'No tienes permisos para ver este proyecto');
           return res.redirect('/director/projects');
         }
@@ -1449,9 +1453,14 @@ class ProjectController {
         case 'Administrador General':
           // Acceso total sin restricción por área
           return true;
-        case 'Director de Proyecto':
-          // Directores acceden a sus proyectos independientemente del área
-          return project.director_id === user.id;
+        case 'Director de Proyecto': {
+          // Directores acceden si son el director asignado O son miembros con rol de director
+          const isAssignedDirector = project.director_id === user.id;
+          if (isAssignedDirector) return true;
+          
+          const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
+          return isProjectMember && isProjectMember.rol_en_proyecto === 'director';
+        }
         case 'Coordinador Académico': {
           // Coordinadores: acceso si son miembros activos del proyecto o si el proyecto pertenece a cualquiera de sus áreas
           const isProjectMember = await this.projectModel.findProjectMember(projectId, user.id);
