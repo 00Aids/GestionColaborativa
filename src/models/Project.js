@@ -190,11 +190,68 @@ class Project extends BaseModel {
     }
   }
 
-  // Obtener proyectos por director
+  // Obtener proyectos por director (SOLUCIÓN ROBUSTA)
+  // Busca en AMBAS fuentes: director_id Y proyecto_usuarios con rol coordinador
   async findByDirector(directorId, additionalConditions = {}) {
     try {
-      const conditions = { director_id: directorId, ...additionalConditions };
-      return await this.findWithDetails(conditions);
+      let query = `
+        SELECT DISTINCT
+          p.*,
+          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
+          u.nombres as estudiante_nombres,
+          u.apellidos as estudiante_apellidos,
+          u.email as estudiante_email,
+          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
+          d.nombres as director_nombres,
+          d.apellidos as director_apellidos,
+          li.nombre as linea_investigacion,
+          li.nombre as linea_investigacion_nombre,
+          ca.nombre as ciclo_nombre,
+          ca.fecha_inicio as ciclo_fecha_inicio,
+          ca.fecha_fin as ciclo_fecha_fin
+        FROM proyectos p
+        LEFT JOIN usuarios u ON p.estudiante_id = u.id
+        LEFT JOIN usuarios d ON p.director_id = d.id
+        LEFT JOIN lineas_investigacion li ON p.linea_investigacion_id = li.id
+        LEFT JOIN ciclos_academicos ca ON p.ciclo_academico_id = ca.id
+        WHERE (
+          p.director_id = ? 
+          OR EXISTS (
+            SELECT 1 FROM proyecto_usuarios pu 
+            WHERE pu.proyecto_id = p.id 
+              AND pu.usuario_id = ? 
+              AND pu.rol = 'coordinador' 
+              AND pu.estado = 'activo'
+          )
+        )
+      `;
+      
+      const values = [directorId, directorId];
+      
+      // Aplicar condiciones adicionales
+      if (Object.keys(additionalConditions).length > 0) {
+        for (const [key, value] of Object.entries(additionalConditions)) {
+          // Ignorar condiciones con valores no válidos
+          if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+            continue;
+          }
+          if (key === 'fecha_inicio_desde') {
+            query += ` AND p.fecha_inicio >= ?`;
+            values.push(value);
+          } else if (key === 'fecha_fin_hasta') {
+            query += ` AND p.fecha_fin <= ?`;
+            values.push(value);
+          } else {
+            query += ` AND p.${key} = ?`;
+            values.push(value);
+          }
+        }
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const [rows] = await this.db.execute(query, values);
+      return rows;
     } catch (error) {
       throw new Error(`Error finding projects by director: ${error.message}`);
     }
@@ -508,6 +565,34 @@ class Project extends BaseModel {
         userId,
         rol
       ]);
+
+      // Actualizar los campos específicos del proyecto según el rol del usuario
+      let updateProjectQuery = '';
+      let updateParams = [];
+
+      switch (rol) {
+        case 'coordinador':
+          // Si es coordinador (Director de Proyecto), actualizar director_id
+          updateProjectQuery = 'UPDATE proyectos SET director_id = ? WHERE id = ?';
+          updateParams = [userId, invitation.proyecto_id];
+          break;
+        case 'estudiante':
+          // Si es estudiante, actualizar estudiante_id
+          updateProjectQuery = 'UPDATE proyectos SET estudiante_id = ? WHERE id = ?';
+          updateParams = [userId, invitation.proyecto_id];
+          break;
+        case 'evaluador':
+          // Si es evaluador, actualizar evaluador_id
+          updateProjectQuery = 'UPDATE proyectos SET evaluador_id = ? WHERE id = ?';
+          updateParams = [userId, invitation.proyecto_id];
+          break;
+      }
+
+      // Ejecutar la actualización del proyecto si hay una consulta definida
+      if (updateProjectQuery) {
+        await this.db.execute(updateProjectQuery, updateParams);
+        console.log(`Actualizado campo ${rol === 'coordinador' ? 'director_id' : rol === 'estudiante' ? 'estudiante_id' : 'evaluador_id'} del proyecto ${invitation.proyecto_id} con usuario ${userId}`);
+      }
 
       // Asignar automáticamente el usuario al área de trabajo del proyecto
       if (project.area_trabajo_id) {

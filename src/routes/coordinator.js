@@ -44,6 +44,19 @@ router.get('/students', async (req, res) => {
   }
 });
 
+// Ruta para desactivar/activar estudiantes
+router.post('/students/:id/toggle-status', async (req, res) => {
+  try {
+    await dashboardController.toggleStudentStatus(req, res);
+  } catch (error) {
+    console.error('Error toggling student status:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al cambiar el estado del estudiante' 
+    });
+  }
+});
+
 // ===== RUTAS DE REPORTES =====
 router.get('/reports', async (req, res) => {
   try {

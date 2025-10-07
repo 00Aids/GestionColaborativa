@@ -372,7 +372,13 @@
             <div class="breadcrumb">
                 <a href="/dashboard">Dashboard</a>
                 <span>›</span>
-                <a href="/projects">Proyectos</a>
+                <% 
+                const projectsUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                                   user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                                   user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                                   user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+                %>
+                <a href="<%= projectsUrl %>">Proyectos</a>
                 <span>›</span>
                 <span>Nuevo</span>
             </div>
@@ -552,7 +558,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <a href="/projects" class="btn btn-secondary">Cancelar</a>
+                    <a href="<%= projectsUrl %>" class="btn btn-secondary">Cancelar</a>
                     <button type="submit" class="btn btn-primary">Crear Proyecto</button>
                 </div>
             </form>

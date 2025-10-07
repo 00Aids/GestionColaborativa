@@ -1702,12 +1702,12 @@
                         <i class="fas fa-chart-bar"></i> Generar Reporte
                     </button>
                     <% if (project && project.estado && project.estado !== 'completado') { %>
-                    <button onclick="showConfirmDialog('¿Completar proyecto?', 'Esta acción marcará el proyecto como completado.', function() { completeProject(<%= project.id %>); })" class="btn btn-success">
+                    <button onclick="showConfirmDialog(&quot;¿Completar proyecto?&quot;, &quot;Esta acción marcará el proyecto como completado.&quot;, function() { completeProject(<%= project.id %>); })" class="btn btn-success">
                         <i class="fas fa-check"></i> Completar
                     </button>
                     <% } %>
                     <% if (project && project.id) { %>
-                    <button onclick="showConfirmDialog('¿Eliminar proyecto?', 'Esta acción no se puede deshacer.', () => deleteProject(<%= project.id %>))" class="btn btn-danger">
+                    <button onclick="showConfirmDialog(&quot;¿Eliminar proyecto?&quot;, &quot;Esta acción no se puede deshacer.&quot;, () => deleteProject(<%= project.id %>))" class="btn btn-danger">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
                     <% } %>
@@ -1931,9 +1931,6 @@
                 </button>
                 <button class="tab-button" onclick="showTab('invitations')">
                     <i class="fas fa-envelope"></i> Invitaciones
-                </button>
-                <button class="tab-button" onclick="showTab('activity')">
-                    <i class="fas fa-history"></i> Actividad
                 </button>
             </div>
 
@@ -2244,6 +2241,7 @@
                                 <option value="tasks">Solo tareas</option>
                                 <option value="members">Solo miembros</option>
                                 <option value="project">Solo proyecto</option>
+                                <option value="deliverables">Solo entregables</option>
                             </select>
                         </div>
                     </div>
@@ -2269,52 +2267,50 @@
                             </div>
                         </div>
 
-                        <!-- Eventos de miembros -->
-                        <% members.forEach((member, index) => { %>
-                        <div class="timeline-event" data-type="members">
-                            <div class="timeline-marker member-marker">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <div class="timeline-content-card">
-                                <div class="timeline-header">
-                                    <h4>Miembro Agregado</h4>
-                                    <span class="timeline-date"><%= new Date(member.fecha_union || project.fecha_creacion).toLocaleDateString('es-ES') %></span>
-                                </div>
-                                <p><%= member.nombres %> <%= member.apellidos %> se unió al proyecto como <%= member.rol %>.</p>
-                                <div class="timeline-meta">
-                                    <span class="timeline-tag member-tag">Miembro</span>
-                                    <span class="timeline-role"><%= member.rol %></span>
-                                </div>
-                            </div>
-                        </div>
-                        <% }); %>
-
-                        <!-- Eventos de tareas -->
-                        <% if (tasks && tasks.length > 0) { %>
-                            <% tasks.forEach(task => { %>
-                            <div class="timeline-event" data-type="tasks">
-                                <div class="timeline-marker task-marker task-<%= task.estado %>">
-                                    <i class="fas fa-<%= task.estado === 'done' ? 'check' : task.estado === 'in-progress' ? 'play' : 'circle' %>"></i>
+                        <!-- Eventos del timeline -->
+                        <% if (timelineEvents && timelineEvents.length > 0) { %>
+                            <% timelineEvents.forEach((event, index) => { %>
+                            <div class="timeline-event" data-type="<%= event.type %>">
+                                <div class="timeline-marker <%= event.tag.replace('-tag', '-marker') %>">
+                                    <i class="fas fa-<%= event.icon %>"></i>
                                 </div>
                                 <div class="timeline-content-card">
                                     <div class="timeline-header">
-                                        <h4><%= task.estado === 'done' ? 'Tarea Completada' : 'Tarea Creada' %></h4>
-                                        <span class="timeline-date"><%= new Date(task.fecha_creacion).toLocaleDateString('es-ES') %></span>
+                                        <h4><%= event.title %></h4>
+                                        <span class="timeline-date"><%= event.date.toLocaleDateString('es-ES') %></span>
                                     </div>
-                                    <p><strong><%= task.titulo %></strong></p>
-                                    <% if (task.descripcion) { %>
-                                    <p class="timeline-description"><%= task.descripcion.substring(0, 100) %>...</p>
-                                    <% } %>
+                                    <p class="timeline-description"><%= event.description %></p>
                                     <div class="timeline-meta">
-                                        <span class="timeline-tag task-tag">Tarea</span>
-                                        <span class="priority-badge priority-<%= task.prioridad %>"><%= task.prioridad %></span>
-                                        <% if (task.asignado_a) { %>
-                                        <span class="timeline-assignee">Asignada a: <%= task.asignado_nombres %></span>
+                                        <span class="timeline-tag <%= event.tag %>"><%= event.tagText %></span>
+                                        <% if (event.role) { %>
+                                        <span class="timeline-role"><%= event.role %></span>
+                                        <% } %>
+                                        <% if (event.priority) { %>
+                                        <span class="priority-badge priority-<%= event.priority %>"><%= event.priority %></span>
+                                        <% } %>
+                                        <% if (event.assignee) { %>
+                                        <span class="timeline-assignee">Asignado a: <%= event.assignee %></span>
                                         <% } %>
                                     </div>
                                 </div>
                             </div>
                             <% }); %>
+                        <% } else { %>
+                            <div class="timeline-event" data-type="project">
+                                <div class="timeline-marker project-marker">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="timeline-content-card">
+                                    <div class="timeline-header">
+                                        <h4>Sin Actividad</h4>
+                                        <span class="timeline-date">-</span>
+                                    </div>
+                                    <p class="timeline-description">No hay eventos registrados para este proyecto.</p>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag project-tag">Información</span>
+                                    </div>
+                                </div>
+                            </div>
                         <% } %>
 
                         <!-- Evento: Estado actual -->
@@ -2327,19 +2323,14 @@
                                     <h4>Estado Actual</h4>
                                     <span class="timeline-date">Ahora</span>
                                 </div>
-                                <p>El proyecto está en progreso con <%= tasks ? tasks.filter(t => 
-                            t.estado === 'completado' || 
-                            t.estado === 'aprobado' || 
-                            t.estado === 'revisado' ||
-                            t.estado === 'completada'
-                        ).length : 0 %> de <%= tasks ? tasks.length : 0 %> tareas completadas.</p>
+                                <p>El proyecto está en progreso con <%= tasks ? tasks.filter(t => t.estado === 'completado' || t.estado === 'aprobado' || t.estado === 'revisado' || t.estado === 'completada' || t.estado === 'done').length : 0 %> de <%= tasks ? tasks.length : 0 %> tareas completadas.</p>
                                 <div class="timeline-meta">
                                     <span class="timeline-tag current-tag">Actual</span>
                                     <div class="current-progress">
                                         <div class="progress-mini">
-                                            <div class="progress-mini-fill" style="width: <%= progress %>%"></div>
+                                            <div class="progress-mini-fill" style="width: <%= progress || 0 %>%"></div>
                                         </div>
-                                        <span><%= progress %>% completado</span>
+                                        <span><%= progress || 0 %>% completado</span>
                                     </div>
                                 </div>
                             </div>
@@ -2418,15 +2409,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Pestaña de Actividad -->
-                <div id="activity" class="tab-pane">
-                    <h3><i class="fas fa-history"></i> Actividad Reciente</h3>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        El registro de actividad estará disponible próximamente.
                     </div>
                 </div>
             </div>
@@ -4432,12 +4414,7 @@
 
         function calculateTaskProgress() {
             const totalTasks = <%= project.tasks ? project.tasks.length : 0 %>;
-            const completedTasks = <%= project.tasks ? project.tasks.filter(t => 
-                t.estado === 'completado' || 
-                t.estado === 'aprobado' || 
-                t.estado === 'revisado' ||
-                t.estado === 'completada'
-            ).length : 0 %>;
+            const completedTasks = <%= project.tasks ? project.tasks.filter(t => t.estado === 'completado' || t.estado === 'aprobado' || t.estado === 'revisado' || t.estado === 'completada').length : 0 %>;
             return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
         }
 
@@ -4494,12 +4471,7 @@
             const startDate = new Date('<%= project.fecha_inicio %>');
             const currentDate = new Date();
             const daysDiff = Math.max(1, Math.ceil((currentDate - startDate) / (1000 * 60 * 60 * 24)));
-            const completedTasks = <%= project.tasks ? project.tasks.filter(t => 
-                t.estado === 'completado' || 
-                t.estado === 'aprobado' || 
-                t.estado === 'revisado' ||
-                t.estado === 'completada'
-            ).length : 0 %>;
+            const completedTasks = <%= project.tasks ? project.tasks.filter(t => t.estado === 'completado' || t.estado === 'aprobado' || t.estado === 'revisado' || t.estado === 'completada').length : 0 %>;
             return completedTasks / daysDiff;
         }
 
@@ -4583,195 +4555,20 @@
             return new Date(date).toLocaleDateString('es-ES', options);
         }
 
-        // Generar eventos del timeline dinámicamente
-        function generateTimelineEvents() {
-            const project = {
-                id: '<%= project.id %>',
-                name: '<%= project.name %>',
-                description: '<%= project.description %>',
-                startDate: '<%= project.start_date %>',
-                endDate: '<%= project.end_date %>',
-                status: '<%= project.status %>',
-                createdAt: '<%= project.created_at %>'
-            };
+        // Los eventos del timeline se obtienen del servidor y se renderizan en el HTML
+        // No necesitamos generar eventos simulados aquí
 
-            const events = [];
-            const today = new Date();
-            const projectStart = new Date(project.startDate);
-            const projectEnd = new Date(project.endDate);
-
-            // Evento de creación del proyecto
-            events.push({
-                type: 'project',
-                date: project.createdAt,
-                title: 'Proyecto Creado',
-                description: `Se creó el proyecto "${project.name}"`,
-                icon: 'fas fa-rocket',
-                marker: 'project-marker',
-                tag: 'project-tag',
-                tagText: 'Proyecto'
-            });
-
-            // Eventos de miembros (simulados)
-            const memberEvents = [
-                {
-                    type: 'member',
-                    date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-                    title: 'Miembro Agregado',
-                    description: 'Se agregó un nuevo miembro al equipo',
-                    icon: 'fas fa-user-plus',
-                    marker: 'member-marker',
-                    tag: 'member-tag',
-                    tagText: 'Equipo',
-                    role: 'Desarrollador'
-                },
-                {
-                    type: 'member',
-                    date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                    title: 'Miembro Agregado',
-                    description: 'Se agregó un diseñador al proyecto',
-                    icon: 'fas fa-user-plus',
-                    marker: 'member-marker',
-                    tag: 'member-tag',
-                    tagText: 'Equipo',
-                    role: 'Diseñador'
-                }
-            ];
-
-            // Eventos de tareas (simulados)
-            const taskEvents = [
-                {
-                    type: 'task',
-                    date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-                    title: 'Tarea Completada',
-                    description: 'Configuración inicial del proyecto',
-                    icon: 'fas fa-check',
-                    marker: 'task-done',
-                    tag: 'task-tag',
-                    tagText: 'Tarea',
-                    assignee: 'Juan Pérez'
-                },
-                {
-                    type: 'task',
-                    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    title: 'Tarea en Progreso',
-                    description: 'Desarrollo de la interfaz principal',
-                    icon: 'fas fa-spinner',
-                    marker: 'task-in-progress',
-                    tag: 'task-tag',
-                    tagText: 'Tarea',
-                    assignee: 'María García'
-                },
-                {
-                    type: 'task',
-                    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    title: 'Nueva Tarea',
-                    description: 'Implementación de autenticación',
-                    icon: 'fas fa-plus',
-                    marker: 'task-marker',
-                    tag: 'task-tag',
-                    tagText: 'Tarea',
-                    assignee: 'Carlos López'
-                }
-            ];
-
-            // Estado actual
-            events.push({
-                type: 'current',
-                date: today.toISOString(),
-                title: 'Estado Actual',
-                description: `Proyecto en estado: ${project.status}`,
-                icon: 'fas fa-clock',
-                marker: 'current-marker',
-                tag: 'current-tag',
-                tagText: 'Actual',
-                isCurrent: true
-            });
-
-            // Fecha límite
-            if (projectEnd > today) {
-                events.push({
-                    type: 'deadline',
-                    date: project.endDate,
-                    title: 'Fecha Límite',
-                    description: 'Fecha límite para completar el proyecto',
-                    icon: 'fas fa-flag-checkered',
-                    marker: 'deadline-marker',
-                    tag: 'deadline-tag',
-                    tagText: 'Deadline',
-                    isFuture: true
-                });
-            }
-
-            // Combinar y ordenar eventos
-            return [...events, ...memberEvents, ...taskEvents].sort((a, b) => 
-                new Date(a.date) - new Date(b.date)
-            );
-        }
-
-        // Renderizar timeline
+        // Renderizar timeline usando solo los datos del servidor
         function renderTimeline() {
             const timelineContainer = document.querySelector('.timeline-container');
             if (!timelineContainer) return;
 
-            const events = generateTimelineEvents();
-            const today = new Date();
-
-            let timelineHTML = '<div class="timeline-line"></div>';
-
+            // Los eventos ya están renderizados en el HTML por el servidor
+            // Solo necesitamos aplicar animaciones
+            const events = timelineContainer.querySelectorAll('.timeline-event');
             events.forEach((event, index) => {
-                const eventDate = new Date(event.date);
-                const isCurrentOrFuture = eventDate >= today;
-                const cardClass = event.isCurrent ? 'current-card' : 
-                                 event.isFuture ? 'future-card' : '';
-
-                let metaHTML = `<span class="timeline-tag ${event.tag}">${event.tagText}</span>`;
-                
-                if (event.role) {
-                    metaHTML += `<span class="timeline-role">${event.role}</span>`;
-                }
-                
-                if (event.assignee) {
-                    metaHTML += `<span class="timeline-assignee">Asignado a: ${event.assignee}</span>`;
-                }
-
-                if (event.isCurrent) {
-                    const projectEnd = new Date('<%= project.end_date %>');
-                    const totalDays = Math.ceil((projectEnd - new Date('<%= project.start_date %>')) / (1000 * 60 * 60 * 24));
-                    const elapsedDays = Math.ceil((today - new Date('<%= project.start_date %>')) / (1000 * 60 * 60 * 24));
-                    const progress = Math.min((elapsedDays / totalDays) * 100, 100);
-                    const daysRemaining = calculateDaysRemaining('<%= project.end_date %>');
-
-                    metaHTML += `
-                        <div class="current-progress">
-                            <div class="progress-mini">
-                                <div class="progress-mini-fill" style="width: ${progress}%"></div>
-                            </div>
-                            <span class="days-remaining">${daysRemaining} días restantes</span>
-                        </div>
-                    `;
-                }
-
-                timelineHTML += `
-                    <div class="timeline-event" data-type="${event.type}" style="animation-delay: ${index * 0.1}s">
-                        <div class="timeline-marker ${event.marker}">
-                            <i class="${event.icon}"></i>
-                        </div>
-                        <div class="timeline-content-card ${cardClass}">
-                            <div class="timeline-header">
-                                <h4>${event.title}</h4>
-                                <span class="timeline-date">${formatTimelineDate(event.date)}</span>
-                            </div>
-                            <div class="timeline-description">${event.description}</div>
-                            <div class="timeline-meta">
-                                ${metaHTML}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                event.style.animationDelay = `${index * 0.1}s`;
             });
-
-            timelineContainer.innerHTML = timelineHTML;
         }
 
         // Inicializar timeline cuando se muestra la pestaña

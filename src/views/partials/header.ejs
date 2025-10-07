@@ -5,8 +5,14 @@
         </div>
         <nav>
             <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
-            <a href="/projects" class="btn btn-secondary">Proyectos</a>
-            <% if (user && user.rol_nombre === 'Estudiante') { %>
+            <% 
+            const projectsUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                               user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                               user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                               user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+            %>
+            <a href="<%= projectsUrl %>" class="btn btn-secondary">Proyectos</a>
+            <% if (user && (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Coordinador Académico' || user.rol_nombre === 'Director de Proyecto')) { %>
                 <a href="/projects/join" class="btn btn-secondary">Unirse a Proyecto</a>
             <% } %>
             <% if (user && (user.rol_nombre === 'Administrador' || user.rol_nombre === 'Coordinador')) { %>

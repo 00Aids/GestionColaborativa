@@ -1593,6 +1593,7 @@ class DashboardController {
           u.apellidos,
           u.email,
           u.telefono,
+          u.activo,
           u.created_at as fecha_registro,
           p.titulo as proyecto_titulo,
           p.id as proyecto_id,
@@ -1617,6 +1618,55 @@ class DashboardController {
         message: 'Error al cargar los estudiantes',
         error: error 
       });
+    }
+  }
+
+  // Desactivar/activar estudiante (similar a la funcionalidad del admin)
+  async toggleStudentStatus(req, res) {
+    try {
+      const { id: studentId } = req.params;
+      const user = req.session.user;
+      
+      // Verificar que el usuario es coordinador
+      if (!user || user.rol_nombre !== 'Coordinador Académico') {
+        return res.status(403).json({ error: 'No autorizado' });
+      }
+
+      // Verificar que el estudiante existe
+      const targetStudent = await this.userModel.findById(studentId);
+      if (!targetStudent) {
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
+      }
+
+      // Verificar que el estudiante pertenece a un proyecto del coordinador
+      const verificationQuery = `
+        SELECT COUNT(*) as count
+        FROM usuarios u
+        INNER JOIN proyectos p ON u.id = p.estudiante_id
+        INNER JOIN proyecto_usuarios pu ON p.id = pu.proyecto_id
+        WHERE u.id = ? AND pu.usuario_id = ? AND pu.rol = 'coordinador'
+      `;
+      
+      const [verification] = await pool.execute(verificationQuery, [studentId, user.id]);
+      
+      if (verification[0].count === 0) {
+        return res.status(403).json({ 
+          error: 'No tienes permisos para gestionar este estudiante' 
+        });
+      }
+
+      // Cambiar estado del estudiante
+      const newStatus = !targetStudent.activo;
+      await this.userModel.update(studentId, { activo: newStatus });
+
+      res.json({ 
+        success: true, 
+        message: `Estudiante ${newStatus ? 'activado' : 'desactivado'} correctamente`,
+        newStatus 
+      });
+    } catch (error) {
+      console.error('Error toggling student status:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 

@@ -635,8 +635,8 @@ class AdminController {
     try {
       const user = req.session.user;
       
-      // Verificar que el usuario existe y es administrador
-      if (!user || user.rol_nombre !== 'Administrador General') {
+      // Verificar que el usuario existe y tiene permisos para crear proyectos
+      if (!user || !['Administrador General', 'Director de Proyecto', 'Coordinador Académico'].includes(user.rol_nombre)) {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
         return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
@@ -722,7 +722,7 @@ class AdminController {
     try {
       // Verificar permisos de administrador
       const user = req.session.user;
-      if (!user || !['Administrador General', 'Coordinador Académico'].includes(user.rol_nombre)) {
+      if (!user || !['Administrador General', 'Coordinador Académico', 'Director de Proyecto'].includes(user.rol_nombre)) {
         return res.status(403).json({ 
           success: false, 
           message: 'No tienes permisos para crear proyectos' 
@@ -807,18 +807,18 @@ class AdminController {
         });
       }
 
-      // Actualizar el proyecto
-      const updateData = {
-        titulo,
-        descripcion,
-        linea_investigacion_id,
-        ciclo_academico_id,
-        director_id,
-        estudiante_id,
-        estado,
-        fecha_inicio,
-        fecha_fin
-      };
+      // Preparar datos para actualizar (filtrar campos undefined)
+      const updateData = {};
+      
+      if (titulo !== undefined) updateData.titulo = titulo;
+      if (descripcion !== undefined) updateData.descripcion = descripcion;
+      if (linea_investigacion_id !== undefined) updateData.linea_investigacion_id = linea_investigacion_id;
+      if (ciclo_academico_id !== undefined) updateData.ciclo_academico_id = ciclo_academico_id;
+      if (director_id !== undefined) updateData.director_id = director_id;
+      if (estudiante_id !== undefined) updateData.estudiante_id = estudiante_id;
+      if (estado !== undefined) updateData.estado = estado;
+      if (fecha_inicio !== undefined) updateData.fecha_inicio = fecha_inicio;
+      if (fecha_fin !== undefined) updateData.fecha_fin = fecha_fin;
 
       await this.projectModel.update(projectId, updateData);
       
@@ -1842,6 +1842,97 @@ class AdminController {
         ORDER BY orden ASC
       `);
       
+      // Calcular progreso del proyecto basado en tareas completadas
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter(task => 
+        task.estado === 'completado' || 
+        task.estado === 'aprobado' || 
+        task.estado === 'revisado' ||
+        task.estado === 'completada' ||
+        task.estado === 'done'
+      ).length;
+      const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      
+      // Crear eventos del timeline ordenados cronológicamente
+      const timelineEvents = [];
+      
+      // Evento de creación del proyecto
+      if (project.created_at) {
+        timelineEvents.push({
+          date: new Date(project.created_at),
+          type: 'project',
+          title: 'Proyecto Creado',
+          description: `El proyecto "${project.titulo}" fue creado.`,
+          icon: 'flag',
+          tag: 'project-tag',
+          tagText: 'Proyecto'
+        });
+      }
+      
+      // Eventos de miembros uniéndose
+      members.forEach(member => {
+        const joinDate = member.fecha_asignacion || project.created_at;
+        if (joinDate) {
+          timelineEvents.push({
+            date: new Date(joinDate),
+            type: 'members',
+            title: 'Miembro Agregado',
+            description: `${member.nombres} ${member.apellidos} se unió como ${member.rol}.`,
+            icon: 'user-plus',
+            tag: 'member-tag',
+            tagText: 'Miembro',
+            role: member.rol
+          });
+        }
+      });
+      
+      // Eventos de tareas
+      tasks.forEach(task => {
+        if (task.created_at) {
+          timelineEvents.push({
+            date: new Date(task.created_at),
+            type: 'tasks',
+            title: task.estado === 'completado' || task.estado === 'done' || task.estado === 'aprobado' ? 'Tarea Completada' : 'Tarea Creada',
+            description: task.titulo,
+            icon: task.estado === 'completado' || task.estado === 'done' || task.estado === 'aprobado' ? 'check' : 'plus',
+            tag: 'task-tag',
+            tagText: 'Tarea',
+            priority: task.prioridad,
+            assignee: task.asignado_nombres ? `${task.asignado_nombres} ${task.asignado_apellidos}` : null
+          });
+        }
+      });
+      
+      // Eventos de entregables
+      deliverables.forEach(deliverable => {
+        if (deliverable.created_at) {
+          timelineEvents.push({
+            date: new Date(deliverable.created_at),
+            type: 'deliverables',
+            title: 'Entregable Creado',
+            description: deliverable.titulo,
+            icon: 'file-alt',
+            tag: 'deliverable-tag',
+            tagText: 'Entregable'
+          });
+        }
+        
+        if (deliverable.fecha_entrega && (deliverable.estado === 'entregado' || deliverable.estado === 'en_revision' || deliverable.estado === 'aprobado')) {
+          timelineEvents.push({
+            date: new Date(deliverable.fecha_entrega),
+            type: 'deliverables',
+            title: deliverable.estado === 'aprobado' ? 'Entregable Aprobado' : 'Entregable Enviado',
+            description: `Entregable "${deliverable.titulo}" fue ${deliverable.estado === 'aprobado' ? 'aprobado' : 'enviado'}.`,
+            icon: deliverable.estado === 'aprobado' ? 'check-circle' : 'paper-plane',
+            tag: 'deliverable-tag',
+            tagText: 'Entregable'
+          });
+        }
+      });
+      
+      // Ordenar eventos por fecha
+      timelineEvents.sort((a, b) => a.date - b.date);
+      
       res.render('admin/project-detail', {
         title: `Admin: ${project.titulo}`,
         user,
@@ -1853,6 +1944,8 @@ class AdminController {
         tasksGrouped,
         deliverables,
         fases,
+        progress,
+        timelineEvents,
         success: req.flash('success'),
         error: req.flash('error')
       });

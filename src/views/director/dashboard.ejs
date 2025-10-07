@@ -320,10 +320,40 @@
                 </div>
                 <div class="card-content">
                     <div class="quick-actions">
-                        <a href="/projects" class="action-btn">Ver Todos los Proyectos</a>
-                        <a href="/admin/projects/new" class="action-btn">Crear Proyecto</a>
+                        <a href="/director/projects" class="action-btn">Ver Todos los Proyectos</a>
+                        <a href="/projects/create" class="action-btn">Crear Proyecto</a>
                         <a href="/reports" class="action-btn">Generar Reportes</a>
                         <a href="/director/deliverables" class="action-btn">Revisar Entregables</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unirse a Proyecto con Código -->
+            <div class="card" style="border: 2px solid #5a67d8;">
+                <div class="card-header" style="background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%); color: white; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🔗</span>
+                    <span>Unirse a un Proyecto</span>
+                </div>
+                <div class="card-content">
+                    <div style="text-align: center; padding: 20px;">
+                        <h3 style="color: #2d3748; margin-bottom: 15px;">¿Tienes un código de invitación?</h3>
+                        <p style="color: #718096; margin-bottom: 25px; font-size: 14px;">
+                            Si tienes un código de invitación de un proyecto, úsalo aquí para unirte automáticamente.
+                        </p>
+                        <a href="/projects/join" 
+                           style="background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%); 
+                                  color: white; 
+                                  padding: 15px 30px; 
+                                  border-radius: 25px; 
+                                  text-decoration: none; 
+                                  font-weight: 600; 
+                                  display: inline-block; 
+                                  transition: transform 0.2s, box-shadow 0.2s;
+                                  box-shadow: 0 4px 15px rgba(90, 103, 216, 0.3);"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(90, 103, 216, 0.4)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(90, 103, 216, 0.3)'">
+                            📝 Ingresar Código de Invitación
+                        </a>
                     </div>
                 </div>
             </div>

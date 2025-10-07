@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const ProjectController = require('../controllers/ProjectController');
+const AdminController = require('../controllers/AdminController');
 const AuthMiddleware = require('../middlewares/auth');
 const { loadUserAreas } = require('../middlewares/areaAuth');
 
 // Crear instancia del controlador
 const projectController = new ProjectController();
+const adminController = new AdminController();
 
 // Aplicar middleware para cargar áreas de trabajo del usuario
 router.use(loadUserAreas);
@@ -13,22 +15,22 @@ router.use(loadUserAreas);
 // IMPORTANTE: Las rutas específicas deben ir ANTES que las rutas con parámetros
 router.get('/create', 
   AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
-  projectController.showCreate.bind(projectController)
+  adminController.newProject.bind(adminController)
 );
 
 router.post('/create', 
   AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
-  projectController.create.bind(projectController)
+  adminController.createProject.bind(adminController)
 );
 
 // Rutas para sistema de invitaciones
 router.get('/join', 
-  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico']),
+  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico', 'Director de Proyecto']),
   projectController.showJoinForm.bind(projectController)
 );
 
 router.post('/join', 
-  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico']),
+  AuthMiddleware.requireRole(['Estudiante', 'Coordinador Académico', 'Director de Proyecto']),
   projectController.joinWithCode.bind(projectController)
 );
 

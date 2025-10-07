@@ -163,7 +163,12 @@ class ProjectController {
       // Solo Coordinadores, Administradores y Directores pueden crear proyectos
       if (!['Coordinador Académico', 'Administrador General', 'Director de Proyecto'].includes(user.rol_nombre)) {
         req.flash('error', 'No tienes permisos para crear proyectos');
-        return res.redirect('/projects');
+        // Redirigir según el rol del usuario
+        const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                           user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                           user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                           user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+        return res.redirect(redirectUrl);
       }
       
       // Obtener datos necesarios para el formulario
@@ -285,7 +290,12 @@ class ProjectController {
         req.flash('success', 'Proyecto creado exitosamente y asignado al área de trabajo del administrador seleccionado');
       }
       
-      res.redirect('/projects');
+      // Redirigir según el rol del usuario después de crear el proyecto
+      const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                         user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                         user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                         user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+      res.redirect(redirectUrl);
       
     } catch (error) {
       console.error('Error creating project:', error);
@@ -305,7 +315,11 @@ class ProjectController {
       
       if (!project) {
         req.flash('error', 'Proyecto no encontrado');
-        const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : '/projects';
+        // Redirigir según el rol del usuario
+        const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                           user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                           user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                           user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
         return res.redirect(redirectUrl);
       }
       
@@ -342,7 +356,7 @@ class ProjectController {
         // Los directores pueden ver cualquier proyecto donde sean directores, independientemente del área
         if (project.director_id !== user.id) {
           req.flash('error', 'No tienes permisos para ver este proyecto');
-          return res.redirect('/projects');
+          return res.redirect('/director/projects');
         }
       } else if (user.rol_nombre === 'Coordinador Académico') {
         // Los coordinadores pueden ver proyectos donde estén asignados como miembros activos
@@ -360,7 +374,9 @@ class ProjectController {
         // Para otros roles, verificar que el proyecto pertenezca al área de trabajo del usuario
         if (project.area_trabajo_id !== req.areaTrabajoId) {
           req.flash('error', 'No tienes permisos para ver este proyecto');
-          return res.redirect('/projects');
+          // Redirigir según el rol del usuario
+          const redirectUrl = user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+          return res.redirect(redirectUrl);
         }
       }
       
@@ -458,7 +474,12 @@ class ProjectController {
         }
         
         req.flash('success', `Te has unido exitosamente al proyecto: ${result.project.titulo}`);
-        res.redirect(`/projects/${result.project.id}`);
+        // Redirigir según el rol del usuario después de unirse exitosamente
+        const redirectUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                           user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                           user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                           user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+        res.redirect(redirectUrl);
       } else {
         req.flash('error', result.message);
         res.redirect('/projects/join');

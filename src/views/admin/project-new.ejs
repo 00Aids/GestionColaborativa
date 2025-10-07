@@ -513,7 +513,10 @@
             };
             
             try {
-                const response = await fetch('/admin/projects', {
+                // Determinar la URL correcta basada en la ruta actual
+                const submitUrl = window.location.pathname.includes('/admin/') ? '/admin/projects' : '/projects/create';
+                
+                const response = await fetch(submitUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -526,7 +529,9 @@
                 if (response.ok) {
                     showAlert('Proyecto creado exitosamente', 'success');
                     setTimeout(() => {
-                        window.location.href = '/admin/projects';
+                        // Redirigir a la página correcta basada en la ruta actual
+                        const redirectUrl = window.location.pathname.includes('/admin/') ? '/admin/projects' : '/projects';
+                        window.location.href = redirectUrl;
                     }, 1500);
                 } else {
                     showAlert(result.message || 'Error al crear el proyecto', 'error');
