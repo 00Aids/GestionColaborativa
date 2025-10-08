@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="32" viewBox="0 0 140 32" role="img" aria-label="UTS">
+  <rect width="140" height="32" rx="6" fill="#FFFFFF"/>
+  <g transform="translate(8,6)" fill="#A7C947">
+    <text x="0" y="16" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="18" fill="#A7C947">UTS</text>
+  </g>
+</svg>

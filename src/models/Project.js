@@ -220,7 +220,7 @@ class Project extends BaseModel {
             SELECT 1 FROM proyecto_usuarios pu 
             WHERE pu.proyecto_id = p.id 
               AND pu.usuario_id = ? 
-              AND pu.rol = 'coordinador' 
+              AND pu.rol IN ('director', 'coordinador') 
               AND pu.estado = 'activo'
           )
         )
@@ -634,8 +634,16 @@ class Project extends BaseModel {
   async findProjectMember(projectId, userId) {
     try {
       const query = `
-        SELECT * FROM project_members 
-        WHERE proyecto_id = ? AND usuario_id = ? AND activo = 1
+        SELECT 
+          pu.*, 
+          u.nombres, 
+          u.apellidos, 
+          u.email, 
+          r.nombre as rol_nombre
+        FROM proyecto_usuarios pu
+        LEFT JOIN usuarios u ON pu.usuario_id = u.id
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE pu.proyecto_id = ? AND pu.usuario_id = ? AND pu.estado = 'activo'
       `;
       
       const [rows] = await this.db.execute(query, [projectId, userId]);
@@ -650,17 +658,17 @@ class Project extends BaseModel {
     try {
       const query = `
         SELECT 
-          pm.*,
-          u.nombres,
-          u.apellidos,
-          u.email,
-          u.codigo_usuario,
+          pu.*, 
+          u.nombres, 
+          u.apellidos, 
+          u.email, 
+          u.codigo_usuario, 
           r.nombre as rol_nombre
-        FROM project_members pm
-        LEFT JOIN usuarios u ON pm.usuario_id = u.id
+        FROM proyecto_usuarios pu
+        LEFT JOIN usuarios u ON pu.usuario_id = u.id
         LEFT JOIN roles r ON u.rol_id = r.id
-        WHERE pm.proyecto_id = ? AND pm.activo = 1
-        ORDER BY pm.created_at ASC
+        WHERE pu.proyecto_id = ? AND pu.estado = 'activo'
+        ORDER BY pu.fecha_asignacion ASC
       `;
       
       const [rows] = await this.db.execute(query, [projectId]);

@@ -1,0 +1,64 @@
+:root{--uts-green:#A7C947;--uts-green-dark:#7EA62D;--uts-gray:#5A5A5A;--uts-white:#FFFFFF;--uts-black:#000000;--uts-primary:#A7C947;--uts-secondary:#7EA62D;--uts-gray-100:#f7f9fc;--uts-gray-200:#eef2f7;--uts-gray-700:#5A5A5A;--uts-gradient:linear-gradient(135deg, var(--uts-primary) 0%, var(--uts-secondary) 100%)}
+html,body{font-family:'Inter','Segoe UI',Arial,Helvetica,sans-serif;color:var(--uts-gray);background-color:#f7f9fc}
+/* Navbar UTS */
+.navbar-uts{background:var(--uts-gradient);border-bottom:none;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.navbar-uts .navbar-brand{display:flex;align-items:center;gap:.5rem;font-weight:600;color:#fff}
+.navbar-uts .navbar-brand img{height:28px;width:auto}
+.navbar-uts .nav-link{color:#eef7d6;border-radius:12px;padding:.5rem .75rem;transition:all .2s ease}
+.navbar-uts .nav-link:hover,.navbar-uts .nav-link.active{color:#fff;background:rgba(255,255,255,.15)}
+.navbar-uts .btn-logout{border-radius:999px;border:1px solid rgba(255,255,255,.6);color:#fff}
+/* Main spacing for fixed navbar */
+.main-content{padding-top:72px}
+/* Buttons */
+.btn{border-radius:10px;transition:transform .12s ease, box-shadow .12s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.btn-primary{background:var(--uts-green);border-color:var(--uts-green)}
+.btn-primary:hover{background:var(--uts-green-dark);border-color:var(--uts-green-dark)}
+.btn-secondary{background:#8a8a8a;border-color:#8a8a8a;color:#fff}
+.btn-secondary:hover{background:#707070;border-color:#707070}
+.btn-outline-primary{color:var(--uts-green);border-color:var(--uts-green)}
+.btn-outline-primary:hover{color:#fff;background:var(--uts-green);border-color:var(--uts-green)}
+/* Cards */
+.card{border:1px solid #e9ecef;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+.card-header{border-bottom:1px solid #e9ecef;background:linear-gradient(135deg, var(--uts-green) 0%, var(--uts-green-dark) 100%);color:#fff;font-weight:600}
+/* Tables */
+.table{border-radius:12px;overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.05)}
+.table thead th{background:var(--uts-primary);color:#fff;border-color:transparent}
+.table tbody tr{transition:background .12s ease}
+.table tbody tr:hover{background:#f4f9e6}
+.table-striped>tbody>tr:nth-of-type(odd){--bs-table-striped-bg:#f9fde8}
+/* Forms */
+.form-control{border-color:#cbd5e0;border-radius:10px}
+.form-control:focus{border-color:var(--uts-green);box-shadow:0 0 0 .25rem rgba(167,201,71,.25)}
+.form-select:focus{border-color:var(--uts-green);box-shadow:0 0 0 .25rem rgba(167,201,71,.25)}
+.form-floating>.form-control{border-radius:10px}
+.form-floating>label{color:#6b7280}
+/* Badges */
+.badge{background:var(--uts-primary);color:#fff;border-radius:999px}
+.meta-badge{background:rgba(167,201,71,.12);color:#486022;border:1px solid rgba(167,201,71,.25);border-radius:999px;padding:.25rem .5rem;font-weight:600}
+/* Headers legacy override */
+.header{background:linear-gradient(135deg, var(--uts-green) 0%, var(--uts-green-dark) 100%);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.header .btn{background:rgba(255,255,255,.15);color:#fff;border:none}
+.header .btn:hover{background:rgba(255,255,255,.3)}
+.page-header h1,.page-header h2{color:var(--uts-gray)}
+/* Animations & utilities */
+.shadow-soft{box-shadow:0 10px 30px rgba(0,0,0,.08)!important}
+.gradient-uts{background:linear-gradient(135deg, var(--uts-green) 0%, var(--uts-green-dark) 100%)!important;color:#fff}
+.icon-lg{font-size:1.25rem}
+/* Widgets educativos */
+.widget-edu{background:#fff;border:1px solid #e9ecef;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.widget-edu .icon{width:42px;height:42px;border-radius:12px;background:var(--uts-gradient);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 6px 18px rgba(167,201,71,.35)}
+/* Animaciones de entrada */
+.hover-rise:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+/* Breadcrumb / nav pills */
+.nav-pills .nav-link{border-radius:999px}
+.nav-pills .nav-link.active{background:var(--uts-green)}
+/* Alerts */
+.alert-success{background:#e9f7d1;border-color:#d7f0a9;color:#2f3e1e}
+.alert-danger{background:#fee2e2;border-color:#fecaca;color:#7f1d1d}
+.alert-warning{background:#fff7ed;border-color:#fde68a;color:#78350f}
+/* Modals */
+.modal-header{background:var(--uts-green);color:#fff}
+/* Breadcrumb animation helper */
+.animate-in{animation:fadeInUp .25s ease}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}

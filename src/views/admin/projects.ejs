@@ -1616,7 +1616,7 @@
             <div class="user-profile">
                 <div class="user-info">
                     <h4><%= (user && user.nombres) ? user.nombres + ' ' + (user.apellidos || '') : 'Usuario' %></h4>
-                    <span><%= (user && user.rol_nombre) ? user.rol_nombre : 'Sin rol' %></span>
+                    <span><%= (user && user.rol_nombre) ? (((typeof user.rol_nombre === 'string') && (user.rol_nombre === 'Administrador General' || user.rol_nombre === 'Administrador' || user.rol_nombre.toLowerCase().includes('admin'))) ? 'Admin' : user.rol_nombre) : 'Admin' %></span>
                 </div>
                 <div class="user-avatar">
                     <%= (user && user.nombres) ? user.nombres.charAt(0).toUpperCase() : 'U' %>

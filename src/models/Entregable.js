@@ -23,7 +23,17 @@ class Entregable extends BaseModel {
                 }
             }
             
-            return await super.create(entregableData);
+            // Filtrar solo las columnas existentes en la tabla para evitar errores de columna desconocida
+            const [columns] = await this.db.execute('SHOW COLUMNS FROM entregables');
+            const columnNames = new Set(columns.map(col => col.Field));
+            const filteredData = {};
+            for (const [key, value] of Object.entries(entregableData)) {
+                if (columnNames.has(key)) {
+                    filteredData[key] = value;
+                }
+            }
+            
+            return await super.create(filteredData);
         } catch (error) {
             throw new Error(`Error creating entregable: ${error.message}`);
         }

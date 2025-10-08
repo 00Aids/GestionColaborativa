@@ -636,7 +636,7 @@ class AdminController {
       const user = req.session.user;
       
       // Verificar que el usuario existe y tiene permisos para crear proyectos
-      if (!user || !['Administrador General', 'Director de Proyecto', 'Coordinador Académico'].includes(user.rol_nombre)) {
+      if (!user || !['Administrador General', 'Director de Proyecto', 'Director', 'Coordinador Académico'].includes(user.rol_nombre)) {
         req.flash('error', 'No tienes permisos para acceder a esta página.');
         return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
@@ -646,8 +646,12 @@ class AdminController {
       console.log('🏢 req.areaTrabajoId:', req.areaTrabajoId);
       console.log('🏢 req.userAreas:', req.userAreas);
       
-      // Usar el área de trabajo del middleware o valor por defecto
-      const areaTrabajoId = req.areaTrabajoId || 1;
+      // Determinar el área de trabajo a usar (middleware, único área del usuario, o fallback 1)
+      const areaTrabajoId = (req.areaTrabajoId !== undefined && req.areaTrabajoId !== null)
+        ? req.areaTrabajoId
+        : (Array.isArray(req.userAreas) && req.userAreas.length === 1
+            ? (req.userAreas[0].area_trabajo_id || req.userAreas[0].id)
+            : 1);
       console.log('🏢 Usando area_trabajo_id:', areaTrabajoId);
 
       // Obtener líneas de investigación del área del usuario
@@ -679,6 +683,8 @@ class AdminController {
         ciclosAcademicos: ciclosAcademicos || [],
         directores: directores || [],
         estudiantes: estudiantes || [],
+        userAreas: req.userAreas || [],
+        areaTrabajoId,
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -722,14 +728,14 @@ class AdminController {
     try {
       // Verificar permisos de administrador
       const user = req.session.user;
-      if (!user || !['Administrador General', 'Coordinador Académico', 'Director de Proyecto'].includes(user.rol_nombre)) {
+      if (!user || !['Administrador General', 'Coordinador Académico', 'Director de Proyecto', 'Director'].includes(user.rol_nombre)) {
         return res.status(403).json({ 
           success: false, 
           message: 'No tienes permisos para crear proyectos' 
         });
       }
 
-      const { titulo, descripcion, estudiante_id, director_id, linea_investigacion_id, ciclo_academico_id, estado, fecha_inicio, fecha_fin } = req.body;
+      const { titulo, descripcion, estudiante_id, director_id, linea_investigacion_id, ciclo_academico_id, estado, fecha_inicio, fecha_fin, area_trabajo_id } = req.body;
 
       // Validaciones - solo campos realmente obligatorios
       if (!titulo || !descripcion || !ciclo_academico_id || !fecha_inicio || !fecha_fin) {
@@ -747,15 +753,41 @@ class AdminController {
         });
       }
 
+      // Determinar área de trabajo seleccionada con verificación de acceso
+      let selectedAreaId = req.areaTrabajoId;
+      if (area_trabajo_id) {
+        const requestedAreaId = parseInt(area_trabajo_id);
+        if (Array.isArray(req.userAreas) && req.userAreas.some(a => (a.area_trabajo_id || a.id) === requestedAreaId)) {
+          selectedAreaId = requestedAreaId;
+        }
+      }
+      // Fallback: si no está definido, usar el único área del usuario si existe
+      if (!selectedAreaId && Array.isArray(req.userAreas) && req.userAreas.length === 1) {
+        selectedAreaId = req.userAreas[0].area_trabajo_id || req.userAreas[0].id;
+      }
+      // Si aún no se puede determinar, devolver error claro
+      if (!selectedAreaId) {
+        return res.status(400).json({
+          success: false,
+          message: 'No se pudo determinar el área de trabajo para el proyecto. Verifica tu área asignada o selecciona una.'
+        });
+      }
+
+      // Determinar director final: si no se envía y el creador es Director/Director de Proyecto, asignarlo automáticamente
+      let directorIdFinal = director_id ? parseInt(director_id) : null;
+      if (!directorIdFinal && (user.rol_nombre === 'Director' || user.rol_nombre === 'Director de Proyecto')) {
+        directorIdFinal = user.id;
+      }
+
       // Crear el proyecto usando los campos existentes de la base de datos
       const projectData = {
         titulo,
         descripcion,
         estudiante_id: estudiante_id ? parseInt(estudiante_id) : null,
-        director_id: director_id ? parseInt(director_id) : null,
+        director_id: directorIdFinal,
         linea_investigacion_id: linea_investigacion_id ? parseInt(linea_investigacion_id) : null,
         ciclo_academico_id: parseInt(ciclo_academico_id),
-        area_trabajo_id: req.areaTrabajoId, // Asignar área de trabajo del usuario
+        area_trabajo_id: selectedAreaId, // Asignar área de trabajo seleccionada o la del middleware
         estado: estado || 'borrador',
         fecha_inicio,
         fecha_fin
@@ -763,12 +795,12 @@ class AdminController {
         // fecha_aprobacion y fecha_finalizacion se establecerán cuando corresponda
       };
 
-      const projectId = await this.projectModel.create(projectData);
+      const createdProject = await this.projectModel.create(projectData);
 
       res.json({ 
         success: true, 
         message: 'Proyecto creado exitosamente',
-        projectId 
+        projectId: createdProject.id 
       });
 
     } catch (error) {

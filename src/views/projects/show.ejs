@@ -620,9 +620,15 @@
     <div class="main-container">
         <!-- Breadcrumb -->
         <nav class="breadcrumb animate-in">
-            <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="<%= userDashboardRoute %>"><i class="fas fa-home"></i> Dashboard</a>
             <span> / </span>
-            <a href="/dashboard">Mis Proyectos</a>
+            <% 
+            const projectsUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                               user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                               user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                               user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+            %>
+            <a href="<%= projectsUrl %>">Mis Proyectos</a>
             <span> / </span>
             <span><%= project.titulo %></span>
         </nav>
@@ -806,10 +812,38 @@
                         Equipo del Proyecto
                     </div>
                     
-                    <div class="team-info">
-                        <p>La información detallada del equipo está disponible para los miembros del proyecto.</p>
-                        <p>Para ver los participantes y roles específicos, accede con tu cuenta de usuario.</p>
-                    </div>
+                    <% if (typeof isMember !== 'undefined' ? isMember : (project && user && (project.estudiante_id === user.id || project.director_id === user.id))) { %>
+                        <% if (members && members.length > 0) { %>
+                            <div class="team-list">
+                                <% members.forEach(member => { %>
+                                    <div class="team-member">
+                                        <div class="member-avatar">
+                                            <i class="fas fa-user-circle"></i>
+                                        </div>
+                                        <div class="member-info">
+                                            <div class="member-name"><%= member.nombres %> <%= member.apellidos %></div>
+                                            <div class="member-email"><%= member.email %></div>
+                                            <div class="member-roles">
+                                                <span class="badge">Rol Sistema: <%= member.rol_nombre %></span>
+                                                <span class="badge">Rol: <%= member.rol_en_proyecto || member.rol || 'No especificado' %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <h4>Sin miembros registrados</h4>
+                                <p>Aún no se han agregado miembros a este proyecto.</p>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <div class="team-info">
+                            <p>La información detallada del equipo está disponible para los miembros del proyecto.</p>
+                            <p>Para ver los participantes y roles específicos, accede con tu cuenta de usuario.</p>
+                        </div>
+                    <% } %>
                 </div>
 
                 <!-- Recent Comments -->

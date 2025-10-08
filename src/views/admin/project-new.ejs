@@ -395,6 +395,17 @@
                 </div>
             </div>
 
+            <% if (Array.isArray(userAreas) && userAreas.length > 1) { %>
+            <div class="form-group">
+                <label class="form-label" for="area_trabajo_id">Área de Trabajo</label>
+                <select class="form-control" id="area_trabajo_id" name="area_trabajo_id">
+                    <% userAreas.forEach(area => { %>
+                        <option value="<%= area.area_trabajo_id || area.id %>" <%= (area.area_trabajo_id || area.id) === areaTrabajoId ? 'selected' : '' %>><%= area.nombre || area.area_nombre || ('Área ' + (area.area_trabajo_id || area.id)) %></option>
+                    <% }) %>
+                </select>
+            </div>
+            <% } %>
+
             <div class="form-group">
                 <label class="form-label" for="estado">Estado</label>
                 <select class="form-control" id="estado" name="estado">
@@ -409,7 +420,7 @@
             </div>
 
             <div class="form-actions">
-                <a href="/admin/projects" class="btn btn-outline">
+                <a href="<%= (user && (user.rol_nombre === 'Administrador General' || user.rol_nombre === 'Coordinador Académico')) ? '/admin/projects' : (user && (user.rol_nombre === 'Director' || user.rol_nombre === 'Director de Proyecto')) ? '/director/projects' : '/projects' %>" class="btn btn-outline">
                     <i class="fas fa-times"></i> Cancelar
                 </a>
                 <button type="submit" class="btn btn-primary">
@@ -509,7 +520,8 @@
                 ciclo_academico_id: formData.get('ciclo_academico_id'),
                 fecha_inicio: formData.get('fecha_inicio'),
                 fecha_fin: formData.get('fecha_fin'),
-                estado: formData.get('estado') || 'borrador'
+                estado: formData.get('estado') || 'borrador',
+                area_trabajo_id: formData.get('area_trabajo_id') || null
             };
             
             try {
@@ -529,8 +541,17 @@
                 if (response.ok) {
                     showAlert('Proyecto creado exitosamente', 'success');
                     setTimeout(() => {
-                        // Redirigir a la página correcta basada en la ruta actual
-                        const redirectUrl = window.location.pathname.includes('/admin/') ? '/admin/projects' : '/projects';
+                        // Redirigir a la página correcta basada en rol y ruta actual
+                        const isAdminPath = window.location.pathname.includes('/admin/');
+                        const userRole = '<%= user && user.rol_nombre ? user.rol_nombre : "" %>';
+                        let redirectUrl;
+                        if (isAdminPath) {
+                          redirectUrl = '/admin/projects';
+                        } else if (userRole === 'Director' || userRole === 'Director de Proyecto') {
+                          redirectUrl = (result && result.projectId ? `/director/projects/${result.projectId}` : '/director/projects');
+                        } else {
+                          redirectUrl = (result && result.projectId ? `/projects/${result.projectId}` : '/projects');
+                        }
                         window.location.href = redirectUrl;
                     }, 1500);
                 } else {

@@ -14,12 +14,12 @@ router.use(loadUserAreas);
 
 // IMPORTANTE: Las rutas específicas deben ir ANTES que las rutas con parámetros
 router.get('/create', 
-  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto', 'Director']),
   adminController.newProject.bind(adminController)
 );
 
 router.post('/create', 
-  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto']),
+  AuthMiddleware.requireRole(['Coordinador Académico', 'Administrador General', 'Director de Proyecto', 'Director']),
   adminController.createProject.bind(adminController)
 );
 

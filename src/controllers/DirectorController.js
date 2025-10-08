@@ -22,41 +22,17 @@ class DirectorController {
       const limit = 10;
       const offset = (page - 1) * limit;
 
-      // Obtener proyectos donde este usuario es miembro con rol de director
-      let query = `
-        SELECT DISTINCT
-          p.*,
-          CONCAT(u.nombres, ' ', u.apellidos) as estudiante_nombre,
-          u.nombres as estudiante_nombres,
-          u.apellidos as estudiante_apellidos,
-          u.email as estudiante_email,
-          CONCAT(d.nombres, ' ', d.apellidos) as director_nombre,
-          d.nombres as director_nombres,
-          d.apellidos as director_apellidos
-        FROM proyectos p
-        LEFT JOIN usuarios u ON p.estudiante_id = u.id
-        LEFT JOIN usuarios d ON p.director_id = d.id
-        INNER JOIN project_members pm ON p.id = pm.proyecto_id
-        WHERE pm.usuario_id = ? AND pm.rol_en_proyecto = 'director' AND pm.activo = 1
-      `;
-      
-      const values = [user.id];
-      
-      // Aplicar filtro de estado si existe
-      if (estado) {
-        query += ` AND p.estado = ?`;
-        values.push(estado);
-      }
-      
-      query += ` ORDER BY p.created_at DESC`;
-      
-      const [directedProjects] = await this.projectModel.db.execute(query, values);
+      // Usar el modelo centralizado para obtener proyectos dirigidos
+      const additionalConditions = {};
+      if (estado) additionalConditions.estado = estado;
+      const directedProjects = await this.projectModel.findByDirector(user.id, additionalConditions);
 
       // Aplicar búsqueda por título si se especifica
       let filteredProjects = directedProjects;
       if (search) {
+        const term = String(search).toLowerCase();
         filteredProjects = directedProjects.filter(project => 
-          project.titulo.toLowerCase().includes(search.toLowerCase())
+          ((project.titulo || '')).toLowerCase().includes(term)
         );
       }
 
@@ -252,7 +228,17 @@ class DirectorController {
     try {
       const { projectId } = req.params;
       const director = req.session.user;
-      const { titulo, descripcion, fecha_entrega, fase_id } = req.body;
+      // Con multipart/form-data (multer), los campos vienen como strings
+      const { 
+        titulo, 
+        descripcion, 
+        fecha_entrega, // utilizado desde el formulario como fecha límite
+        fase_id,
+        asignado_a,
+        estimacion_horas,
+        estado,
+        etiquetas
+      } = req.body;
 
       // Verificar que el director tiene acceso al proyecto
       const hasAccess = await this.getProjectById(projectId, director.id);
@@ -271,7 +257,7 @@ class DirectorController {
         });
       }
 
-      // Verificar que la fecha de entrega sea futura
+      // Validar que la fecha límite sea futura
       const dueDate = new Date(fecha_entrega);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
@@ -288,11 +274,51 @@ class DirectorController {
         titulo: titulo.trim(),
         descripcion: descripcion ? descripcion.trim() : null,
         proyecto_id: projectId,
-        fase_id: fase_id || 1, // Por defecto fase 1 (Propuesta)
-        fecha_entrega: fecha_entrega,
-        estado: 'pendiente',
-        created_by: director.id
+        fase_id: fase_id ? Number(fase_id) : 1, // Por defecto fase 1 (Propuesta)
+        fecha_limite: fecha_entrega, // mapear como fecha límite del entregable
+        estado: (estado && estado.trim()) || 'pendiente'
       };
+
+      // Campos opcionales adicionales
+      if (asignado_a) {
+        const asignado = Number(asignado_a);
+        if (!Number.isNaN(asignado)) {
+          // Validar que el usuario asignado sea miembro del proyecto y Estudiante
+          const member = await this.projectModel.findProjectMember(projectId, asignado);
+          if (!member) {
+            return res.status(400).json({
+              success: false,
+              error: 'El usuario seleccionado no pertenece al proyecto'
+            });
+          }
+          if ((member.rol_nombre || '').trim() !== 'Estudiante') {
+            return res.status(400).json({
+              success: false,
+              error: 'Solo se puede asignar el entregable a un usuario con rol Estudiante'
+            });
+          }
+          deliverableData.asignado_a = asignado;
+        }
+      }
+      if (estimacion_horas) {
+        const est = Number(estimacion_horas);
+        if (!Number.isNaN(est)) {
+          deliverableData.estimacion_horas = est;
+        }
+      }
+      if (etiquetas) {
+        deliverableData.etiquetas = etiquetas;
+      }
+
+      // Procesar archivos adjuntos (archivos de referencia) enviados por el director
+      let attachments = [];
+      if (req.files && req.files.length > 0) {
+        const FileHelper = require('../helpers/fileHelper');
+        attachments = FileHelper.processUploadedFiles(req.files, '/uploads/deliverables');
+      }
+      if (attachments.length > 0) {
+        deliverableData.observaciones = JSON.stringify({ archivos_adjuntos: attachments });
+      }
 
       const newDeliverable = await this.entregableModel.create(deliverableData);
 
@@ -342,6 +368,21 @@ class DirectorController {
         return res.status(404).json({
           success: false,
           message: 'Usuario no encontrado'
+        });
+      }
+
+      // Validar que el usuario sea estudiante miembro del proyecto
+      const member = await this.projectModel.findProjectMember(deliverable.proyecto_id, userId);
+      if (!member) {
+        return res.status(400).json({
+          success: false,
+          message: 'El usuario no pertenece a este proyecto'
+        });
+      }
+      if ((member.rol_nombre || '').trim() !== 'Estudiante') {
+        return res.status(400).json({
+          success: false,
+          message: 'Solo se puede asignar el entregable a un usuario con rol Estudiante'
         });
       }
 
@@ -427,16 +468,22 @@ class DirectorController {
         });
       }
 
-      // Obtener miembros del proyecto
+      // Obtener miembros del proyecto y filtrar solo estudiantes
       const projectMembers = await this.projectModel.getProjectMembers(projectId);
-      
-      // Obtener todos los usuarios activos (opcional, para asignaciones más amplias)
-      const allUsers = await this.userModel.findAll({ activo: 1 });
+      const students = (projectMembers || [])
+        .filter(m => (m.rol_nombre || '').trim() === 'Estudiante')
+        .map(m => ({
+          id: m.usuario_id || m.id,
+          nombres: m.nombres,
+          apellidos: m.apellidos,
+          email: m.email,
+          rol: m.rol_nombre,
+          codigo_usuario: m.codigo_usuario
+        }));
 
       res.json({
         success: true,
-        projectMembers: projectMembers || [],
-        allUsers: allUsers || []
+        users: students
       });
 
     } catch (error) {

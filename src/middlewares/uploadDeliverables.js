@@ -64,30 +64,22 @@ const uploadDeliverables = multer({
 const handleMulterError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ 
-        success: false,
-        message: 'El archivo es demasiado grande. Tamaño máximo: 50MB' 
-      });
+      req.flash('error', 'El archivo es demasiado grande. Tamaño máximo: 50MB');
+      return res.redirect('/student/deliverables');
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Solo se permiten hasta 5 archivos por entregable' 
-      });
+      req.flash('error', 'Solo se permiten hasta 5 archivos por entregable');
+      return res.redirect('/student/deliverables');
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Campo de archivo inesperado' 
-      });
+      req.flash('error', 'Campo de archivo inesperado');
+      return res.redirect('/student/deliverables');
     }
   }
   
   if (err.message.includes('Tipo de archivo no permitido')) {
-    return res.status(400).json({ 
-      success: false,
-      message: err.message 
-    });
+    req.flash('error', err.message);
+    return res.redirect('/student/deliverables');
   }
   
   next(err);

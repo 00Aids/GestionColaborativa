@@ -160,6 +160,9 @@ body {
 .sidebar-nav {
     padding: 0 20px;
 }
+/* Premium UTS additions */
+.sidebar .nav-section { margin-bottom: 24px; }
+.sidebar .nav-section-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 8px; margin-bottom: 8px; border-bottom: 1px solid rgba(148,163,184,.2); }
 
 .nav-item {
     display: block;
@@ -171,15 +174,19 @@ body {
     transition: all 0.3s ease;
     font-weight: 500;
 }
+.nav-item .icon, .nav-item i { font-size: 16px; margin-right: 8px; color: #6b7280; }
+.nav-item:hover .icon, .nav-item:hover i { color: #fff; }
+.nav-item.active { background: rgba(167,201,71,.18); color: #486022; border-left: 3px solid var(--uts-primary); font-weight: 600; }
+.nav-item.active .icon, .nav-item.active i { color: var(--uts-primary); }
 
 .nav-item:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--uts-gradient);
     color: white;
     transform: translateX(5px);
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--uts-gradient);
     color: white;
 }
 
@@ -196,20 +203,28 @@ body {
 }
 
 .page-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: white;
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
     margin-bottom: 8px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    letter-spacing: .2px;
 }
 
 .page-subtitle {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.92);
     font-size: 16px;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 /* ===== STATS GRID ===== */
+
+/* Loaders educativos - Premium UTS */
+.skeleton { background: linear-gradient(90deg, #eef2f7 25%, #f7f9fc 37%, #eef2f7 63%); background-size: 400% 100%; animation: shimmer 1.2s infinite linear; border-radius: 12px; }
+.skeleton-text { height: 12px; margin: 6px 0; }
+.skeleton-avatar { width: 42px; height: 42px; border-radius: 50%; }
+.skeleton-card { height: 120px; border-radius: 14px; }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -217,16 +232,27 @@ body {
     margin-bottom: 30px;
 }
 
+/* Responsividad Premium UTS */
+@media (max-width: 992px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .main-content { padding: 24px; }
+}
+@media (max-width: 576px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .main-content { padding: 16px; }
+}
+
 .stat-card {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     padding: 15px;
-    border-radius: 12px;
+    border-radius: 14px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+    border: 1px solid #e9ecef;
     min-width: 180px;
+    border-left: 4px solid var(--uts-primary);
 }
 
 .stat-card:hover {

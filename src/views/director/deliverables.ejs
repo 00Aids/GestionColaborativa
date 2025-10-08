@@ -1140,12 +1140,20 @@
             const userSelect = document.getElementById('assignUser');
             userSelect.innerHTML = '<option value="">Cargando usuarios...</option>';
             
-            fetch(`/director/api/projects/${projectId}/users`)
+            fetch(`/director/api/projects/${projectId}/available-users`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         userSelect.innerHTML = '<option value="">Selecciona un usuario</option>';
-                        data.users.forEach(user => {
+                        const users = data.users || [];
+                        if (users.length === 0) {
+                            const option = document.createElement('option');
+                            option.value = '';
+                            option.textContent = 'No hay estudiantes disponibles';
+                            userSelect.appendChild(option);
+                            return;
+                        }
+                        users.forEach(user => {
                             const option = document.createElement('option');
                             option.value = user.id;
                             option.textContent = `${user.nombres} ${user.apellidos} (${user.rol})`;
@@ -1239,37 +1247,32 @@
             
             if (projectId) {
                 // Si hay un proyecto seleccionado, obtener usuarios específicos del proyecto
-                fetch(`/director/api/projects/${projectId}/users`)
+                fetch(`/director/api/projects/${projectId}/available-users`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             userSelect.innerHTML = '<option value="">Sin asignar</option>';
-                            
-                            // Agregar miembros del proyecto
-                            if (data.projectMembers && data.projectMembers.length > 0) {
-                                const projectGroup = document.createElement('optgroup');
-                                projectGroup.label = 'Miembros del proyecto';
-                                data.projectMembers.forEach(user => {
+                            const users = data.users || [];
+
+                            const projectGroup = document.createElement('optgroup');
+                            projectGroup.label = 'Estudiantes del proyecto';
+
+                            if (users.length === 0) {
+                                const option = document.createElement('option');
+                                option.value = '';
+                                option.textContent = 'No hay estudiantes disponibles';
+                                projectGroup.appendChild(option);
+                            } else {
+                                users.forEach(user => {
                                     const option = document.createElement('option');
                                     option.value = user.id;
-                                    option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
+                                    option.textContent = `${user.nombres} ${user.apellidos}`;
                                     projectGroup.appendChild(option);
                                 });
-                                userSelect.appendChild(projectGroup);
                             }
-                            
-                            // Agregar todos los usuarios disponibles
-                            if (data.allUsers && data.allUsers.length > 0) {
-                                const allUsersGroup = document.createElement('optgroup');
-                                allUsersGroup.label = 'Todos los usuarios';
-                                data.allUsers.forEach(user => {
-                                    const option = document.createElement('option');
-                                    option.value = user.id;
-                                    option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
-                                    allUsersGroup.appendChild(option);
-                                });
-                                userSelect.appendChild(allUsersGroup);
-                            }
+
+                            userSelect.appendChild(projectGroup);
+                            userSelect.disabled = false;
                         } else {
                             userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
                         }
@@ -1279,26 +1282,15 @@
                         userSelect.innerHTML = '<option value="">Sin asignar</option>';
                     });
             } else {
-                // Si no hay proyecto seleccionado, obtener todos los usuarios disponibles
-                fetch('/director/api/users')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            userSelect.innerHTML = '<option value="">Sin asignar</option>';
-                            data.users.forEach(user => {
-                                const option = document.createElement('option');
-                                option.value = user.id;
-                                option.textContent = `${user.nombres} ${user.apellidos} (${user.rol_nombre || user.rol})`;
-                                userSelect.appendChild(option);
-                            });
-                        } else {
-                            userSelect.innerHTML = '<option value="">Error al cargar usuarios</option>';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        userSelect.innerHTML = '<option value="">Sin asignar</option>';
-                    });
+                // Requerir selección de proyecto para listar estudiantes
+                userSelect.innerHTML = '';
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Seleccione un proyecto para listar estudiantes';
+                opt.disabled = true;
+                opt.selected = true;
+                userSelect.appendChild(opt);
+                userSelect.disabled = true;
             }
         }
 

@@ -5,10 +5,11 @@ const DirectorController = require('../controllers/DirectorController');
 const ProjectController = require('../controllers/ProjectController');
 const DashboardController = require('../controllers/DashboardController');
 const EntregableController = require('../controllers/EntregableController');
+const BaseModel = require('../models/BaseModel');
 
 // Middleware para verificar que el usuario sea director
 router.use(AuthMiddleware.requireAuth);
-router.use(AuthMiddleware.requireRole('Director de Proyecto'));
+router.use(AuthMiddleware.requireRole(['Director de Proyecto', 'Director']));
 
 // Instanciar controladores
 const directorController = new DirectorController();
@@ -40,11 +41,15 @@ router.get('/projects/:projectId', async (req, res) => {
     
     // Obtener entregables del proyecto
     const deliverables = await directorController.getDeliverablesByProject(projectId);
+
+    // Obtener fases del proyecto
+    const fases = await new BaseModel('fases_proyecto').findAll();
     
     res.render('director/project-detail', {
       title: `Proyecto: ${project.titulo}`,
       project: project,
       deliverables: deliverables || [],
+      fases: fases || [],
       user: user,
       success: req.flash('success'),
       error: req.flash('error')
@@ -58,8 +63,14 @@ router.get('/projects/:projectId', async (req, res) => {
 
 // ===== API ENDPOINTS =====
 
-// Crear nuevo entregable
-router.post('/api/projects/:projectId/deliverables', directorController.createDeliverable.bind(directorController));
+// Crear nuevo entregable con subida de archivos (campo 'archivos')
+const { upload: uploadDeliverables, handleError } = require('../middlewares/uploadDeliverables');
+router.post(
+  '/api/projects/:projectId/deliverables', 
+  uploadDeliverables.array('archivos', 5), 
+  handleError, 
+  directorController.createDeliverable.bind(directorController)
+);
 
 // API para obtener proyectos dirigidos
 router.get('/api/projects', async (req, res) => {

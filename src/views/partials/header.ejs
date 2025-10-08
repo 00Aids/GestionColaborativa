@@ -1,41 +1,48 @@
-<header class="header">
-    <div class="header-left">
-        <div class="logo">
-            📚 Sistema Académico
+<!-- Navbar UTS -->
+<nav class="navbar navbar-expand-lg navbar-uts fixed-top">
+  <div class="container-fluid px-3">
+    <a class="navbar-brand d-flex align-items-center" href="<%= userDashboardRoute %>">
+      <img src="/images/uts-logo.svg" alt="UTS" class="me-2">
+      <span>Sistema Académico</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarUTS" aria-controls="navbarUTS" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarUTS">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="<%= userDashboardRoute %>"><i class="bi bi-house-door-fill me-1"></i>Dashboard</a>
+        </li>
+        <% 
+          const projectsUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
+                              user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
+                              user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
+                              user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
+        %>
+        <li class="nav-item">
+          <a class="nav-link" href="<%= projectsUrl %>"><i class="bi bi-folder2-open me-1"></i>Proyectos</a>
+        </li>
+        <% if (user && (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Coordinador Académico' || user.rol_nombre === 'Director de Proyecto')) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/projects/join"><i class="bi bi-people-fill me-1"></i>Unirse a Proyecto</a>
+          </li>
+        <% } %>
+        <% if (user && (user.rol_nombre === 'Administrador' || user.rol_nombre === 'Coordinador')) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin"><i class="bi bi-gear-fill me-1"></i>Administración</a>
+          </li>
+        <% } %>
+      </ul>
+      <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-person-circle me-2"></i>
+          <span><%= user.nombre %> <%= user.apellido %></span>
+          <span class="badge ms-2"><%= user.rol_nombre %></span>
         </div>
-        <nav>
-            <a href="/dashboard" class="btn btn-secondary">Dashboard</a>
-            <% 
-            const projectsUrl = user.rol_nombre === 'Estudiante' ? '/student/projects' : 
-                               user.rol_nombre === 'Coordinador Académico' ? '/coordinator/projects' :
-                               user.rol_nombre === 'Director de Proyecto' ? '/director/projects' :
-                               user.rol_nombre === 'Evaluador' ? '/evaluator/projects' : '/admin/projects';
-            %>
-            <a href="<%= projectsUrl %>" class="btn btn-secondary">Proyectos</a>
-            <% if (user && (user.rol_nombre === 'Estudiante' || user.rol_nombre === 'Coordinador Académico' || user.rol_nombre === 'Director de Proyecto')) { %>
-                <a href="/projects/join" class="btn btn-secondary">Unirse a Proyecto</a>
-            <% } %>
-            <% if (user && (user.rol_nombre === 'Administrador' || user.rol_nombre === 'Coordinador')) { %>
-                <a href="/admin" class="btn btn-secondary">Administración</a>
-            <% } %>
-        </nav>
+        <a href="/auth/logout" class="btn btn-outline-primary btn-logout"><i class="bi bi-box-arrow-right me-1"></i>Salir</a>
+      </div>
     </div>
-    <div class="header-right">
-        <div class="user-info">
-            <span>👤 <%= user.nombre %> <%= user.apellido %></span>
-            <span class="badge"><%= user.rol_nombre %></span>
-        </div>
-        <a href="/auth/logout" class="logout-btn">Cerrar Sesión</a>
-    </div>
-</header>
+  </div>
+</nav>
 
-<style>
-.badge {
-    background: #5a67d8;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-}
-</style>
+<!-- Eliminamos estilos inline anteriores; los estilos provienen de uts-theme.css -->

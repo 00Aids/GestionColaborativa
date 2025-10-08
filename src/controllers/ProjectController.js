@@ -393,6 +393,20 @@ class ProjectController {
       const invitations = await this.projectModel.getProjectInvitations(projectId);
       const tasks = await this.projectModel.getProjectTasks(projectId);
       
+      // Calcular bandera de membresía para controlar la vista del equipo
+      let isMember = false;
+      if (user.rol_nombre === 'Estudiante') {
+        isMember = (project.estudiante_id === user.id) || !!(await this.projectModel.findProjectMember(projectId, user.id));
+      } else if (user.rol_nombre === 'Director de Proyecto') {
+        isMember = (project.director_id === user.id) || !!(await this.projectModel.findProjectMember(projectId, user.id));
+      } else if (user.rol_nombre === 'Coordinador Académico') {
+        isMember = !!(await this.projectModel.findProjectMember(projectId, user.id));
+      } else if (user.rol_nombre === 'Administrador General') {
+        isMember = true;
+      } else {
+        isMember = !!(await this.projectModel.findProjectMember(projectId, user.id));
+      }
+      
       res.render('projects/show', {
         title: `Proyecto: ${project.titulo}`,
         user,
@@ -402,6 +416,7 @@ class ProjectController {
         members,
         invitations,
         tasks,
+        isMember,
         success: req.flash('success'),
         error: req.flash('error')
       });
@@ -1267,8 +1282,7 @@ class ProjectController {
         proyecto_id: projectId,
         fase_id: fase_id || 1, // Por defecto fase 1 (Propuesta)
         fecha_entrega: fecha_entrega,
-        estado: 'pendiente',
-        created_by: user.id
+        estado: 'pendiente'
       };
 
       const newDeliverable = await this.entregableModel.create(deliverableData);

@@ -8,8 +8,9 @@ class AuthMiddleware {
     }
     
     const accepts = req.headers.accept || '';
+    const acceptsHtml = accepts.includes('text/html');
     const isApiRequest = req.xhr || accepts.includes('application/json') || (req.originalUrl && req.originalUrl.startsWith('/api/'));
-    const isHtmlNavigation = req.method === 'GET' && !isApiRequest;
+    const isHtmlNavigation = (req.method === 'GET' || req.method === 'HEAD') && acceptsHtml && !isApiRequest;
 
     if (!isHtmlNavigation) {
       return res.status(401).json({ error: 'No autorizado' });
@@ -36,8 +37,9 @@ class AuthMiddleware {
     return (req, res, next) => {
       if (!req.session || !req.session.user) {
         const accepts = req.headers.accept || '';
+        const acceptsHtml = accepts.includes('text/html');
         const isApiRequest = req.xhr || accepts.includes('application/json') || (req.originalUrl && req.originalUrl.startsWith('/api/'));
-        const isHtmlNavigation = req.method === 'GET' && !isApiRequest;
+        const isHtmlNavigation = (req.method === 'GET' || req.method === 'HEAD') && acceptsHtml && !isApiRequest;
 
         if (!isHtmlNavigation) {
           return res.status(401).json({ error: 'No autorizado' });

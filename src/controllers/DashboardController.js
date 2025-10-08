@@ -1280,26 +1280,27 @@ class DashboardController {
 
       // Validar que se proporcione al menos contenido o archivos
       if ((!content || content.trim().length < 10) && (!req.files || req.files.length === 0)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Debes proporcionar contenido (mínimo 10 caracteres) o al menos un archivo'
-        });
+        req.flash('error', 'Debes proporcionar contenido (mínimo 10 caracteres) o al menos un archivo');
+        return res.redirect('/student/deliverables');
       }
 
       // Verificar que el entregable existe
       if (!deliverable_id) {
-        return res.status(400).json({
-          success: false,
-          message: 'ID de entregable requerido'
-        });
+        req.flash('error', 'ID de entregable requerido');
+        return res.redirect('/student/deliverables');
       }
 
       const deliverable = await this.entregableModel.findById(deliverable_id);
       if (!deliverable) {
-        return res.status(404).json({
-          success: false,
-          message: 'Entregable no encontrado'
-        });
+        req.flash('error', 'Entregable no encontrado');
+        return res.redirect('/student/deliverables');
+      }
+
+      // Validar estados permitidos para enviar/reenviar
+      const allowedStates = ['pendiente', 'en_progreso', 'requiere_cambios'];
+      if (!allowedStates.includes(deliverable.estado)) {
+        req.flash('error', 'No puedes modificar este entregable en su estado actual');
+        return res.redirect('/student/deliverables');
       }
 
       // Preparar datos de actualización
@@ -1314,19 +1315,28 @@ class DashboardController {
         updateData.descripcion = content.trim();
       }
 
-      // Manejar archivos adjuntos - CORREGIDO: Los archivos del estudiante van a archivos_adjuntos
+      // Manejar archivos adjuntos: fusionar con existentes si corresponde
+      let existingFiles = [];
+      try {
+        if (deliverable.archivos_adjuntos) {
+          existingFiles = Array.isArray(deliverable.archivos_adjuntos)
+            ? deliverable.archivos_adjuntos
+            : JSON.parse(deliverable.archivos_adjuntos);
+        }
+      } catch (parseErr) {
+        console.warn('⚠️ No se pudo parsear archivos_adjuntos existentes, se ignorarán:', parseErr);
+      }
+
       if (req.files && req.files.length > 0) {
-        const fileUrls = req.files.map(file => `/uploads/deliverables/${file.filename}`);
-        
-        // Los archivos del estudiante deben ir a archivos_adjuntos, no a archivo_url
         const filesData = req.files.map(file => ({
           url: `/uploads/deliverables/${file.filename}`,
           nombre_original: file.originalname,
           nombre_archivo: file.filename,
           tipo: 'entregado'
         }));
-        
-        updateData.archivos_adjuntos = JSON.stringify(filesData);
+
+        const merged = [...existingFiles, ...filesData];
+        updateData.archivos_adjuntos = JSON.stringify(merged);
       }
 
       // Actualizar en la base de datos
@@ -1349,17 +1359,13 @@ class DashboardController {
         // No fallar la operación principal por errores de notificación
       }
       
-      res.json({
-        success: true,
-        message: 'Entregable enviado exitosamente'
-      });
+      req.flash('success', 'Entregable enviado exitosamente');
+      return res.redirect('/student/deliverables');
       
     } catch (error) {
       console.error('❌ Error in uploadDeliverable:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Error interno del servidor al enviar el entregable'
-      });
+      req.flash('error', 'Error interno del servidor al enviar el entregable');
+      return res.redirect('/student/deliverables');
     }
   }
 

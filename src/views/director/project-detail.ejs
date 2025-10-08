@@ -70,7 +70,8 @@
 
     <div class="actions">
       <a href="/director/projects" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Volver a Proyectos</a>
-      <a href="/director/deliverables" class="btn btn-primary"><i class="fas fa-clipboard-list"></i> Ver Entregables</a>
+      <a href="/director/deliverables" class="btn btn-outline"><i class="fas fa-clipboard-list"></i> Ver Entregables</a>
+      <button id="openCreateDeliverableBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Crear Entregable</button>
     </div>
 
     <div class="grid" style="margin-bottom: 1.5rem;">
@@ -115,6 +116,178 @@
       <% } %>
     </section>
 
+    <!-- Modal crear entregable -->
+    <style>
+      .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 1000; }
+      .modal { background: #fff; width: 95%; max-width: 720px; border-radius: 10px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); overflow: hidden; }
+      .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; background: #667eea; color: #fff; }
+      .modal-body { padding: 1rem 1.25rem; }
+      .modal-footer { padding: 0.75rem 1.25rem; background: #f7fafc; display: flex; justify-content: flex-end; gap: 0.75rem; }
+      .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+      .form-control { width: 100%; padding: 0.6rem; border: 1px solid #cbd5e0; border-radius: 6px; }
+      .form-label { font-size: 0.9rem; color: #4a5568; margin-bottom: 0.25rem; display: block; }
+      .error-msg { color: #e53e3e; font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+      .tag-hint { font-size: 0.82rem; color: #718096; }
+    </style>
+
+    <div id="createDeliverableModal" class="modal-backdrop" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <h3 id="modalTitle"><i class="fas fa-tasks"></i> Crear Entregable</h3>
+          <button id="closeCreateDeliverableBtn" class="btn btn-outline"><i class="fas fa-times"></i> Cerrar</button>
+        </div>
+        <form id="deliverableForm" enctype="multipart/form-data">
+          <div class="modal-body">
+            <div class="form-row">
+              <div>
+                <label class="form-label" for="titulo">Título</label>
+                <input type="text" id="titulo" name="titulo" class="form-control" placeholder="Título del entregable" required />
+                <div id="errorTitulo" class="error-msg">El título es obligatorio</div>
+              </div>
+              <div>
+                <label class="form-label" for="fase_id">Fase</label>
+                <select id="fase_id" name="fase_id" class="form-control" required>
+                  <option value="">Seleccione fase...</option>
+                  <% (fases || []).forEach(function(f){ %>
+                    <option value="<%= f.id %>"><%= f.nombre %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label class="form-label" for="asignado_a">Asignar a</label>
+                <select id="asignado_a" name="asignado_a" class="form-control">
+                  <option value="">Sin asignar</option>
+                </select>
+                <div class="tag-hint">Solo se muestran estudiantes del proyecto</div>
+              </div>
+              <div>
+                <label class="form-label" for="fecha_entrega">Fecha Límite</label>
+                <input type="date" id="fecha_entrega" name="fecha_entrega" class="form-control" required />
+                <div id="errorFecha" class="error-msg">La fecha debe ser posterior a hoy</div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label class="form-label" for="estimacion_horas">Estimación (horas)</label>
+                <input type="number" id="estimacion_horas" name="estimacion_horas" class="form-control" min="0" step="0.5" placeholder="Ej. 8" />
+              </div>
+              <div>
+                <label class="form-label" for="estado">Estado Inicial</label>
+                <select id="estado" name="estado" class="form-control">
+                  <option value="pendiente">Por Hacer</option>
+                  <option value="en_progreso">En Progreso</option>
+                  <option value="entregado">Entregado</option>
+                  <option value="en_revision">En Revisión</option>
+                  <option value="aprobado">Aprobado</option>
+                  <option value="rechazado">Rechazado</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <label class="form-label" for="descripcion">Descripción</label>
+              <textarea id="descripcion" name="descripcion" class="form-control" rows="4" placeholder="Detalles y alcance"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div>
+                <label class="form-label" for="etiquetas">Etiquetas</label>
+                <input type="text" id="etiquetas" name="etiquetas" class="form-control" placeholder="frontend, backend, diseño" />
+                <div class="tag-hint">Separadas por comas</div>
+              </div>
+              <div>
+                <label class="form-label" for="archivos">Archivos Adjuntos</label>
+                <input type="file" id="archivos" name="archivos" class="form-control" multiple />
+                <div class="tag-hint">Puedes adjuntar múltiples archivos relacionados</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancelCreateDeliverableBtn" class="btn btn-outline">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        const projectId = <%= project && project.id ? project.id : 'null' %>;
+        const modal = document.getElementById('createDeliverableModal');
+        const openBtn = document.getElementById('openCreateDeliverableBtn');
+        const closeBtn = document.getElementById('closeCreateDeliverableBtn');
+        const cancelBtn = document.getElementById('cancelCreateDeliverableBtn');
+        const form = document.getElementById('deliverableForm');
+        const selectUsers = document.getElementById('asignado_a');
+        const errorTitulo = document.getElementById('errorTitulo');
+        const errorFecha = document.getElementById('errorFecha');
+
+        function openModal(){ modal.style.display = 'flex'; }
+        function closeModal(){ modal.style.display = 'none'; }
+
+        openBtn && openBtn.addEventListener('click', openModal);
+        closeBtn && closeBtn.addEventListener('click', closeModal);
+        cancelBtn && cancelBtn.addEventListener('click', closeModal);
+
+        // Cargar usuarios (solo estudiantes del proyecto)
+        async function loadUsers(){
+          if (!projectId) return;
+          try {
+            const resp = await fetch(`/director/api/projects/${projectId}/available-users`);
+            const data = await resp.json();
+            if (data && data.success) {
+              // Limpiar y volver a agregar "Sin asignar"
+              selectUsers.innerHTML = '<option value="">Sin asignar</option>';
+              (data.users || []).forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = `${u.nombres} ${u.apellidos}` + (u.codigo_usuario ? ` (${u.codigo_usuario})` : '');
+                selectUsers.appendChild(opt);
+              });
+            }
+          } catch (e) {
+            console.error('Error cargando usuarios del proyecto:', e);
+          }
+        }
+        loadUsers();
+
+        // Validaciones y envío
+        form && form.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          errorTitulo.style.display = 'none';
+          errorFecha.style.display = 'none';
+
+          const titulo = document.getElementById('titulo').value.trim();
+          const fechaEntrega = document.getElementById('fecha_entrega').value;
+          if (!titulo) { errorTitulo.style.display = 'block'; return; }
+          if (!fechaEntrega) { errorFecha.textContent = 'La fecha es obligatoria'; errorFecha.style.display = 'block'; return; }
+
+          const due = new Date(fechaEntrega);
+          const today = new Date(); today.setHours(0,0,0,0);
+          if (due <= today) { errorFecha.textContent = 'La fecha debe ser posterior a hoy'; errorFecha.style.display = 'block'; return; }
+
+          const fd = new FormData(form);
+          try {
+            const resp = await fetch(`/director/api/projects/${projectId}/deliverables`, { method: 'POST', body: fd });
+            const data = await resp.json();
+            if (data && data.success) {
+              alert('Entregable creado exitosamente');
+              window.location.reload();
+            } else {
+              alert(data.error || 'Error al crear el entregable');
+            }
+          } catch (e) {
+            console.error('Error al enviar el formulario:', e);
+            alert('Error de red o servidor');
+          }
+        });
+      })();
+    </script>
+  
   </main>
 </body>
 </html>
