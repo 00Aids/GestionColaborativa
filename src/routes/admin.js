@@ -36,6 +36,9 @@ router.get('/api/users', adminController.getUsersByRole.bind(adminController));
 // Página principal de gestión de proyectos
 router.get('/projects', adminController.projects.bind(adminController));
 
+// Exportar proyectos a Excel
+router.get('/projects/export', adminController.exportProjects.bind(adminController));
+
 // Mostrar formulario para crear nuevo proyecto
 router.get('/projects/new', adminController.newProject.bind(adminController));
 

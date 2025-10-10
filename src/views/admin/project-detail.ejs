@@ -6,6 +6,7 @@
     <title>Detalles del Proyecto - <%= (project && project.nombre) ? project.nombre : (project && project.titulo) ? project.titulo : 'Proyecto' %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -383,10 +384,10 @@
         /* Tarjeta principal del proyecto */
         .project-card {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(8px);
             width: 100%;
             box-sizing: border-box;
         }
@@ -395,16 +396,16 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
             border-bottom: 2px solid #f1f3f4;
         }
 
         .project-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .project-meta {
@@ -1879,43 +1880,132 @@
                     </div>
                 </div>
 
-                <!-- Métricas de rendimiento -->
-                <div class="stats-card">
-                    <h4 style="margin-bottom: 15px; color: #2c3e50;">
-                        <i class="fas fa-chart-bar"></i> Métricas de Rendimiento
-                    </h4>
-                    <div class="performance-metrics">
-                        <div class="metric-item">
-                            <div class="metric-icon">
-                                <i class="fas fa-tachometer-alt"></i>
-                            </div>
-                            <div class="metric-content">
-                                <span class="metric-value"><%= (project && project.fecha_creacion && completedTasks > 0) ? Math.round((completedTasks / Math.max(1, (Date.now() - new Date(project.fecha_creacion)) / (1000 * 60 * 60 * 24))) * 10) / 10 : 0 %></span>
-                                <span class="metric-label">Tareas/día</span>
-                            </div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-icon">
-                                <i class="fas fa-users-cog"></i>
-                            </div>
-                            <div class="metric-content">
-                                <span class="metric-value"><%= members.length > 0 ? Math.round((completedTasks / members.length) * 10) / 10 : 0 %></span>
-                                <span class="metric-label">Tareas/miembro</span>
-                            </div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-icon">
-                                <i class="fas fa-percentage"></i>
-                            </div>
-                            <div class="metric-content">
-                                <span class="metric-value"><%= progress %>%</span>
-                                <span class="metric-label">Completado</span>
-                            </div>
-                        </div>
+                <!-- Métricas de rendimiento eliminadas -->
+            </div>
+        </div>
+
+        <!-- Panel Académico con Gráficos -->
+        <div class="stats-card" id="academic-insights">
+            <h4 style="margin-bottom: 15px; color: #2c3e50; display:flex; align-items:center; gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z" fill="#667eea"/>
+                    <path d="M3 19a1 1 0 001 1h14a1 1 0 001-1v-5l-7 3.82L3 14v5z" fill="#764ba2" opacity="0.8"/>
+                </svg>
+                Panel Académico
+            </h4>
+            <div class="chart-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
+                <div class="chart-card" style="background:#fff; border-radius:12px; padding:12px; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+                    <div class="chart-title" style="font-weight:600; color:#334155; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-check-circle" style="color:#22c55e"></i>
+                        Tareas: Completadas vs En progreso
                     </div>
+                    <canvas id="tasksStatusChart" height="120" aria-label="Gráfico de tareas por estado" role="img"></canvas>
+                </div>
+                <div class="chart-card" style="background:#fff; border-radius:12px; padding:12px; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+                    <div class="chart-title" style="font-weight:600; color:#334155; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-layer-group" style="color:#3b82f6"></i>
+                        Distribución por área
+                    </div>
+                    <canvas id="deliverablesAreaChart" height="120" aria-label="Gráfico de entregables por área" role="img"></canvas>
+                </div>
+                <div class="chart-card" style="background:#fff; border-radius:12px; padding:12px; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+                    <div class="chart-title" style="font-weight:600; color:#334155; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-percentage" style="color:#f59e0b"></i>
+                        Progreso porcentual
+                    </div>
+                    <canvas id="progressPercentChart" height="120" aria-label="Gráfico de progreso porcentual" role="img"></canvas>
                 </div>
             </div>
         </div>
+
+        <script>
+        // Inicialización de gráficos académicos
+        function initAcademicCharts() {
+            const completed = (<%= (tasksGrouped && tasksGrouped.done) ? tasksGrouped.done.length : 0 %>);
+            const inProgress = (<%= (tasksGrouped && tasksGrouped.in_progress) ? tasksGrouped.in_progress.length : 0 %>);
+            const progressPercent = (<%= (typeof progress !== 'undefined') ? progress : 0 %>);
+
+            // 1) Gráfico de estado de tareas
+            const tsCanvas = document.getElementById('tasksStatusChart');
+            if (tsCanvas) {
+                const tsCtx = tsCanvas.getContext('2d');
+                window.__academicCharts = window.__academicCharts || {};
+                if (window.__academicCharts['tasksStatusChart'] && typeof window.__academicCharts['tasksStatusChart'].destroy === 'function') { try { window.__academicCharts['tasksStatusChart'].destroy(); } catch (e) {} }
+                window.__academicCharts['tasksStatusChart'] = new Chart(tsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Completadas', 'En progreso'],
+                        datasets: [{
+                            data: [completed, inProgress],
+                            backgroundColor: ['#22c55e', '#3b82f6'],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { position: 'bottom' } },
+                        cutout: '60%'
+                    }
+                });
+            }
+
+            // 2) Gráfico de distribución por área (basado en deliverables si existen)
+            const areaCanvas = document.getElementById('deliverablesAreaChart');
+            if (areaCanvas) {
+                const areaCtx = areaCanvas.getContext('2d');
+                const areaCounts = {};
+                <% if (typeof deliverables !== 'undefined' && deliverables && deliverables.length > 0) { %>
+                    <% deliverables.forEach(function(d) { %>
+                        areaCounts['<%= d.area_trabajo_nombre || d.area_trabajo || d.area || 'Sin área' %>'] = (areaCounts['<%= d.area_trabajo_nombre || d.area_trabajo || d.area || 'Sin área' %>'] || 0) + 1;
+                    <% }); %>
+                <% } %>
+                const areaLabels = Object.keys(areaCounts);
+                const areaValues = areaLabels.map(k => areaCounts[k]);
+                window.__academicCharts = window.__academicCharts || {};
+                if (window.__academicCharts['deliverablesAreaChart'] && typeof window.__academicCharts['deliverablesAreaChart'].destroy === 'function') { try { window.__academicCharts['deliverablesAreaChart'].destroy(); } catch (e) {} }
+                window.__academicCharts['deliverablesAreaChart'] = new Chart(areaCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: areaLabels.length ? areaLabels : ['Sin datos'],
+                        datasets: [{
+                            label: 'Entregables',
+                            data: areaValues.length ? areaValues : [0],
+                            backgroundColor: '#6366f1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+            // 3) Gráfico de progreso porcentual
+            const ppCanvas = document.getElementById('progressPercentChart');
+            if (ppCanvas) {
+                const ppCtx = ppCanvas.getContext('2d');
+                window.__academicCharts = window.__academicCharts || {};
+                if (window.__academicCharts['progressPercentChart'] && typeof window.__academicCharts['progressPercentChart'].destroy === 'function') { try { window.__academicCharts['progressPercentChart'].destroy(); } catch (e) {} }
+                window.__academicCharts['progressPercentChart'] = new Chart(ppCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Inicio', 'Actual'],
+                        datasets: [{
+                            label: '% Completado',
+                            data: [0, progressPercent],
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
+                    }
+                });
+            }
+        }
+        </script>
 
         <!-- Pestañas de gestión -->
         <div class="tabs-container">
@@ -4599,6 +4689,9 @@
             animateCounters();
             startDashboardUpdates();
             
+            // Inicializar gráficos académicos
+            initAcademicCharts();
+            
             // Inicializar timeline cuando se muestra por primera vez
             const timelineButton = document.querySelector('[onclick="showTab(\'timeline\')"]');
             if (timelineButton) {
@@ -4607,6 +4700,10 @@
                     originalShowTab(tabName);
                     if (tabName === 'timeline') {
                         setTimeout(initializeTimeline, 100);
+                    }
+                    // Reinit gráficos al cambiar a pestañas donde el DOM pudo cambiar
+                    if (['timeline','tasks','members','invitations'].includes(tabName)) {
+                        setTimeout(initAcademicCharts, 100);
                     }
                 };
             }

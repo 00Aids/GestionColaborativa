@@ -1,8 +1,15 @@
-<div class="task-card" onclick="openTaskModal(<%= task.id || 0 %>)" data-task-id="<%= task.id || '' %>">
+<div class="task-card"
+     onclick="openTaskModal(<%= task.id || 0 %>)"
+     data-task-id="<%= task.id || '' %>"
+     data-title="<%= task.titulo || '' %>"
+     data-description="<%= task.descripcion || '' %>"
+     data-priority="<%= task.prioridad === 'high' ? 'alta' : task.prioridad === 'medium' ? 'media' : task.prioridad === 'low' ? 'baja' : (task.prioridad || '') %>"
+     data-assignee-id="<%= task.asignado_a || task.usuario_asignado_id || '' %>">
     <div class="task-header">
         <h3 class="task-title"><%= task.titulo %></h3>
-        <span class="task-priority priority-<%= task.prioridad || 'media' %>">
-            <%= task.prioridad || 'media' %>
+        <span class="task-priority priority-<%= task.prioridad === 'high' ? 'alta' : task.prioridad === 'medium' ? 'media' : task.prioridad === 'low' ? 'baja' : (task.prioridad || 'media') %>">
+            <i class="fas fa-flag"></i>
+            <%= task.prioridad === 'high' ? 'alta' : task.prioridad === 'medium' ? 'media' : task.prioridad === 'low' ? 'baja' : (task.prioridad || 'media') %>
         </span>
     </div>
     
@@ -16,7 +23,7 @@
         <div class="task-assignee">
             <% if (task.asignado_nombres) { %>
                 <div class="assignee-avatar">
-                    <%= task.asignado_nombres.charAt(0).toUpperCase() %><%= task.asignado_apellidos.charAt(0).toUpperCase() %>
+                    <%= (task.asignado_nombres ? task.asignado_nombres.charAt(0).toUpperCase() : '') %><%= (task.asignado_apellidos ? task.asignado_apellidos.charAt(0).toUpperCase() : '') %>
                 </div>
                 <span><%= task.asignado_nombres %> <%= task.asignado_apellidos %></span>
             <% } else { %>

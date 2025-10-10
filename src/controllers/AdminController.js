@@ -9,6 +9,7 @@ const FileHelper = require('../helpers/fileHelper');
 const { pool } = require('../config/database');
 const fs = require('fs');
 const path = require('path');
+const ExcelJS = require('exceljs');
 
 class AdminController {
   constructor() {
@@ -568,6 +569,26 @@ class AdminController {
         allProjects = allProjects.filter(project => project.linea_investigacion_id == linea);
       }
       
+      // Calcular progreso por tareas para cada proyecto
+      if (allProjects && allProjects.length > 0) {
+        const progressList = await Promise.all(allProjects.map(async (p) => {
+          try {
+            const tasks = await this.projectModel.getProjectTasks(p.id);
+            const total = tasks.length;
+            const completed = tasks.filter(t => {
+              const st = (t.estado || '').toLowerCase();
+              return ['aprobado','aceptado','completado','entregado','finalizado','done'].includes(st);
+            }).length;
+            const percent = total ? Math.round((completed / total) * 100) : 0;
+            return { id: p.id, percent };
+          } catch (e) {
+            return { id: p.id, percent: 0 };
+          }
+        }));
+        const progressMap = new Map(progressList.map(item => [item.id, item.percent]));
+        allProjects = allProjects.map(p => ({ ...p, progress_percent: progressMap.get(p.id) || 0 }));
+      }
+
       // Obtener proyectos recientes (últimos 10)
       const recentProjects = allProjects.slice(0, 10);
       
@@ -3551,6 +3572,124 @@ class AdminController {
         success: false, 
         message: 'Error interno del servidor al crear la tarea.' 
       });
+    }
+  }
+
+  async exportProjects(req, res) {
+    try {
+      const user = req.session.user;
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para exportar proyectos.');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
+      }
+
+      const {
+        search = '',
+        status = '',
+        linea = '',
+        dateFilter = '',
+        dateFrom = '',
+        dateTo = '',
+        director = '',
+        estudiante = '',
+      } = req.query;
+
+      const areaFilter = req.areaTrabajoId ? { area_trabajo_id: req.areaTrabajoId } : {};
+      let projects = await this.projectModel.findWithDetails(areaFilter);
+
+      if (search) {
+        projects = projects.filter(p => (p.titulo || '').toLowerCase().includes(search.toLowerCase()));
+      }
+      if (status) {
+        projects = projects.filter(p => p.estado === status);
+      }
+      if (linea) {
+        projects = projects.filter(p => p.linea_investigacion_id == linea);
+      }
+      if (director) {
+        projects = projects.filter(p => String(p.director_id) === String(director));
+      }
+      if (estudiante) {
+        projects = projects.filter(p => String(p.estudiante_id) === String(estudiante));
+      }
+      if (dateFilter && (dateFrom || dateTo)) {
+        const from = dateFrom ? new Date(dateFrom) : null;
+        const to = dateTo ? new Date(dateTo) : null;
+        const field = dateFilter === 'created' ? 'created_at' : (dateFilter === 'start' ? 'fecha_inicio' : (dateFilter === 'end' ? 'fecha_fin' : null));
+        if (field) {
+          projects = projects.filter(p => {
+            const val = p[field] ? new Date(p[field]) : null;
+            if (!val) return false;
+            if (from && val < from) return false;
+            if (to && val > to) return false;
+            return true;
+          });
+        }
+      }
+
+      if (projects && projects.length > 0) {
+        const progressList = await Promise.all(projects.map(async (p) => {
+          try {
+            const tasks = await this.projectModel.getProjectTasks(p.id);
+            const total = tasks.length;
+            const completed = tasks.filter(t => {
+              const st = (t.estado || '').toLowerCase();
+              return ['aprobado','aceptado','completado','entregado','finalizado','done'].includes(st);
+            }).length;
+            const percent = total ? Math.round((completed / total) * 100) : 0;
+            return { id: p.id, percent };
+          } catch (e) {
+            return { id: p.id, percent: 0 };
+          }
+        }));
+        const progressMap = new Map(progressList.map(item => [item.id, item.percent]));
+        projects = projects.map(p => ({ ...p, progress_percent: progressMap.get(p.id) || 0 }));
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Sistema de Gestión de Proyectos';
+      workbook.created = new Date();
+      const sheet = workbook.addWorksheet('Proyectos');
+
+      sheet.columns = [
+        { header: 'ID', key: 'id', width: 10 },
+        { header: 'Título', key: 'titulo', width: 45 },
+        { header: 'Estado', key: 'estado', width: 18 },
+        { header: 'Director', key: 'director_nombre', width: 28 },
+        { header: 'Estudiante', key: 'estudiante_nombre', width: 28 },
+        { header: 'Línea', key: 'linea_investigacion', width: 25 },
+        { header: 'Ciclo', key: 'ciclo_nombre', width: 18 },
+        { header: 'Fecha Inicio', key: 'fecha_inicio', width: 16 },
+        { header: 'Fecha Fin', key: 'fecha_fin', width: 16 },
+        { header: 'Progreso (%)', key: 'progress_percent', width: 16 },
+      ];
+
+      sheet.getRow(1).font = { bold: true };
+
+      projects.forEach(p => {
+        sheet.addRow({
+          id: p.id,
+          titulo: p.titulo,
+          estado: p.estado,
+          director_nombre: p.director_nombre || `${p.director_nombres || ''} ${p.director_apellidos || ''}`.trim(),
+          estudiante_nombre: p.estudiante_nombre || `${p.estudiante_nombres || ''} ${p.estudiante_apellidos || ''}`.trim(),
+          linea_investigacion: p.linea_investigacion || p.linea_investigacion_nombre || '',
+          ciclo_nombre: p.ciclo_nombre || '',
+          fecha_inicio: p.fecha_inicio ? new Date(p.fecha_inicio).toISOString().slice(0,10) : '',
+          fecha_fin: p.fecha_fin ? new Date(p.fecha_fin).toISOString().slice(0,10) : '',
+          progress_percent: typeof p.progress_percent === 'number' ? p.progress_percent : 0,
+        });
+      });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      const filename = `proyectos_${new Date().toISOString().slice(0,10)}.xlsx`;
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      console.error('Error exporting projects to Excel:', error);
+      req.flash('error', 'Error al exportar proyectos a Excel');
+      return res.redirect('/admin/projects');
     }
   }
 }

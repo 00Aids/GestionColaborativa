@@ -1649,36 +1649,125 @@
         <div class="stats-grid fade-in">
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-folder"></i>
+                    <i class="fas fa-book"></i>
                 </div>
                 <div class="stat-number"><%= stats ? stats.total : 0 %></div>
                 <div class="stat-label">Total Proyectos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-play-circle"></i>
+                    <i class="fas fa-chalkboard-teacher"></i>
                 </div>
                 <div class="stat-number"><%= stats ? stats.active : 0 %></div>
                 <div class="stat-label">Proyectos Activos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-graduation-cap"></i>
                 </div>
                 <div class="stat-number"><%= stats ? stats.completed : 0 %></div>
                 <div class="stat-label">Completados</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-hourglass-half"></i>
                 </div>
                 <div class="stat-number"><%= stats ? stats.pending : 0 %></div>
                 <div class="stat-label">Pendientes</div>
             </div>
         </div>
 
+        <!-- Insights: restaurado -->
+        <% 
+          let avgProgress = 0;
+          let totalProjects = (Array.isArray(projects) ? projects.length : 0);
+          if (totalProjects > 0) {
+            let sum = 0;
+            projects.forEach(p => { sum += (p.progress_percent != null ? p.progress_percent : 0); });
+            avgProgress = Math.round(sum / totalProjects);
+          }
+          const statusCounts = { borrador:0,enviado:0,en_revision:0,aprobado:0,rechazado:0,en_desarrollo:0,finalizado:0 };
+          if (Array.isArray(projects)) {
+            projects.forEach(p=>{ if (p.estado && statusCounts.hasOwnProperty(p.estado)) statusCounts[p.estado]++; });
+          }
+          const totalStatus = Object.values(statusCounts).reduce((a,b)=>a+b,0);
+          const statusKeys = Object.keys(statusCounts);
+        %>
+        <div class="insights-section fade-in">
+          <div class="insight-card radial">
+            <div class="insight-title"><i class="fas fa-chart-pie"></i> Progreso promedio</div>
+            <div class="radial-svg" aria-hidden="false">
+              <svg viewBox="0 0 120 120" width="160" height="160" role="img" aria-label="Progreso promedio">
+                <circle cx="60" cy="60" r="54" stroke="#e5e7eb" stroke-width="12" fill="none"></circle>
+                <circle cx="60" cy="60" r="54" stroke="var(--accent, #16a34a)" stroke-width="12" fill="none" stroke-linecap="round" transform="rotate(-90 60 60)" stroke-dasharray="339.292" stroke-dashoffset="<%= (339.292 * (1 - (avgProgress/100))).toFixed(2) %>"></circle>
+                <text x="60" y="60" dy="8" text-anchor="middle" font-weight="700" font-size="20" fill="#111827"><%= avgProgress %>%</text>
+              </svg>
+            </div>
+          </div>
+          <div class="insight-card status">
+            <div class="insight-title"><i class="fas fa-chart-bar"></i> Distribución por estado</div>
+            <div class="status-bar" role="img" aria-label="Distribución por estado">
+              <% statusKeys.forEach(k => { 
+                  const pct = totalStatus>0 ? Math.round((statusCounts[k]/totalStatus)*100) : 0; %>
+                <div class="status-segment status-<%= k %>" style="flex: 0 0 <%= pct %>%" title="<%= k %>: <%= statusCounts[k] %> (<%= pct %>%)"></div>
+              <% }) %>
+            </div>
+            <ul class="status-legend" aria-label="Leyenda de estados">
+              <% statusKeys.forEach(k => { 
+                  const pct = totalStatus>0 ? Math.round((statusCounts[k]/totalStatus)*100) : 0; %>
+                <li class="legend-item"><span class="legend-dot status-<%= k %>"></span> <%= k.replace('_',' ') %> (<%= pct %>%)</li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+        <style>
+        .insights-section { display:grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+        .insight-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .insight-title { font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+        .radial-svg { display:flex; align-items:center; justify-content:center; }
+        .status-bar { display:flex; height:14px; border-radius:8px; overflow:hidden; background:#f3f4f6; }
+        .status-segment { height:100%; }
+        /* Eliminar estilos antiguos del radial basado en conic-gradient */
+        .status-borrador { background:#9ca3af; }
+        .status-enviado { background:#3b82f6; }
+        .status-en_revision { background:#f59e0b; }
+        .status-aprobado { background:#22c55e; }
+        .status-rechazado { background:#ef4444; }
+        .status-en_desarrollo { background:#06b6d4; }
+        .status-finalizado { background:#9333ea; }
+        .status-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; color:#4b5563; font-size:13px; }
+        .legend-item { display:inline-flex; align-items:center; gap:6px; }
+        .legend-dot { display:inline-block; width:10px; height:10px; border-radius:50%; }
+        .legend-dot.status-borrador { background:#9ca3af; }
+        .legend-dot.status-enviado { background:#3b82f6; }
+        .legend-dot.status-en_revision { background:#f59e0b; }
+        .legend-dot.status-aprobado { background:#22c55e; }
+        .legend-dot.status-rechazado { background:#ef4444; }
+        .legend-dot.status-en_desarrollo { background:#06b6d4; }
+        .legend-dot.status-finalizado { background:#9333ea; }
+        </style>
+
+        <style>
+        /* Responsivo */
+        @media (max-width: 1024px) {
+          .insights-section { grid-template-columns: 1fr; }
+          .insight-card { padding:14px; }
+          .radial { width:140px; height:140px; }
+          .radial-center { inset:22px; font-size:18px; }
+          .status-legend { font-size:12px; }
+        }
+        @media (max-width: 640px) {
+           .insights-section { gap:12px; margin-top:12px; }
+           .insight-title { font-size:14px; }
+           .radial-svg svg { width:120px; height:120px; }
+           .status-bar { height:12px; display:flex; flex-wrap:wrap; }
+           .status-segment { min-width:8px; }
+           .legend-item { font-size:12px; }
+         }
+         </style>
+
         <!-- Advanced Controls Section -->
-        <div class="controls-section fade-in">
+        <div class="controls-section fade-in" style="margin-top: 20px;">
             <div class="controls-header">
                 <div class="search-filters">
                     <!-- Búsqueda en tiempo real -->
@@ -1757,9 +1846,7 @@
                         <button class="view-btn" onclick="toggleView('list')" id="listBtn" title="Vista de lista">
                             <i class="fas fa-list"></i>
                         </button>
-                        <button class="view-btn" onclick="toggleView('kanban')" id="kanbanBtn" title="Vista Kanban">
-                            <i class="fas fa-columns"></i>
-                        </button>
+
                     </div>
                 </div>
             </div>
@@ -1843,19 +1930,19 @@
                                 <div class="header-right">
                                     <div class="project-status status-<%= project.estado %>">
                                         <% if (project.estado === 'borrador') { %>
-                                            <i class="fas fa-edit"></i> Borrador
+                                            <i class="fas fa-book"></i> Borrador
                                         <% } else if (project.estado === 'enviado') { %>
                                             <i class="fas fa-paper-plane"></i> Enviado
                                         <% } else if (project.estado === 'en_revision') { %>
-                                            <i class="fas fa-eye"></i> En Revisión
+                                            <i class="fas fa-chalkboard-teacher"></i> En Revisión
                                         <% } else if (project.estado === 'aprobado') { %>
-                                            <i class="fas fa-check-circle"></i> Aprobado
+                                            <i class="fas fa-graduation-cap"></i> Aprobado
                                         <% } else if (project.estado === 'rechazado') { %>
                                             <i class="fas fa-times-circle"></i> Rechazado
                                         <% } else if (project.estado === 'en_desarrollo') { %>
-                                            <i class="fas fa-cogs"></i> En Desarrollo
+                                            <i class="fas fa-book-open"></i> En Desarrollo
                                         <% } else if (project.estado === 'finalizado') { %>
-                                            <i class="fas fa-trophy"></i> Finalizado
+                                            <i class="fas fa-certificate"></i> Finalizado
                                         <% } %>
                                     </div>
                                 </div>
@@ -1886,21 +1973,14 @@
                                 <% } %>
                             </div>
                             
-                            <!-- Barra de progreso (simulada basada en estado) -->
+                            <!-- Barra de progreso basada en tareas completadas -->
                             <div class="progress-section">
                                 <div class="progress-label">Progreso del proyecto</div>
                                 <div class="progress-bar">
-                                    <div class="progress-fill" style="width: <% if (project.estado === 'borrador') { %>10%<% } else if (project.estado === 'enviado') { %>25%<% } else if (project.estado === 'en_revision') { %>40%<% } else if (project.estado === 'aprobado') { %>60%<% } else if (project.estado === 'en_desarrollo') { %>80%<% } else if (project.estado === 'finalizado') { %>100%<% } else { %>0%<% } %>"></div>
+                                    <div class="progress-fill" style="width: <%= (project.progress_percent != null ? project.progress_percent : 0) %>%"></div>
                                 </div>
                                 <div class="progress-text">
-                                    <% if (project.estado === 'borrador') { %>10%
-                                    <% } else if (project.estado === 'enviado') { %>25%
-                                    <% } else if (project.estado === 'en_revision') { %>40%
-                                    <% } else if (project.estado === 'aprobado') { %>60%
-                                    <% } else if (project.estado === 'en_desarrollo') { %>80%
-                                    <% } else if (project.estado === 'finalizado') { %>100%
-                                    <% } else { %>0%
-                                    <% } %>
+                                    <%= (project.progress_percent != null ? project.progress_percent : 0) %>%
                                 </div>
                             </div>
                             
@@ -2841,6 +2921,9 @@
             
             // Initialize dynamic filters
             loadFilterOptions();
+
+            // Insights removidos: inicialización deshabilitada
+
         });
     </script>
 </body>
