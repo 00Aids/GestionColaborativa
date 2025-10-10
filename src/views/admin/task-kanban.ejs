@@ -98,13 +98,17 @@
         }
 
         .top-bar {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%);
+            backdrop-filter: blur(6px);
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
         .back-navigation {
@@ -135,6 +139,30 @@
             color: white;
         }
 
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        .breadcrumb a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .breadcrumb i {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -146,8 +174,14 @@
             color: white;
             font-weight: 600;
             border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-
+        .user-avatar:hover {
+            border-color: white;
+            transform: scale(1.05);
+        }
         .user-info h4 {
             margin: 0;
             font-size: 14px;
@@ -161,9 +195,13 @@
 
         /* ===== KANBAN BOARD ===== */
         .kanban-container {
-            padding: 30px;
-            height: calc(100vh - 80px);
+            padding: 24px;
+            padding-bottom: 80px; /* evitar contenido pegado al borde inferior */
+            height: auto; /* antes: calc(100vh - 80px) */
+            min-height: calc(100vh - 120px);
             overflow: hidden;
+            max-width: 1320px;
+            margin: 0 auto; /* centrar y reducir espacio sobrante a los lados */
         }
 
         .kanban-header {
@@ -201,7 +239,44 @@
             gap: 15px;
             align-items: center;
         }
-
+        
+        /* Filtros Kanban */
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-right: 8px;
+        }
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .filter-item i {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .filter-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            min-width: 200px;
+        }
+        .filter-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .filter-select {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+        }
+        .filter-select option { color: #1e293b; }
         .btn {
             padding: 12px 24px;
             border: none;
@@ -271,15 +346,16 @@
 
         .kanban-board {
             display: flex;
-            gap: 25px;
-            height: calc(100% - 140px);
+            gap: 36px; /* más separación entre columnas (antes 25px) */
+            height: auto; /* antes: calc(100% - 140px) */
             overflow-x: auto;
-            padding-bottom: 20px;
+            padding: 8px 12px 24px; /* ligero padding horizontal para mejor respiración */
+            justify-content: flex-start; /* evitar columnas muy centradas o pegadas */
         }
 
         .kanban-column {
             flex: 1;
-            min-width: 350px;
+            min-width: 380px; /* antes 350px, da mejor legibilidad y evita que queden demasiado juntas */
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px);
             border-radius: 20px;
@@ -327,462 +403,158 @@
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .column-body {
-            flex: 1;
-            padding: 25px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .task-card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .task-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .task-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .task-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 0;
-            line-height: 1.4;
-            flex: 1;
-            margin-right: 10px;
-        }
-
-        .task-priority {
-            padding: 6px 12px;
-            border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .priority-alta {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #dc2626;
+        /* Microinteracciones y mejoras de Kanban */
+        .kanban-column {
+            transition: transform 180ms ease, box-shadow 180ms ease;
         }
-
-        .priority-media {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #d97706;
+        .kanban-column:hover {
+            transform: translateY(-2px);
         }
-
-        .priority-baja {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #16a34a;
+        
+        .task-card {
+            transition: box-shadow 180ms ease, transform 180ms ease, border-top-color 180ms ease;
+            border-top: 3px solid transparent;
         }
-
-        .task-description {
-            color: #64748b;
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            /* Fallback para navegadores que no soportan line-clamp */
-            line-clamp: 2;
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
         }
-
-        .task-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 15px;
+        
+        /* Borde superior según prioridad */
+        .task-card[data-priority="alta"] { border-top-color: #ef4444; }
+        .task-card[data-priority="media"] { border-top-color: #f59e0b; }
+        .task-card[data-priority="baja"] { border-top-color: #10b981; }
+        
+        /* Icono dentro del contador de columna */
+        .column-count::before {
+            content: "\f0ae"; /* fa-tasks */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-right: 6px;
         }
-
-        .task-assignee {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .assignee-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 11px;
-            font-weight: 700;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-        }
-
-        .task-due-date {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 8px;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .task-due-date.overdue {
-            background: rgba(220, 38, 38, 0.1);
-            color: #dc2626;
-        }
-
-        .task-indicators {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .task-stats {
-            display: flex;
-            gap: 15px;
-        }
-
-        .task-stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
-            background: rgba(102, 126, 234, 0.1);
+        
+        /* Tooltip simple para contadores y acciones */
+        .btn[title], .column-count[title] { position: relative; }
+        .btn[title]:hover::after, .column-count[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: -28px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 6px 8px;
             border-radius: 6px;
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .task-status-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-weight: 600;
             font-size: 11px;
+            white-space: nowrap;
+            pointer-events: none;
         }
-
-        .status-done {
-            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-            color: #16a34a;
+        
+        /* Ajuste de icono de prioridad ya existente */
+        .task-priority i { margin-right: 6px; }
+        .task-priority { font-size: 11px; }
+        /* Limpieza: eliminar media queries duplicados al final del documento */
+        @media (max-width: 1280px) {
+            .kanban-container { max-width: 100%; padding: 20px; }
+            .kanban-board { gap: 28px; }
+            .kanban-column { min-width: 340px; }
         }
-
-        .empty-column {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-style: italic;
-            padding: 60px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+        
+        @media (max-width: 1024px) {
+            .kanban-header { flex-wrap: wrap; gap: 12px; padding: 18px 20px; }
+            .kanban-title { font-size: 24px; }
+            .filter-group { flex-wrap: wrap; width: 100%; }
+            .filter-item { flex: 1 1 220px; }
+            .filter-input { min-width: 140px; }
+            .kanban-actions { flex-wrap: wrap; width: 100%; justify-content: flex-end; gap: 10px; }
+            .kanban-board { gap: 24px; }
+            .kanban-column { min-width: 100%; }
         }
-
-        .empty-column i {
-            font-size: 48px;
-            opacity: 0.3;
-        }
-
-        .empty-column p {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        /* ===== MODAL STYLES ===== */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: white;
-            margin: 2% auto;
-            padding: 0;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-header {
-            padding: 30px 35px;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1e293b;
-            margin: 0;
-        }
-
-        .close {
-            color: #64748b;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            padding: 5px;
-            border-radius: 50%;
-        }
-
-        .close:hover {
-            color: #1e293b;
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-body {
-            padding: 35px;
-            max-height: calc(90vh - 140px);
-            overflow-y: auto;
-        }
-
-        /* ===== QUICK CREATE FORM ===== */
-        .quick-create-form {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            z-index: 3000;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .quick-create-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            z-index: 2999;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 25px;
-        }
-
-        .btn-cancel {
-            background: #f1f5f9;
-            color: #64748b;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-cancel:hover {
-            background: #e2e8f0;
-        }
-
-        /* ===== RESPONSIVE ===== */
+        
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .kanban-board {
-                flex-direction: column;
-                height: auto;
-            }
-
-            .kanban-column {
-                min-width: auto;
-            }
-
+            .kanban-container { padding: 16px; padding-bottom: 80px; }
             .kanban-header {
-                flex-direction: column;
-                gap: 20px;
-                text-align: center;
-            }
-
-            .kanban-actions {
+                padding: 14px 16px;
+                gap: 10px;
                 width: 100%;
+                order: 2;
                 justify-content: center;
             }
+            .kanban-title { font-size: 20px; gap: 10px; }
+            .filter-group { gap: 8px; }
+            .filter-item { flex: 1 1 100%; }
+            .kanban-actions { justify-content: center; }
+            .kanban-board { flex-direction: column; gap: 16px; padding: 6px 0 16px; }
+            .kanban-column { min-width: auto; width: 100%; }
+            .column-header { padding: 16px 18px; }
+            .column-title { font-size: 16px; }
+            .column-count { font-size: 10px; }
         }
-
-        /* ===== LOADING ANIMATION ===== */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+        
+        @media (max-width: 480px) {
+            .kanban-title { font-size: 18px; }
+            .filter-item { padding: 6px 8px; }
+            .filter-input { min-width: 120px; }
+            .btn { padding: 8px 10px; border-radius: 10px; }
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+    </style>
+    <style>
+        /* Eliminado: CSS duplicado del modal fuera de <style> */
+        .quick-create-form .modal-body {
+          padding: 20px;
+          display: grid;
+          gap: 16px;
+          grid-template-columns: 1fr;
+          align-items: start;
         }
-
-        /* ===== NOTIFICATION ===== */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            z-index: 4000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+        .quick-create-form .form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          padding: 16px 20px;
+          border-top: 1px solid #eef2f7;
         }
-
-        .notification.show {
-            transform: translateX(0);
+        .quick-create-form .col-span-2 { grid-column: 1 / -1; }
+        @media (min-width: 768px) {
+          .modal-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+          }
+          .quick-create-form .modal-body { grid-template-columns: 1fr 1fr; }
         }
-
-        .notification.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        @media (min-width: 1024px) {
+          .quick-create-form .modal { width: min(960px, 92vw); }
+          .quick-create-form .modal-body { gap: 20px; }
         }
-
-        .notification.error {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        @media (min-width: 1280px) {
+          .quick-create-form .modal { width: min(1000px, 90vw); }
+        }
+        @media (max-width: 480px) {
+          .quick-create-form .modal-body { gap: 12px; }
+          .quick-create-form .form-actions { flex-direction: column-reverse; gap: 8px; }
         }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2><i class="fas fa-graduation-cap"></i> Admin Panel</h2>
         </div>
         <nav class="sidebar-nav">
-            <a href="/dashboard/admin" class="nav-item">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-            </a>
-            <a href="/admin/users" class="nav-item">
-                <i class="fas fa-users"></i> Usuarios
-            </a>
-            <a href="/admin/roles" class="nav-item">
-                <i class="fas fa-user-shield"></i> Roles
-            </a>
-            <a href="/admin/projects" class="nav-item active">
-                <i class="fas fa-project-diagram"></i> Proyectos
-            </a>
-            <a href="/admin/deliverables" class="nav-item">
-                <i class="fas fa-tasks"></i> Entregables
-            </a>
-            <a href="/admin/calendar" class="nav-item">
-                <i class="fas fa-calendar"></i> Calendario
-            </a>
-            <a href="/admin/invitations" class="nav-item">
-                <i class="fas fa-envelope"></i> Invitaciones
-            </a>
-            <a href="/admin/reports" class="nav-item">
-                <i class="fas fa-chart-bar"></i> Reportes
-            </a>
-            <a href="/admin/settings" class="nav-item">
-                <i class="fas fa-cog"></i> Configuración
-            </a>
+            <a href="/dashboard/admin" class="nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="/admin/users" class="nav-item"><i class="fas fa-users"></i> Usuarios</a>
+            <a href="/admin/roles" class="nav-item"><i class="fas fa-user-shield"></i> Roles</a>
+            <a href="/admin/projects" class="nav-item active"><i class="fas fa-project-diagram"></i> Proyectos</a>
+            <a href="/admin/deliverables" class="nav-item"><i class="fas fa-tasks"></i> Entregables</a>
+            <a href="/admin/calendar" class="nav-item"><i class="fas fa-calendar"></i> Calendario</a>
+            <a href="/admin/invitations" class="nav-item"><i class="fas fa-envelope"></i> Invitaciones</a>
+            <a href="/admin/reports" class="nav-item"><i class="fas fa-chart-bar"></i> Reportes</a>
+            <a href="/admin/settings" class="nav-item"><i class="fas fa-cog"></i> Configuración</a>
         </nav>
     </div>
 
@@ -790,10 +562,12 @@
     <div class="main-content">
         <!-- Top Bar -->
         <div class="top-bar">
-            <div class="back-navigation">
-                <a href="/admin/projects/<%= project.id %>/details" class="back-arrow" title="Volver al proyecto">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
+            <div class="breadcrumb">
+                <a href="/admin/projects"><i class="fas fa-project-diagram"></i> Proyectos</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/admin/projects/<%= project.id %>"><%= project.titulo %></a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Tablero Kanban</span>
             </div>
             <div class="user-profile">
                 <div class="user-avatar">
@@ -808,187 +582,202 @@
 
         <!-- Kanban Container -->
         <div class="kanban-container">
-            <!-- Header -->
             <div class="kanban-header">
-                <h1 class="kanban-title">
-                    <i class="fas fa-tasks"></i>
-                    Tablero de Tareas - <%= project.titulo %>
-                </h1>
+                <h2 class="kanban-title"><i class="fas fa-tasks"></i> Tablero Kanban • <%= project.titulo %></h2>
                 <div class="kanban-actions">
-                    <button class="btn btn-quick-create" onclick="openQuickCreateForm()">
-                        <i class="fas fa-plus-circle"></i> Nueva Tarea
-                    </button>
-                    <button class="btn btn-secondary" onclick="refreshBoard()">
-                        <i class="fas fa-sync-alt"></i> Actualizar
-                    </button>
+                    <div class="filter-group">
+                        <div class="filter-item">
+                            <i class="fas fa-search"></i>
+                            <input id="kanbanSearch" class="filter-input" type="text" placeholder="Buscar por título o descripción">
+                        </div>
+                        <div class="filter-item">
+                            <i class="fas fa-flag"></i>
+                            <select id="kanbanPriority" class="filter-select">
+                                <option value="">Todas las prioridades</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Media</option>
+                                <option value="baja">Baja</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <i class="fas fa-user"></i>
+                            <select id="kanbanAssignee" class="filter-select">
+                                <option value="">Todos los asignados</option>
+                                <% if (members && members.length > 0) { %>
+                                    <% members.forEach(member => { %>
+                                        <option value="<%= member.usuario_id %>"><%= member.nombres %> <%= member.apellidos %></option>
+                                    <% }) %>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-quick-create" onclick="openQuickCreateForm()"><i class="fas fa-plus"></i> Crear Tarea Rápida</button>
+                    <a class="btn btn-secondary" href="/admin/projects/<%= project.id %>/tasks/new"><i class="fas fa-file-alt"></i> Crear Tarea Completa</a>
                 </div>
             </div>
 
             <!-- Kanban Board -->
             <div class="kanban-board">
-                <!-- TODO Column -->
-                <div class="kanban-column" data-status="todo">
+                <!-- Columna: Por Hacer -->
+                <div class="kanban-column">
                     <div class="column-header">
-                        <div class="column-title">
-                            <i class="fas fa-circle" style="color: #64748b;"></i>
-                            Por Hacer
-                        </div>
-                        <div class="column-count"><%= tasksGrouped.todo.length %></div>
+                        <div class="column-title"><i class="fas fa-clipboard-list"></i> Por Hacer</div>
+                        <span class="column-count" title="Tareas en Por Hacer"><%= (tasksGrouped && tasksGrouped.todo) ? tasksGrouped.todo.length : 0 %></span>
                     </div>
-                    <div class="column-body" id="todo-column">
-                        <% if (tasksGrouped.todo.length === 0) { %>
-                            <div class="empty-column">
-                                <i class="fas fa-inbox"></i>
-                                <p>No hay tareas pendientes</p>
+                    <% if (tasksGrouped && tasksGrouped.todo && tasksGrouped.todo.length > 0) { %>
+                        <% tasksGrouped.todo.forEach(task => { %>
+                            <div class="task-card" data-title="<%= task.titulo || '' %>" data-description="<%= task.descripcion || '' %>" data-priority="<%= task.prioridad || '' %>" data-assignee-id="<%= task.asignado_a || '' %>" onclick="openTaskModal('<%= task.id %>')">
+                                <div class="task-header">
+                                    <span class="task-code"><%= task.codigo || ('TASK-' + task.id) %></span>
+                                    <div class="priority-indicator"></div>
+                                </div>
+                                <h4 class="task-title"><%= task.titulo %></h4>
+                                <p class="task-description"><%= task.descripcion || 'Sin descripción' %></p>
+                                <div class="task-meta">
+                                    <span class="task-priority priority-<%= task.prioridad || 'media' %>"><%= task.prioridad || 'media' %></span>
+                                </div>
                             </div>
-                        <% } else { %>
-                            <% tasksGrouped.todo.forEach(task => { %>
-                                <%- include('partials/task-card', { task: task }) %>
-                            <% }) %>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- IN PROGRESS Column -->
-                <div class="kanban-column" data-status="in_progress">
-                    <div class="column-header">
-                        <div class="column-title">
-                            <i class="fas fa-circle" style="color: #f59e0b;"></i>
-                            En Progreso
-                        </div>
-                        <div class="column-count"><%= tasksGrouped.in_progress.length %></div>
-                    </div>
-                    <div class="column-body" id="in_progress-column">
-                        <% if (tasksGrouped.in_progress.length === 0) { %>
-                            <div class="empty-column">
-                                <i class="fas fa-clock"></i>
-                                <p>No hay tareas en progreso</p>
-                            </div>
-                        <% } else { %>
-                            <% tasksGrouped.in_progress.forEach(task => { %>
-                                <%- include('partials/task-card', { task: task }) %>
-                            <% }) %>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- DONE Column -->
-                <div class="kanban-column" data-status="done">
-                    <div class="column-header">
-                        <div class="column-title">
-                            <i class="fas fa-circle" style="color: #10b981;"></i>
-                            Completadas
-                        </div>
-                        <div class="column-count"><%= tasksGrouped.done.length %></div>
-                    </div>
-                    <div class="column-body" id="done-column">
-                        <% if (tasksGrouped.done.length === 0) { %>
-                            <div class="empty-column">
-                                <i class="fas fa-check-circle"></i>
-                                <p>No hay tareas completadas</p>
-                            </div>
-                        <% } else { %>
-                            <% tasksGrouped.done.forEach(task => { %>
-                                <%- include('partials/task-card', { task: task }) %>
-                            <% }) %>
-                        <% } %>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Complete Create Form -->
-    <div class="quick-create-overlay" onclick="closeQuickCreateForm()"></div>
-    <div class="quick-create-form" style="max-height: 90vh; overflow-y: auto;">
-        <h3 style="margin-bottom: 25px; color: #1e293b; font-weight: 700; font-size: 20px;">
-            <i class="fas fa-plus-circle" style="color: #667eea; margin-right: 10px;"></i>
-            Nueva Tarea
-        </h3>
-        <form id="quickCreateTaskForm" enctype="multipart/form-data">
-            <!-- Información Básica -->
-            <div class="form-group">
-                <label class="form-label">Título de la tarea <span style="color: #ef4444;">*</span></label>
-                <input type="text" id="quickTaskTitle" class="form-input" placeholder="Ingresa el título de la tarea" required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Descripción</label>
-                <textarea id="quickTaskDescription" class="form-input form-textarea" placeholder="Describe los detalles de la tarea"></textarea>
-            </div>
-
-            <!-- Configuración de Tarea -->
-            <div class="form-group">
-                <label class="form-label">Fase del Proyecto</label>
-                <select id="quickTaskPhase" class="form-select">
-                    <option value="">Sin fase específica</option>
-                    <% if (fases && fases.length > 0) { %>
-                        <% fases.forEach(fase => { %>
-                            <option value="<%= fase.id %>"><%= fase.nombre %></option>
                         <% }) %>
+                    <% } else { %>
+                        <div style="padding: 16px; color: #fff; opacity: 0.9;">No hay tareas por hacer</div>
                     <% } %>
-                </select>
-            </div>
-
-            <!-- Asignación y Fechas -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label class="form-label">Asignar a</label>
-                    <select id="quickTaskAssignee" class="form-select">
-                        <option value="">Sin asignar</option>
-                        <% if (members && members.length > 0) { %>
-                            <% members.forEach(member => { %>
-                                <option value="<%= member.usuario_id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
-                            <% }) %>
-                        <% } %>
-                    </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Fecha Límite</label>
-                    <input type="date" id="quickTaskDeadline" class="form-input">
+                <!-- Columna: En Progreso -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title"><i class="fas fa-spinner"></i> En Progreso</div>
+                        <span class="column-count" title="Tareas en Progreso"><%= (tasksGrouped && tasksGrouped.in_progress) ? tasksGrouped.in_progress.length : 0 %></span>
+                    </div>
+                    <% if (tasksGrouped && tasksGrouped.in_progress && tasksGrouped.in_progress.length > 0) { %>
+                        <% tasksGrouped.in_progress.forEach(task => { %>
+                            <div class="task-card" data-title="<%= task.titulo || '' %>" data-description="<%= task.descripcion || '' %>" data-priority="<%= task.prioridad || '' %>" data-assignee-id="<%= task.asignado_a || '' %>" onclick="openTaskModal('<%= task.id %>')">
+                                <div class="task-header">
+                                    <span class="task-code"><%= task.codigo || ('TASK-' + task.id) %></span>
+                                    <div class="priority-indicator"></div>
+                                </div>
+                                <h4 class="task-title"><%= task.titulo %></h4>
+                                <p class="task-description"><%= task.descripcion || 'Sin descripción' %></p>
+                                <div class="task-meta">
+                                    <span class="task-priority priority-<%= task.prioridad || 'media' %>"><%= task.prioridad || 'media' %></span>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div style="padding: 16px; color: #fff; opacity: 0.9;">No hay tareas en progreso</div>
+                    <% } %>
+                </div>
+
+                <!-- Columna: Completadas -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <div class="column-title"><i class="fas fa-check-circle"></i> Completadas</div>
+                        <span class="column-count" title="Tareas Completadas"><%= (tasksGrouped && tasksGrouped.done) ? tasksGrouped.done.length : 0 %></span>
+                    </div>
+                    <% if (tasksGrouped && tasksGrouped.done && tasksGrouped.done.length > 0) { %>
+                        <% tasksGrouped.done.forEach(task => { %>
+                            <div class="task-card" data-title="<%= task.titulo || '' %>" data-description="<%= task.descripcion || '' %>" data-priority="<%= task.prioridad || '' %>" data-assignee-id="<%= task.asignado_a || '' %>" onclick="openTaskModal('<%= task.id %>')">
+                                <div class="task-header">
+                                    <span class="task-code"><%= task.codigo || ('TASK-' + task.id) %></span>
+                                    <div class="priority-indicator"></div>
+                                </div>
+                                <h4 class="task-title"><%= task.titulo %></h4>
+                                <p class="task-description"><%= task.descripcion || 'Sin descripción' %></p>
+                                <div class="task-meta">
+                                    <span class="task-priority priority-<%= task.prioridad || 'media' %>"><%= task.prioridad || 'media' %></span>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div style="padding: 16px; color: #fff; opacity: 0.9;">No hay tareas completadas</div>
+                    <% } %>
                 </div>
             </div>
 
-            <!-- Estimación de Tiempo -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label class="form-label">Estimación (horas)</label>
-                    <input type="number" id="quickTaskEstimation" class="form-input" min="0" step="0.5" placeholder="Ej: 8">
+            <!-- Eliminado: CSS fuera de <style> que se mostraba como texto -->
+            <!-- Quick Create Form (modal overlay) -->
+            <div class="quick-create-overlay" style="display: none;" onclick="closeQuickCreateForm()"></div>
+            <div class="quick-create-form" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="quickCreateModalTitle">
+                <div class="modal">
+                    <div class="modal-header">
+                        <div class="modal-title" id="quickCreateModalTitle">Crear Entregable</div>
+                        <button type="button" class="btn btn-cancel" onclick="closeQuickCreateForm()" aria-label="Cerrar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="quickCreateTaskForm" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <div class="form-group col-span-2">
+                                <label class="form-label" for="quickTaskTitle">Título de la Tarea</label>
+                                <input type="text" id="quickTaskTitle" class="form-input" placeholder="Ingresa el título" required>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label class="form-label" for="quickTaskDescription">Descripción</label>
+                                <textarea id="quickTaskDescription" class="form-textarea" placeholder="Describe la tarea"></textarea>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label class="form-label" for="quickTaskPhase">Fase</label>
+                                <select id="quickTaskPhase" class="form-select">
+                                    <option value="">Sin fase específica</option>
+                                    <% if (fases && fases.length > 0) { %>
+                                        <% fases.forEach(fase => { %>
+                                            <option value="<%= fase.id %>"><%= fase.nombre %></option>
+                                        <% }) %>
+                                    <% } %>
+                                </select>
+                            </div>
+                            <div class="modal-grid-2 col-span-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="quickTaskAssignee">Asignar a</label>
+                                    <select id="quickTaskAssignee" class="form-select">
+                                        <option value="">Sin asignar</option>
+                                        <% if (members && members.length > 0) { %>
+                                            <% members.forEach(member => { %>
+                                                <option value="<%= member.usuario_id %>"><%= member.nombres %> <%= member.apellidos %> (<%= member.rol_nombre %>)</option>
+                                            <% }) %>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="quickTaskDeadline">Fecha Límite</label>
+                                    <input type="date" id="quickTaskDeadline" class="form-input">
+                                </div>
+                            </div>
+                            <div class="modal-grid-2 col-span-2">
+                                <div class="form-group">
+                                    <label class="form-label" for="quickTaskEstimation">Estimación (horas)</label>
+                                    <input type="number" id="quickTaskEstimation" class="form-input" min="0" step="0.5" placeholder="Ej: 8">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="quickTaskStatus">Estado Inicial</label>
+                                    <select id="quickTaskStatus" class="form-select">
+                                        <option value="todo" selected>Por Hacer</option>
+                                        <option value="in_progress">En Progreso</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label class="form-label" for="quickTaskTags">Etiquetas</label>
+                                <input type="text" id="quickTaskTags" class="form-input" placeholder="frontend, backend, diseño (separadas por comas)">
+                            </div>
+                            <div class="form-group col-span-2">
+                                <label class="form-label" for="quickTaskFiles">Archivos Adjuntos</label>
+                                <input type="file" id="quickTaskFiles" class="form-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif">
+                                <div style="font-size: 12px; color: #64748b; margin-top: 5px;">Puedes adjuntar múltiples archivos relacionados con la tarea</div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-cancel" onclick="closeQuickCreateForm()">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Tarea
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">Estado Inicial</label>
-                    <select id="quickTaskStatus" class="form-select">
-                        <option value="todo" selected>Por Hacer</option>
-                        <option value="in_progress">En Progreso</option>
-                    </select>
-                </div>
             </div>
-
-            <!-- Etiquetas -->
-            <div class="form-group">
-                <label class="form-label">Etiquetas</label>
-                <input type="text" id="quickTaskTags" class="form-input" placeholder="frontend, backend, diseño (separadas por comas)">
-            </div>
-
-            <!-- Archivos Adjuntos -->
-            <div class="form-group">
-                <label class="form-label">Archivos Adjuntos</label>
-                <input type="file" id="quickTaskFiles" class="form-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif">
-                <div style="font-size: 12px; color: #64748b; margin-top: 5px;">Puedes adjuntar múltiples archivos relacionados con la tarea</div>
-            </div>
-
-            <div class="form-actions">
-                <button type="button" class="btn btn-cancel" onclick="closeQuickCreateForm()">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Crear Tarea
-                </button>
-            </div>
-        </form>
-    </div>
+            <!-- Eliminado: bloque duplicado quick-create-form inline -->
 
     <!-- Task Detail Modal -->
     <div id="taskModal" class="modal">
@@ -1011,16 +800,24 @@
         // Quick Create Form Functions
         function openQuickCreateForm() {
             document.querySelector('.quick-create-overlay').style.display = 'block';
-            document.querySelector('.quick-create-form').style.display = 'block';
+            const modal = document.querySelector('.quick-create-form');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
             document.getElementById('quickTaskTitle').focus();
         }
 
         function closeQuickCreateForm() {
             document.querySelector('.quick-create-overlay').style.display = 'none';
-            document.querySelector('.quick-create-form').style.display = 'none';
+            const modal = document.querySelector('.quick-create-form');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
             document.getElementById('quickCreateTaskForm').reset();
         }
 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeQuickCreateForm();
+        });
+        document.querySelector('.quick-create-overlay')?.addEventListener('click', closeQuickCreateForm);
         // Handle complete create form submission
         document.getElementById('quickCreateTaskForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1184,6 +981,39 @@
             document.getElementById('taskModal').style.display = 'none';
             currentTask = null;
         }
+        
+        // Filtros de Kanban
+        const filters = { query: '', priority: '', assignee: '' };
+        function attachKanbanFilters() {
+            const search = document.getElementById('kanbanSearch');
+            const priority = document.getElementById('kanbanPriority');
+            const assignee = document.getElementById('kanbanAssignee');
+            if (search) search.addEventListener('input', (e) => { filters.query = e.target.value.toLowerCase(); applyFilters(); });
+            if (priority) priority.addEventListener('change', (e) => { filters.priority = e.target.value; applyFilters(); });
+            if (assignee) assignee.addEventListener('change', (e) => { filters.assignee = e.target.value; applyFilters(); });
+        }
+        function applyFilters() {
+            const cards = document.querySelectorAll('.task-card');
+            cards.forEach(card => {
+                const title = (card.getAttribute('data-title') || '').toLowerCase();
+                const desc = (card.getAttribute('data-description') || '').toLowerCase();
+                const priority = (card.getAttribute('data-priority') || '');
+                const assignee = (card.getAttribute('data-assignee-id') || '');
+                let visible = true;
+                if (filters.query) {
+                    const match = title.includes(filters.query) || desc.includes(filters.query);
+                    if (!match) visible = false;
+                }
+                if (filters.priority && filters.priority !== priority) {
+                    visible = false;
+                }
+                if (filters.assignee && filters.assignee !== assignee) {
+                    visible = false;
+                }
+                card.style.display = visible ? '' : 'none';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', attachKanbanFilters);
 
         // Función para renderizar el modal de tarea
         function renderTaskModal(data) {
