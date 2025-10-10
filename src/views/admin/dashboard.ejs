@@ -6,7 +6,9 @@
     <title>Dashboard - Administrador | Sistema de Gestión</title>
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/css/uts-theme.css" rel="stylesheet">
     <style>
+        :root{--uts-primary:#667eea;--uts-secondary:#764ba2;--uts-gray-100:#f7f9fc;--uts-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}        
         * {
             margin: 0;
             padding: 0;
@@ -15,7 +17,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--uts-gradient);
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -39,7 +41,7 @@
         .sidebar-header {
             padding: 30px 25px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--uts-gradient);
             color: white;
         }
 
@@ -98,15 +100,15 @@
         }
 
         .nav-item:hover {
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            border-left-color: #667eea;
+            background: rgba(102, 126, 234, 0.10);
+            color: var(--uts-primary);
+            border-left-color: var(--uts-primary);
         }
 
         .nav-item.active {
             background: rgba(102, 126, 234, 0.15);
-            color: #667eea;
-            border-left-color: #667eea;
+            color: var(--uts-primary);
+            border-left-color: var(--uts-primary);
             font-weight: 600;
         }
 
@@ -124,18 +126,19 @@
         .main-content {
             margin-left: 280px;
             min-height: 100vh;
-            background: transparent;
+            background: var(--uts-gray-100);
+            padding-top: 10px;
         }
 
         .top-bar {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            padding: 15px 30px;
+            padding: 10px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            min-height: 60px;
+            min-height: 56px;
         }
 
         /* Widget de Notificaciones y Accesos Rápidos */
@@ -402,7 +405,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 25px;
-            margin-top: 30px;
+            margin-top: 50px;
         }
 
         /* Estilos para entregables vencidos */
@@ -510,7 +513,7 @@
 
         .btn-outline {
             background: transparent;
-            border: 1px solid rgba(126,166,45,0.35);
+            border: 1px solid rgba(118,75,162,0.35);
             color: var(--uts-secondary);
             text-decoration: none;
             display: inline-flex;
@@ -520,8 +523,8 @@
         }
 
         .btn-outline:hover {
-            background: rgba(167,201,71,0.12);
-            border-color: rgba(126,166,45,0.55);
+            background: rgba(102,126,234,0.12);
+            border-color: rgba(118,75,162,0.55);
             color: var(--uts-text);
         }
 
@@ -533,6 +536,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-left: 3px solid var(--uts-secondary);
+            margin-top: 16px;
         }
 
         .card-header {
@@ -684,12 +688,12 @@
             line-height: 1.3;
         }
 
-        /* Colores específicos para diferentes acciones (paleta UTS verde) */
-        .action-card:nth-child(1) { background: linear-gradient(135deg, #A7C947 0%, #7EA62D 100%); }
-        .action-card:nth-child(2) { background: linear-gradient(135deg, #7EA62D 0%, #A7C947 100%); }
-        .action-card:nth-child(3) { background: linear-gradient(135deg, rgba(167,201,71,0.95) 0%, rgba(126,166,45,0.95) 100%); }
-        .action-card:nth-child(4) { background: linear-gradient(135deg, rgba(126,166,45,0.95) 0%, rgba(167,201,71,0.95) 100%); }
-        .action-card:nth-child(5) { background: linear-gradient(135deg, #A7C947 0%, #7EA62D 100%); }
+        /* Colores específicos para diferentes acciones (paleta morada) */
+        .action-card:nth-child(1) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .action-card:nth-child(2) { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
+        .action-card:nth-child(3) { background: linear-gradient(135deg, rgba(102,126,234,0.95) 0%, rgba(118,75,162,0.95) 100%); }
+        .action-card:nth-child(4) { background: linear-gradient(135deg, rgba(118,75,162,0.95) 0%, rgba(102,126,234,0.95) 100%); }
+        .action-card:nth-child(5) { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
         /* ===== ALERTS MEJORADAS ===== */
         .alert {
@@ -867,9 +871,9 @@
     </style>
     <style>
          :root {
-             --uts-primary: #A7C947; /* Verde UTS (principal) */
-             --uts-secondary: #7EA62D; /* Verde oscuro (variaciones y hover) */
-             --uts-accent: #7EA62D; /* Acento verde oscuro */
+             --uts-primary: #667eea; /* Morado claro */
+             --uts-secondary: #764ba2; /* Morado oscuro */
+             --uts-accent: #764ba2; /* Acento morado oscuro */
              --uts-bg: #FFFFFF; /* Fondos y contrastes limpios */
              --uts-surface: rgba(255, 255, 255, 0.96);
              --uts-text: #000000; /* Negro para tipografías importantes */
@@ -976,7 +980,7 @@
              font-weight: 600;
              text-decoration: none;
              transition: all .2s ease;
-             border: 1px solid rgba(126,166,45,0.28);
+             border: 1px solid rgba(118,75,162,0.28);
          }
          .hero-btn.primary { background: var(--uts-primary); color: #fff; border-color: var(--uts-primary); }
          .hero-btn.primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
@@ -990,21 +994,21 @@
          .hero-graphic svg { max-width: 260px; height: auto; }
          .hero-meta {
              display: flex; gap: 10px; flex-wrap: wrap;
-             margin-top: 16px;
+             margin-top: 12px;
          }
          .meta-badge {
              display: inline-flex; align-items: center; gap: 6px;
              padding: 6px 10px;
              border-radius: 999px;
              font-size: 12px; font-weight: 600;
-             background: rgba(167,201,71,0.15);
+             background: rgba(102,126,234,0.15);
              color: var(--uts-secondary);
-             border: 1px solid rgba(126,166,45,0.35);
+             border: 1px solid rgba(118,75,162,0.35);
          }
          .meta-badge.success {
-             background: rgba(167,201,71,0.18);
+             background: rgba(102,126,234,0.18);
              color: var(--uts-secondary);
-             border-color: rgba(126,166,45,0.35);
+             border-color: rgba(118,75,162,0.35);
          }
          @media (max-width: 768px) {
              .hero-content { grid-template-columns: 1fr; }
@@ -1085,7 +1089,7 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Top Bar -->
-        <div class="top-bar" style="background: linear-gradient(135deg, rgba(126,166,45,0.92) 0%, rgba(167,201,71,0.85) 100%); backdrop-filter: blur(6px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div class="top-bar" style="background: linear-gradient(135deg, rgba(102,126,234,0.92) 0%, rgba(118,75,162,0.85) 100%); backdrop-filter: blur(6px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); border-bottom: 1px solid rgba(0,0,0,0.06);">
             <button class="mobile-menu-toggle" onclick="toggleSidebar()">
                 <i class="fas fa-bars"></i>
             </button>
@@ -1155,10 +1159,6 @@
                             <span class="meta-badge <%= (overdueDeliverables && overdueDeliverables.length > 0) ? '' : 'success' %>">
                                 <i class="fas fa-file-alt"></i>
                                 <%= (overdueDeliverables && overdueDeliverables.length) ? overdueDeliverables.length : 0 %> Entregables vencidos
-                            </span>
-                            <span class="meta-badge">
-                                <i class="fas fa-clipboard-check"></i>
-                                <%= (evaluationStats && evaluationStats.total) ? evaluationStats.total : 0 %> Evaluaciones
                             </span>
                         </div>
                     </div>
@@ -1259,7 +1259,7 @@
                             <i class="fas fa-users"></i>
                         </div>
                     </div>
-                    <div class="stat-number"><%= (recentUsers && recentUsers.length) ? recentUsers.length : 0 %></div>
+                    <div class="stat-number"><%= (userStats && userStats.total) ? userStats.total : 0 %></div>
                     <div class="stat-label">Usuarios Activos</div>
                     <div class="stat-change positive">
                         <i class="fas fa-user-plus"></i>
@@ -1331,7 +1331,7 @@
                             <div class="action-desc">Crear código de invitación para proyecto</div>
                         </a>
                         
-                        <a href="/admin/reports/generate" class="action-card">
+                        <a href="/admin/reports" class="action-card">
                             <i class="fas fa-chart-line action-icon"></i>
                             <div class="action-title">Generar Reporte</div>
                             <div class="action-desc">Crear reporte de actividad del sistema</div>

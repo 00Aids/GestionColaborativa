@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title || 'Iniciar Sesión' %></title>
     <%- include('../partials/head') %>
+    <style>
+        :root{--uts-primary:#667eea;--uts-secondary:#764ba2;--uts-gray-100:#f7f9fc;--uts-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);} 
+        body{background-color: var(--uts-gray-100);}/* Fondo general gris institucional */
+        .gradient-uts{background: var(--uts-gradient)!important;color:#fff;}/* Panel lateral verde institucional */
+    </style>
 </head>
 <body class="min-vh-100 d-flex align-items-center">
     <div class="container">
@@ -19,7 +24,7 @@
                                     <img src="/images/uts-logo.svg" alt="UTS" class="me-2" style="height:36px;width:auto;">
                                     <span>Universidad Tecnológica de Santander</span>
                                 </a>
-                                <h2 class="mt-4 mb-2">Portal Académico UTS</h2>
+                                <h2 class="mt-4 mb-2">Portal Académico</h2>
                                 <p class="mb-3 opacity-75">Accede al Sistema de Gestión Académica y aprovecha las herramientas para tu progreso.</p>
                                 <ul class="list-unstyled mt-3 mb-0">
                                     <li class="d-flex align-items-start gap-2 mb-2"><i class="bi bi-mortarboard-fill"></i><span>Gestión de proyectos y entregables</span></li>
@@ -28,7 +33,7 @@
                                 </ul>
                             </div>
                             <div class="mt-4">
-                                <small class="opacity-75">© <%= new Date().getFullYear() %> UTS</small>
+                                <small class="opacity-75">© <%= new Date().getFullYear() %></small>
                             </div>
                         </div>
 
@@ -70,7 +75,7 @@
                                     <button type="submit" class="btn btn-primary px-4">Iniciar Sesión</button>
                                     <a href="/auth/register" class="btn btn-outline-primary px-4">Registrarse</a>
                                 </div>
-                                <p class="small text-muted mt-3">Al acceder aceptas el código de conducta UTS y políticas de uso</p>
+                                <p class="small text-muted mt-3">Al acceder aceptas el código de conducta institucional y políticas de uso</p>
                             </form>
                         </div>
                     </div>

@@ -178,6 +178,7 @@ router.delete('/academic-cycles/:cycleId', adminController.deleteAcademicCycle.b
 
 // Rutas futuras para otras funcionalidades admin
 router.get('/reports', adminController.reports.bind(adminController));
+router.get('/backup', adminController.backup.bind(adminController));
 
 // =============================================
 // RUTAS DE GESTIÓN DE ENTREGABLES

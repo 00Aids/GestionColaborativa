@@ -132,16 +132,18 @@ class Entregable extends BaseModel {
             const values = [];
             
             if (Object.keys(conditions).length > 0) {
-                const whereConditions = Object.keys(conditions)
-                    .map(key => {
-                        if (key === 'area_trabajo_id') {
-                            return `e.area_trabajo_id = ?`;
-                        }
-                        return `e.${key} = ?`;
-                    })
-                    .join(' AND ');
+                const whereParts = [];
+                Object.keys(conditions).forEach(key => {
+                    if (key === 'area_trabajo_id') {
+                        whereParts.push(`(e.area_trabajo_id = ? OR p.area_trabajo_id = ?)`);
+                        values.push(conditions[key], conditions[key]);
+                    } else {
+                        whereParts.push(`e.${key} = ?`);
+                        values.push(conditions[key]);
+                    }
+                });
+                const whereConditions = whereParts.join(' AND ');
                 query += ` AND ${whereConditions}`;
-                values.push(...Object.values(conditions));
             }
             
             query += ` ORDER BY e.fecha_entrega ASC`;

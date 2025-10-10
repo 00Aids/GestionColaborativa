@@ -6,6 +6,9 @@ const BaseModel = require('../models/BaseModel');
 const Task = require('../models/Task');
 const DashboardHelper = require('../helpers/dashboardHelper');
 const FileHelper = require('../helpers/fileHelper');
+const { pool } = require('../config/database');
+const fs = require('fs');
+const path = require('path');
 
 class AdminController {
   constructor() {
@@ -1169,6 +1172,74 @@ class AdminController {
     }
   }
 
+  // Método para realizar respaldos de la base de datos en JSON
+  async backup(req, res) {
+    try {
+      const user = req.session.user;
+      
+      // Verificar permisos
+      if (!user || user.rol_nombre !== 'Administrador General') {
+        req.flash('error', 'No tienes permisos para realizar respaldos.');
+        return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
+      }
+
+      // Tablas a respaldar
+      const tables = [
+        'usuarios', 'roles', 'areas_trabajo', 'usuario_areas_trabajo',
+        'proyectos', 'proyecto_usuarios', 'project_invitations', 'invitaciones',
+        'entregables', 'entregable_comentarios', 'proyecto_comentarios',
+        'notificaciones', 'evaluaciones', 'tarea_comentarios', 'tarea_historial',
+        'historial_area_trabajo', 'lineas_investigacion', 'ciclos_academicos'
+      ];
+
+      const backupData = {};
+      for (const table of tables) {
+        try {
+          const [rows] = await pool.execute(`SELECT * FROM ${table}`);
+          backupData[table] = rows;
+        } catch (err) {
+          console.warn(`No se pudo exportar la tabla ${table}: ${err.message}`);
+          backupData[table] = { error: err.message };
+        }
+      }
+
+      // Directorio de respaldos
+      const backupDir = path.join(__dirname, '..', 'backups');
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      // Nombre de archivo con timestamp
+      const ts = new Date();
+      const fileName = `backup-${ts.getFullYear()}${String(ts.getMonth() + 1).padStart(2, '0')}${String(ts.getDate()).padStart(2, '0')}-${String(ts.getHours()).padStart(2, '0')}${String(ts.getMinutes()).padStart(2, '0')}${String(ts.getSeconds()).padStart(2, '0')}.json`;
+      const filePath = path.join(backupDir, fileName);
+
+      // Escribir archivo JSON
+      fs.writeFileSync(filePath, JSON.stringify({
+        metadata: {
+          created_at: ts.toISOString(),
+          db_name: process.env.DB_NAME || 'unknown',
+          host: process.env.DB_HOST || 'localhost',
+          user: user.email || user.username || user.nombre || 'admin'
+        },
+        data: backupData
+      }, null, 2), 'utf-8');
+
+      // Enviar para descarga
+      return res.download(filePath, fileName, (err) => {
+        if (err) {
+          console.error('Error al descargar el respaldo:', err);
+          req.flash('error', 'Respaldo creado pero no se pudo iniciar la descarga.');
+          return res.redirect('/admin/settings');
+        }
+      });
+    } catch (error) {
+      console.error('Error al crear respaldo:', error);
+      req.flash('error', 'Error al crear el respaldo.');
+      return res.redirect('/admin/settings');
+    }
+  }
+
   // Método para gestionar configuraciones del sistema
   async settings(req, res) {
     try {
@@ -1216,8 +1287,24 @@ class AdminController {
         totalProjects: (await this.projectModel.findAll()).length,
         totalRoles: (await this.roleModel.findAll()).length,
         diskUsage: '0 MB', // Placeholder - se puede implementar cálculo real
-        lastBackup: 'No disponible' // Placeholder - se puede implementar sistema de backup
+        lastBackup: 'No disponible'
       };
+
+      // Calcular fecha del último respaldo
+      try {
+        const backupDir = path.join(__dirname, '..', 'backups');
+        if (fs.existsSync(backupDir)) {
+          const files = fs.readdirSync(backupDir)
+            .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+            .map(f => ({ name: f, time: fs.statSync(path.join(backupDir, f)).mtime }))
+            .sort((a, b) => b.time - a.time);
+          if (files.length > 0) {
+            systemStats.lastBackup = files[0].time.toISOString();
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo obtener la fecha del último respaldo:', e.message);
+      }
   
       res.render('admin/settings', {
         title: 'Configuración del Sistema',

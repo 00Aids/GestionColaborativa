@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title || 'Registro' %></title>
     <%- include('../partials/head') %>
+    <style>
+        :root{--uts-primary:#667eea;--uts-secondary:#764ba2;--uts-gray-100:#f7f9fc;--uts-gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);} 
+        body{background-color: var(--uts-gray-100);} 
+        .gradient-uts{background:var(--uts-gradient)!important;color:#fff;}
+    </style>
 </head>
 <body class="min-vh-100 d-flex align-items-center">
     <div class="container">
@@ -19,7 +24,7 @@
                                     <img src="/images/uts-logo.svg" alt="UTS" class="me-2" style="height:36px;width:auto;">
                                     <span>Universidad Tecnológica de Santander</span>
                                 </a>
-                                <h2 class="mt-4 mb-2">Únete a la comunidad UTS</h2>
+                                <h2 class="mt-4 mb-2">Únete a la comunidad</h2>
                                 <p class="mb-3 opacity-75">Crea tu cuenta para acceder a herramientas de gestión académica</p>
                                 <ul class="list-unstyled mt-3 mb-0">
                                     <li class="d-flex align-items-start gap-2 mb-2"><i class="bi bi-journal-text"></i><span>Registro de avances y documentos</span></li>
@@ -101,7 +106,7 @@
                                 <div class="d-grid mt-4">
                                     <button type="submit" class="btn btn-primary py-2">Registrarse</button>
                                 </div>
-                                <p class="small text-muted mt-3">Al registrarte aceptas el código de conducta UTS y políticas de uso</p>
+                                <p class="small text-muted mt-3">Al registrarte aceptas el código de conducta institucional y políticas de uso</p>
                             </form>
                         </div>
                     </div>
