@@ -257,18 +257,37 @@ class User extends BaseModel {
   async findByArea(areaId) {
     try {
       const query = `
-        SELECT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
+        SELECT DISTINCT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
         FROM usuarios u
-        INNER JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id
+        LEFT JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id AND uat.activo = 1
         LEFT JOIN roles r ON u.rol_id = r.id
-        WHERE uat.area_trabajo_id = ? AND u.activo = 1 AND uat.activo = 1
+        WHERE (uat.area_trabajo_id = ? OR u.area_trabajo_id = ?) AND u.activo = 1
         ORDER BY u.nombres, u.apellidos
       `;
       
-      const [rows] = await this.db.execute(query, [areaId]);
+      const [rows] = await this.db.execute(query, [areaId, areaId]);
       return rows;
     } catch (error) {
       throw new Error(`Error finding users by area: ${error.message}`);
+    }
+  }
+
+  // Obtener usuarios de un área específica (incluye activos e inactivos)
+  async findByAreaAll(areaId) {
+    try {
+      const query = `
+        SELECT DISTINCT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
+        FROM usuarios u
+        LEFT JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id AND uat.activo = 1
+        LEFT JOIN roles r ON u.rol_id = r.id
+        WHERE (uat.area_trabajo_id = ? OR u.area_trabajo_id = ?)
+        ORDER BY u.nombres, u.apellidos
+      `;
+      
+      const [rows] = await this.db.execute(query, [areaId, areaId]);
+      return rows;
+    } catch (error) {
+      throw new Error(`Error finding users by area (all): ${error.message}`);
     }
   }
 
@@ -276,15 +295,15 @@ class User extends BaseModel {
   async findByAreaAndRole(areaId, roleName) {
     try {
       const query = `
-        SELECT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
+        SELECT DISTINCT u.*, r.nombre as rol_nombre, uat.created_at as fecha_asignacion, uat.es_admin
         FROM usuarios u
-        INNER JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id
+        LEFT JOIN usuario_areas_trabajo uat ON u.id = uat.usuario_id AND uat.activo = 1
         LEFT JOIN roles r ON u.rol_id = r.id
-        WHERE uat.area_trabajo_id = ? AND r.nombre = ? AND u.activo = 1 AND uat.activo = 1
+        WHERE (uat.area_trabajo_id = ? OR u.area_trabajo_id = ?) AND r.nombre = ? AND u.activo = 1
         ORDER BY u.nombres, u.apellidos
       `;
       
-      const [rows] = await this.db.execute(query, [areaId, roleName]);
+      const [rows] = await this.db.execute(query, [areaId, areaId, roleName]);
       return rows;
     } catch (error) {
       throw new Error(`Error finding users by area and role: ${error.message}`);

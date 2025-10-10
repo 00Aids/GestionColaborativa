@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Usuarios - Sistema Académico</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -306,6 +309,9 @@
             margin-bottom: 15px;
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
         }
+        .bg-indigo { background: linear-gradient(135deg, #2b4c7e 0%, #1b2a49 100%); }
+        .bg-gold { background: linear-gradient(135deg, #f2c94c 0%, #f2994a 100%); }
+        .bg-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
 
         .stat-number {
             font-size: 32px;
@@ -372,225 +378,226 @@
 
         /* ===== CONTENT STYLES ===== */
         .main-section {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 28px;
+            box-shadow: 0 10px 36px rgba(17, 24, 39, 0.12);
+            border: 1px solid rgba(226, 232, 240, 0.9);
         }
-
         .section-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            gap: 12px;
+            padding-bottom: 16px;
+            margin-bottom: 18px;
             border-bottom: 1px solid #e5e7eb;
         }
-
+        .section-header i {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #60a5fa 100%);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.35);
+        }
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            color: #1e293b;
+            color: #1f2937;
         }
 
+        /* Filtros */
         .filters-section {
-            margin-bottom: 25px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
         }
-
         .filters-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: 1.2fr 0.8fr 0.8fr;
+            gap: 12px;
             align-items: center;
         }
-
-        .search-box {
-            position: relative;
-        }
-
-        .search-box .search-input {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            background: white;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .search-box .search-input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .search-box .search-icon {
+        .search-box { position: relative; }
+        .search-icon {
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #64748b;
+            color: #9ca3af;
         }
-
-        .filter-select {
-            padding: 12px 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            background: white;
-            font-size: 14px;
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
             outline: none;
-            transition: all 0.3s ease;
+            background: #fff;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-
-        .filter-select:focus {
+        .search-input:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 14px;
+            color: #374151;
         }
 
+        /* Lista de usuarios */
         .users-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
-
         .user-item {
             display: grid;
-            grid-template-columns: 60px 1fr auto auto;
-            gap: 20px;
+            grid-template-columns: 56px 1.4fr 0.9fr 0.8fr;
             align-items: center;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
+            gap: 14px;
+            padding: 14px;
             border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(17, 24, 39, 0.06);
+            transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
+        .user-item:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(17, 24, 39, 0.09); }
+        .user-item[data-status="active"] { border-color: rgba(52, 211, 153, 0.35); }
+        .user-item[data-status="inactive"] { border-color: rgba(248, 113, 113, 0.35); }
 
-        .user-item:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+        .user-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 16px;
+            box-shadow: 0 6px 18px rgba(96, 165, 250, 0.35);
         }
-
-        .user-item .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 18px;
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .user-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .user-email {
-            font-size: 14px;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-code {
-            font-size: 12px;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .user-role {
-            font-size: 12px;
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            padding: 4px 8px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 5px;
-        }
+        .user-info { display: grid; gap: 6px; }
+        .user-name { font-weight: 600; color: #111827; }
+        .user-email, .user-code { color: #6b7280; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .user-email i, .user-code i { color: #9ca3af; }
+        .user-role { font-size: 13px; color: #374151; background: #f3f4f6; padding: 6px 10px; border-radius: 8px; display: inline-block; }
 
         .role-select {
-            padding: 8px 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            background: white;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 13px;
+            color: #374151;
         }
-
-        .role-select:focus {
-            border-color: #667eea;
-        }
-
+        .user-actions { display: flex; justify-content: flex-end; }
         .action-btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 12px; border-radius: 10px;
+            border: 1px solid #e5e7eb; background: #fff; color: #111827;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .action-btn:hover { background: #f9fafb; box-shadow: 0 6px 20px rgba(17, 24, 39, 0.08); transform: translateY(-1px); }
+        .action-btn.btn-toggle { border-color: #667eea; color: #4f46e5; }
+        .action-btn.btn-toggle:hover { background: rgba(102, 126, 234, 0.08); }
+
+        /* Spinner para acciones */
+        .spinner {
+            width: 16px; height: 16px; border: 2px solid #e5e7eb; border-top-color: #667eea; border-radius: 50%;
+            display: inline-block; animation: spin 0.8s linear infinite; margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 992px) {
+            .filters-grid { grid-template-columns: 1fr; }
+            .user-item { grid-template-columns: 48px 1fr; grid-auto-rows: auto; }
+            .role-select, .user-actions { margin-top: 8px; }
+            .user-actions { justify-content: flex-start; }
+        }
+
+        /* ===== CHARTS & CHIPS ===== */
+        .summary-charts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .chart-title {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
         }
-
-        .btn-toggle {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .btn-toggle:hover {
-            background: #d97706;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        /* ===== ALERTS ===== */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+        .filter-chips {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
-            font-weight: 500;
+            margin-top: 12px;
         }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: #374151;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chip:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .chip.active { background: rgba(102,126,234,0.12); border-color: #667eea; color: #1f2937; }
 
-        .alert-success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            color: #166534;
+        /* Tooltips educativos */
+        [data-tooltip] { position: relative; }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: calc(100% + 8px);
+            background: rgba(27, 42, 73, 0.95);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
         }
+        [data-tooltip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(-2px); }
 
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #991b1b;
+        @media (max-width: 992px) {
+            .summary-charts { grid-template-columns: 1fr; }
         }
-    </style>
+        </style>
 </head>
 <body>
     <div class="dashboard-layout">
@@ -713,9 +720,8 @@
                 <% } %>
                 <% if (typeof error !== 'undefined' && error && error.length > 0) { %>
                     <% error.forEach(msg => { %>
-                        <div class="alert alert-error">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <%= msg %>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> <%= msg %>
                         </div>
                     <% }) %>
                 <% } %>
@@ -741,7 +747,7 @@
                     </div>
                     <% Object.keys(userStats.byRole).forEach(role => { %>
                         <div class="stat-card">
-                            <i class="fas fa-user-tag stat-icon"></i>
+                            <i class="fas fa-graduation-cap stat-icon"></i>
                             <div class="stat-number"><%= userStats.byRole[role] %></div>
                             <div class="stat-label"><%= role %></div>
                         </div>
@@ -751,85 +757,59 @@
                 <!-- Sección Principal -->
                 <div class="main-section">
                     <div class="section-header">
-                        <i class="fas fa-list"></i>
-                        <span class="section-title">Lista de Usuarios (<%= allUsers.length %>)</span>
+                        <i class="fa-solid fa-users"></i>
+                        <span class="section-title">Lista de Usuarios (<%= allUsers?.length || 0 %>)</span>
                     </div>
-                    
-                    <!-- Filtros -->
+                
                     <div class="filters-section">
                         <div class="filters-grid">
-                            <div class="search-box">
-                                <i class="fas fa-search search-icon"></i>
-                                <input type="text" class="search-input" placeholder="Buscar usuarios por nombre, email o código..." id="searchInput">
+                            <div class="filters-grid">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                                    <input type="text" class="search-input" placeholder="Buscar usuarios por nombre, email o código..." id="searchInput">
+                                </div>
+                                <select class="filter-select" id="statusFilter">
+                                    <option value="all">Todos los estados</option>
+                                    <option value="active">Activos</option>
+                                    <option value="inactive">Inactivos</option>
+                                </select>
+                                <select class="filter-select" id="roleFilter">
+                                    <option value="all">Todos los roles</option>
+                                    <% roles.forEach(function(role){ %>
+                                        <option value="<%= role.nombre %>"><%= role.nombre %></option>
+                                    <% }) %>
+                                </select>
                             </div>
-                            <select class="filter-select" id="roleFilter">
-                                <option value="">Todos los roles</option>
-                                <% roles.forEach(role => { %>
-                                    <option value="<%= role.nombre %>"><%= role.nombre %></option>
-                                <% }) %>
-                            </select>
-                            <select class="filter-select" id="statusFilter">
-                                <option value="">Todos los estados</option>
-                                <option value="active">Activos</option>
-                                <option value="inactive">Inactivos</option>
-                            </select>
                         </div>
-                    </div>
-                    
-                    <!-- Lista de Usuarios -->
-                    <div class="users-list">
-                        <% if (allUsers && allUsers.length > 0) { %>
-                            <% allUsers.forEach(userItem => { %>
+                
+                        <div class="users-list" id="usersList">
+                            <% allUsers.forEach(function(userItem){ %>
                                 <div class="user-item" data-user-id="<%= userItem.id %>" data-role="<%= userItem.rol_nombre %>" data-status="<%= userItem.activo ? 'active' : 'inactive' %>">
-                                    <div class="user-avatar">
-                                        <%= userItem.nombres.charAt(0).toUpperCase() %><%= userItem.apellidos.charAt(0).toUpperCase() %>
+                                    <div class="user-avatar" title="<%= userItem.nombres %> <%= userItem.apellidos %>">
+                                        <%= (userItem.nombres?.[0] || 'U') + (userItem.apellidos?.[0] || '') %>
                                     </div>
-                                    
                                     <div class="user-info">
-                                        <div class="user-name">
-                                            <%= userItem.nombres %> <%= userItem.apellidos %>
-                                        </div>
-                                        <div class="user-email">
-                                            <i class="fas fa-envelope"></i>
-                                            <%= userItem.email %>
-                                        </div>
-                                        <div class="user-code">
-                                            <i class="fas fa-id-card"></i>
-                                            <%= userItem.codigo_usuario %>
-                                        </div>
-                                        <div class="user-role">
-                                            <%= userItem.rol_nombre || 'Sin rol' %>
-                                        </div>
+                                        <div class="user-name"><i class="fa-solid fa-id-badge"></i> <%= userItem.nombres %> <%= userItem.apellidos %></div>
+                                        <div class="user-email"><i class="fa-solid fa-envelope"></i> <%= userItem.email %></div>
+                                        <div class="user-code"><i class="fa-solid fa-hashtag"></i> <%= userItem.codigo_usuario %></div>
+                                        <span class="user-role"><i class="fa-solid fa-user-shield"></i> <%= userItem.rol_nombre %></span>
                                     </div>
-                                    
-                                    <select class="role-select" onchange="changeUserRole(<%= userItem.id %>, this.value)">
-                                        <% roles.forEach(role => { %>
-                                            <option value="<%= role.id %>" 
-                                                    <%= userItem.rol_id === role.id ? 'selected' : '' %>>
-                                                <%= role.nombre %>
-                                            </option>
-                                        <% }) %>
-                                    </select>
-                                    
+                                    <div>
+                                        <select class="role-select" data-user-id="<%= userItem.id %>">
+                                            <% roles.forEach(function(role){ %>
+                                                <option value="<%= role.id %>" <%= role.nombre === userItem.rol_nombre ? 'selected' : '' %>><%= role.nombre %></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
                                     <div class="user-actions">
-                                        <% if (userItem.id !== user.id) { %>
-                                            <button class="action-btn btn-toggle" 
-                                                    onclick="toggleUserStatus(<%= userItem.id %>, <%= userItem.activo ? 'true' : 'false' %>)">
-                                                <i class="fas <%= userItem.activo ? 'fa-user-slash' : 'fa-user-check' %>"></i>
-                                                <%= userItem.activo ? 'Desactivar' : 'Activar' %>
-                                            </button>
-                                        <% } else { %>
-                                            <span style="color: #a0aec0; font-size: 0.9rem;">Tu cuenta</span>
-                                        <% } %>
+                                        <button class="action-btn btn-toggle" onclick="toggleUserStatus(<%= userItem.id %>)">
+                                            <i class="fa-solid <%= userItem.activo ? 'fa-toggle-on' : 'fa-toggle-off' %>"></i>
+                                            <span><%= userItem.activo ? 'Desactivar' : 'Activar' %></span>
+                                        </button>
                                     </div>
                                 </div>
                             <% }) %>
-                        <% } else { %>
-                            <div style="padding: 3rem; text-align: center; color: #718096;">
-                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                                <p>No hay usuarios en el sistema</p>
-                            </div>
-                        <% } %>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -860,20 +840,30 @@
                     // Mostrar mensaje de éxito
                     showNotification('Estado del usuario actualizado correctamente', 'success');
                     
-                    // Recargar después de un breve delay
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    // Actualizar UI sin recargar
+                    const userItem = button.closest('.user-item');
+                    if (userItem) {
+                        userItem.dataset.status = result.newStatus ? 'active' : 'inactive';
+                    }
+                    const icon = button.querySelector('i');
+                    const textSpan = button.querySelector('span');
+                    if (icon) icon.className = `fa-solid ${result.newStatus ? 'fa-toggle-on' : 'fa-toggle-off'}`;
+                    if (textSpan) textSpan.textContent = result.newStatus ? 'Desactivar' : 'Activar';
+                    
+                    // Reaplicar filtros para reflejar el cambio en la lista
+                    if (typeof filterUsers === 'function') {
+                        filterUsers();
+                    }
                 } else {
                     throw new Error(result.error || 'Error desconocido');
                 }
             } catch (error) {
                 // Restaurar botón
                 button.innerHTML = originalContent;
-                button.disabled = false;
-                
                 showNotification('Error al cambiar estado del usuario: ' + error.message, 'error');
                 console.error(error);
+            } finally {
+                button.disabled = false;
             }
         }
         
@@ -897,6 +887,19 @@
                 if (result.success) {
                     showNotification('Rol del usuario actualizado correctamente', 'success');
                     selectElement.dataset.originalValue = newRoleId;
+                    // Actualizar UI: etiqueta de rol y atributo de filtro
+                    const userItem = selectElement.closest('.user-item');
+                    if (userItem) {
+                        userItem.dataset.role = result.newRole;
+                        const roleLabel = userItem.querySelector('.user-role');
+                        if (roleLabel) {
+                            roleLabel.innerHTML = `<i class="fa-solid fa-user-shield"></i> ${result.newRole}`;
+                        }
+                    }
+                    // Reaplicar filtros para reflejar el cambio
+                    if (typeof filterUsers === 'function') {
+                        filterUsers();
+                    }
                 } else {
                     throw new Error(result.error || 'Error desconocido');
                 }
@@ -913,7 +916,7 @@
         // Función para mostrar notificaciones
         function showNotification(message, type) {
             const notification = document.createElement('div');
-            notification.className = `alert alert-${type}`;
+            notification.className = `alert ${type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : `alert-${type}`}`;
             notification.innerHTML = `
                 <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
                 ${message}
@@ -943,24 +946,21 @@
                 const userRole = item.dataset.role;
                 const userStatus = item.dataset.status;
                 
-                const matchesSearch = userName.includes(searchTerm) || 
+                const matchesSearch = !searchTerm || userName.includes(searchTerm) || 
                                     userEmail.includes(searchTerm) || 
                                     userCode.includes(searchTerm);
-                const matchesRole = !roleFilter || userRole === roleFilter;
-                const matchesStatus = !statusFilter || userStatus === statusFilter;
+                const matchesRole = roleFilter === 'all' || !roleFilter || userRole === roleFilter;
+                const matchesStatus = statusFilter === 'all' || !statusFilter || userStatus === statusFilter;
                 
-                if (matchesSearch && matchesRole && matchesStatus) {
-                    item.style.display = 'grid';
-                } else {
-                    item.style.display = 'none';
-                }
+                // Usar estilo vacío para respetar el display del CSS (grid)
+                item.style.display = (matchesSearch && matchesRole && matchesStatus) ? '' : 'none';
             });
         }
         
         // Toggle sidebar for mobile
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('sidebar-open');
+            sidebar.classList.toggle('open');
         }
         
         // Event listeners
@@ -969,6 +969,9 @@
             document.getElementById('searchInput').addEventListener('input', filterUsers);
             document.getElementById('roleFilter').addEventListener('change', filterUsers);
             document.getElementById('statusFilter').addEventListener('change', filterUsers);
+            
+            // Aplicar filtros iniciales para asegurar que se muestre el listado correctamente
+            filterUsers();
             
             // Event listeners para cambios de rol
             const roleSelects = document.querySelectorAll('.role-select');

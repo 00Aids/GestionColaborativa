@@ -33,13 +33,18 @@ class AdminController {
         return res.redirect(DashboardHelper.getDashboardRouteFromUser(user));
       }
 
-      // Obtener todos los usuarios con información de rol
-      const allUsers = await this.userModel.findWithRole();
+      // Filtrar por área de trabajo si está disponible
+      const areaTrabajoId = req.areaTrabajoId || null;
+
+      // Obtener usuarios con información de rol, filtrados por área cuando corresponda
+      const allUsers = areaTrabajoId
+        ? await this.userModel.findByAreaAll(areaTrabajoId)
+        : await this.userModel.findWithRole();
       
       // Obtener usuarios recientes (últimos 10)
       const recentUsers = allUsers.slice(0, 10);
       
-      // Obtener estadísticas de usuarios
+      // Obtener estadísticas de usuarios (del conjunto cargado)
       const userStats = {
         total: allUsers.length,
         active: allUsers.filter(u => u.activo).length,
@@ -48,8 +53,8 @@ class AdminController {
       };
       
       // Agrupar por roles
-      allUsers.forEach(user => {
-        const roleName = user.rol_nombre || 'Sin rol';
+      allUsers.forEach(u => {
+        const roleName = u.rol_nombre || 'Sin rol';
         userStats.byRole[roleName] = (userStats.byRole[roleName] || 0) + 1;
       });
       
